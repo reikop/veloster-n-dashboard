@@ -1,0 +1,39 @@
+{
+  "release_date": "2026-10-23",
+  "scope": "Veloster N JSN KR Android API17; tested build eng.vmadmin.20250902.081552",
+  "license": "MIT (project-authored code only)",
+  "signer_certificate_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+  "signing_note": "Public AOSP platform test certificate; not a private publisher identity or OTA signing key. No private keys distributed.",
+  "apks": [
+    {
+      "file": "apks/N-Dashboard-v5-API17.apk",
+      "package": "com.veloster.dashboard",
+      "version_code": 5,
+      "version_name": "1.4-hscan-socket",
+      "sha256": "cd8678169e5d7c3bb8d7d7a5c13a30c7c0290ce02d721b54c9161c4f9cf71c7a",
+      "bytes": 51062,
+      "vehicle_install_observed": true,
+      "scope": "Initial launch/telemetry checked; cold boot and extended operation not established."
+    },
+    {
+      "file": "apks/My-Apps-v8-API17.apk",
+      "package": "com.veloster.carplayhub",
+      "version_code": 8,
+      "version_name": "1.7-reboot-button",
+      "sha256": "c9622bfaa42c477954429feef201e52e1dc0994e99a91970c45b44c1fb4deb35",
+      "bytes": 27101,
+      "vehicle_install_observed": true,
+      "scope": "Historical installed release; no universal compatibility claim."
+    },
+    {
+      "file": "apks/rollback/N-Dashboard-v3-API17.apk",
+      "package": "com.veloster.dashboard",
+      "version_code": 3,
+      "version_name": "1.2-tire-pressure",
+      "sha256": "96dd7b8a7572bb6460b171203d9da40033839963a65baa8ae5c4e44934d5976f",
+      "bytes": 46227,
+      "vehicle_install_observed": true,
+      "scope": "Historical installed release; no universal compatibility claim."
+    }
+  ]
+}

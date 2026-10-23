@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.dashboard" android:versionCode="5" android:versionName="1.4-hscan-socket">
+    <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="17" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <application android:label="N 계기판" android:allowBackup="false" android:debuggable="true" android:theme="@android:style/Theme.Holo.NoActionBar">
+        <uses-library android:name="automotive" android:required="true" />
+        <activity android:name="com.veloster.dashboard.DashboardActivity" android:exported="true" android:screenOrientation="landscape" android:launchMode="singleTop">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-23",
+  "scope": "Offline public-export validation. No ADB connection or new vehicle test performed.",
+  "host_tests": {
+    "programs": 9,
+    "all_passed": true,
+    "input": "Synthetic; private vehicle capture excluded",
+    "hscan_frame_checks": 18
+  },
+  "public_source_builds": {
+    "dashboard": "passed",
+    "hub": "passed",
+    "output": "unsigned; external to distribution",
+    "payload_entries_equal_to_signed_release": [
+      "AndroidManifest.xml",
+      "resources.arsc",
+      "classes.dex"
+    ],
+    "exact_signed_apk_reproduction_claimed": false
+  },
+  "source_receipts": {
+    "dashboard_files_matched": 30,
+    "hub_files_matched": 7
+  },
+  "toolchain": {
+    "java": "OpenJDK 17.0.20.1",
+    "d8": "8.3.37",
+    "aapt2": "2.20-eng.202610",
+    "compile_android_api": 16,
+    "min_target_android_api": 17
+  },
+  "apks": [
+    {
+      "file": "apks/N-Dashboard-v5-API17.apk",
+      "package": "com.veloster.dashboard",
+      "version_code": 5,
+      "version_name": "1.4-hscan-socket",
+      "v1_signature_valid": true,
+      "dex_version": "035",
+      "defined_classes": 59,
+      "only_project_classes": true,
+      "known_private_strings_found": false
+    },
+    {
+      "file": "apks/My-Apps-v8-API17.apk",
+      "package": "com.veloster.carplayhub",
+      "version_code": 8,
+      "version_name": "1.7-reboot-button",
+      "v1_signature_valid": true,
+      "dex_version": "035",
+      "defined_classes": 57,
+      "only_project_classes": true,
+      "known_private_strings_found": false
+    },
+    {
+      "file": "apks/rollback/N-Dashboard-v3-API17.apk",
+      "package": "com.veloster.dashboard",
+      "version_code": 3,
+      "version_name": "1.2-tire-pressure",
+      "v1_signature_valid": true,
+      "dex_version": "035",
+      "defined_classes": 49,
+      "only_project_classes": true,
+      "known_private_strings_found": false
+    }
+  ],
+  "privacy_review": {
+    "known_private_path_and_device_identifier_matches": 0,
+    "private_key_files": 0,
+    "oem_implementation_files": 0,
+    "private_capture_files": 0,
+    "apk_defined_classes": "com.veloster only",
+    "note": "Allowlisted export plus known-string/content inspection, not an exhaustive secret-detection guarantee."
+  },
+  "document_checks": {
+    "local_links": "passed",
+    "readme_languages": [
+      "English",
+      "Korean"
+    ],
+    "password_years_documented": [
+      2026,
+      2027
+    ]
+  },
+  "not_verified": [
+    "Cold boot and extended vehicle operation",
+    "Vehicle pause/resume for v5",
+    "ABS/TCS/ESC active transitions",
+    "Compatibility on other head units",
+    "Home-screen launch without existing entry point",
+    "Preserving v5 app data when downgrading to v3"
+  ]
+}
