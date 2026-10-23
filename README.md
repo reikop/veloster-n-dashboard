@@ -48,9 +48,13 @@ Vehicle telemetry uses existing receive paths without issuing new ECU diagnostic
 - Exhaust temperature and e-LSD values remain unverified. Wireless CarPlay, GPS track timing, and automatic updates are not implemented. My Apps retains an experimental hotspot screen; this does not provide wireless CarPlay.
 - Initial operation has been checked, but cold boot, extended operation, and actual ABS/TCS/ESC intervention transitions are not fully validated.
 
+## How this project started
+
+We started from the Veloster N BlueLink update package and used open-source tooling to investigate the firmware catalog, Android apps, and vehicle data paths. [Read the download and research walkthrough](docs/RESEARCH.md) for `nudl` commands, the exact model/version and package hashes, extraction stages, ADB findings, and the move to a standalone app. [한국어 과정 설명](docs/RESEARCH_ko.md)
+
 ## Documentation
 
-Detailed guides are currently in Korean:
+The [download and research walkthrough](docs/RESEARCH.md) is available in English and [Korean](docs/RESEARCH_ko.md). The detailed operational guides below are currently in Korean:
 
 - [ADB access and USB troubleshooting](docs/ADB.md): menu entry, command format, cable limitations, and evidence scope. Includes analyzed password candidates for device calendar years 2026 and 2027.
 - [Installation, launch, and recovery](docs/INSTALL.md): backups, signature errors, home-screen limitations, and removal.

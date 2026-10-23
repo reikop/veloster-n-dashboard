@@ -42,6 +42,7 @@ python3 scripts/verify_release.py
 
 ## 문서
 
+- [원본 다운로드부터 독립 앱까지](docs/RESEARCH_ko.md) · [English](docs/RESEARCH.md): 오픈소스 `nudl` 사용법, 정확한 모델·버전·해시, 추출·분석·ADB 연결·독립 앱 제작 과정.
 - [ADB 진입과 연결 문제 구분](docs/ADB.md): 숨은 메뉴, 입력 형식, 케이블·USB 열거, 확인된 범위.
 - [설치·실행·복귀](docs/INSTALL.md): 백업, 서명 오류, 홈 진입점, 제거.
 - [지원 범위와 한계](docs/LIMITATIONS.md): 데이터 신뢰도, 미확인 기능, SD·서명, 장시간 검증 상태.

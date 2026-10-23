@@ -81,6 +81,10 @@
     "password_years_documented": [
       2026,
       2027
+    ],
+    "research_walkthrough_languages": [
+      "English",
+      "Korean"
     ]
   },
   "not_verified": [
@@ -103,5 +107,21 @@
     "gps_camera_date_metadata_removed": true,
     "mpo_auxiliary_images_removed": true,
     "new_vehicle_test_performed": false
+  },
+  "research_documentation": {
+    "date": "2026-10-23",
+    "files": [
+      "docs/RESEARCH.md",
+      "docs/RESEARCH_ko.md"
+    ],
+    "download_route": "nudl; documented reproduction commands checked against upstream CLI and retained source",
+    "new_firmware_download_performed": false,
+    "new_vehicle_test_performed": false,
+    "historical_model": "JSNAS.S5AMC.KR",
+    "historical_download_version": "JSN.KOR.SOP.V141.260114.STD_H",
+    "original_outer_zip_hashes_rechecked": true,
+    "catalog_authorization_fields_published": false,
+    "vendor_binaries_added": false,
+    "history_vs_reproduction_commands_distinguished": true
   }
 }
