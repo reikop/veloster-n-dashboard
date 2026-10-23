@@ -90,5 +90,18 @@
     "Compatibility on other head units",
     "Home-screen launch without existing entry point",
     "Preserving v5 app data when downgrading to v3"
-  ]
+  ],
+  "public_photo": {
+    "file": "docs/images/dashboard-overview-in-car.jpg",
+    "origin": "Owner-provided actual in-car photograph, explicitly requested for public sharing",
+    "sha256": "9ca451042e14bcca4fceb98dcb727009410d063ff2cda9cda3c6a6336d42db84",
+    "pixel_data_unchanged": true,
+    "orientation_preserved": true,
+    "exif_tags_retained": [
+      "Orientation"
+    ],
+    "gps_camera_date_metadata_removed": true,
+    "mpo_auxiliary_images_removed": true,
+    "new_vehicle_test_performed": false
+  }
 }

@@ -6,6 +6,14 @@ A standalone Android dashboard for the Veloster N factory head unit, with a comp
 
 **Tested target:** Korean JSN head unit, Android API 17, build `eng.vmadmin.20250902.081552`. Compatibility with other model years, regions, newer N vehicles, or ordinary Android devices is not established. Perform installation and screen interaction while parked.
 
+## In the car
+
+<img src="docs/images/dashboard-overview-in-car.jpg" alt="N Dashboard overview running on the factory head unit in a Korean-spec Veloster N" width="480">
+
+Actual owner-provided photo of the overview screen on the factory head unit. Unavailable readings remain marked with a dash. Location and camera metadata have been removed; the image pixels are unchanged.
+
+[Open the full-resolution photo](docs/images/dashboard-overview-in-car.jpg)
+
 ## Download
 
 | APK | Purpose | Verification scope |
