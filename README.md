@@ -48,6 +48,14 @@ Vehicle telemetry uses existing receive paths without issuing new ECU diagnostic
 - Exhaust temperature and e-LSD values remain unverified. Wireless CarPlay, GPS track timing, and automatic updates are not implemented. My Apps retains an experimental hotspot screen; this does not provide wireless CarPlay.
 - Initial operation has been checked, but cold boot, extended operation, and actual ABS/TCS/ESC intervention transitions are not fully validated.
 
+## Launching after disconnecting or rebooting
+
+Once installed, the dashboard reads vehicle data inside the head unit; a PC or USB debugging connection is not required for normal use. Unplugging the cable does not uninstall the app. After a reboot, open it again manually; this release does not auto-start on boot.
+
+On our research vehicle, with its separately configured OEM menu entry, the route is **HOME → All menus → page 2 → Information (정보) → My Apps (내 앱) → N Dashboard (N 계기판)**. That menu route was checked during prior vehicle work; v5 cold-boot operation remains unverified. A compatible launcher can also open N Dashboard directly.
+
+**The public APKs do not create the OEM Information/My Apps entry.** If your head unit has no working shortcut or launcher, reconnect ADB and start the app again; reinstalling the same APK does not add a home icon. See the [disconnect/reboot procedure and ADB fallback (Korean)](docs/INSTALL.md#after-reboot).
+
 ## How this project started
 
 We started from the Veloster N BlueLink update package and used open-source tooling to investigate the firmware catalog, Android apps, and vehicle data paths. [Read the download and research walkthrough](docs/RESEARCH.md) for `nudl` commands, the exact model/version and package hashes, extraction stages, ADB findings, and the move to a standalone app. [한국어 과정 설명](docs/RESEARCH_ko.md)

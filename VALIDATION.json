@@ -123,5 +123,15 @@
     "catalog_authorization_fields_published": false,
     "vendor_binaries_added": false,
     "history_vs_reproduction_commands_distinguished": true
+  },
+  "relaunch_documentation": {
+    "date": "2026-10-25",
+    "file": "docs/INSTALL.md#after-reboot",
+    "existing_vehicle_menu_route": "HOME > All menus > page 2 > Information > My Apps > N Dashboard",
+    "route_observation_date": "2026-10-20",
+    "oem_menu_entry_in_public_apks": false,
+    "automatic_boot_launch": false,
+    "adb_fallback_documented": true,
+    "new_vehicle_or_cold_boot_test_performed": false
   }
 }
