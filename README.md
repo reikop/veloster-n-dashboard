@@ -40,6 +40,16 @@ Package identities, versions, sizes, and SHA-256 hashes are recorded in [release
 
 Vehicle telemetry uses existing receive paths without issuing new ECU diagnostic requests. Media controls and explicit settings actions in My Apps do change playback or device state.
 
+## My Apps companion
+
+My Apps opens N Dashboard, other installed apps, and available head-unit settings. It provides an editable app list, USB debugging controls, engineering and Android utilities shortcuts, Classic Bluetooth pairing, and a restart confirmation dialog. It does not replace the factory home screen or add an OEM entry point automatically.
+
+<img src="docs/images/my-apps-v8-main-preview.png" alt="My Apps v8 PC preview, not an in-car screenshot" width="640">
+
+*Current v8 layout preview generated from source labels, with example app names; not an Android or in-car capture.*
+
+[My Apps guide and screenshots](docs/MY_APPS.md) · [한국어 설명](docs/MY_APPS_ko.md). The guide also includes list editing, restart confirmation, and a clearly labelled earlier real vehicle screenshot.
+
 ## Important limitations
 
 - **The factory home screen may not show newly installed apps.** This release does not include a modified OEM home APK. Initial launch uses ADB; launching again without a computer requires a working launcher or app entry point on your head unit.

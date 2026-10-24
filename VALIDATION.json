@@ -133,5 +133,43 @@
     "automatic_boot_launch": false,
     "adb_fallback_documented": true,
     "new_vehicle_or_cold_boot_test_performed": false
+  },
+  "my_apps_documentation": {
+    "date": "2026-10-25",
+    "guides": [
+      "docs/MY_APPS.md",
+      "docs/MY_APPS_ko.md"
+    ],
+    "current_release_version_code": 8,
+    "label_source_sha256": "cb49cb615f6ca4567819663a48e6c1b90e89008ae5ad35df7e5b5dcfa19911d2",
+    "screenshots": [
+      {
+        "file": "docs/images/my-apps-v8-main-preview.png",
+        "sha256": "2ba85b1f28762bd67efc5622740f6c44a4720ca30bfe00f02ad747bd60a6d7e4",
+        "type": "browser preview with production source labels and example app list",
+        "exif_and_text_metadata_present": false
+      },
+      {
+        "file": "docs/images/my-apps-v8-edit-preview.png",
+        "sha256": "63f6ac99a90da3a8f7fdcd0e6fa03670d98f0d32f5363dedfe8eb3bf638b6037",
+        "type": "browser preview with production source labels and example app list",
+        "exif_and_text_metadata_present": false
+      },
+      {
+        "file": "docs/images/my-apps-v8-reboot-preview.png",
+        "sha256": "450a4e5b9385c567c8d2ff06a435da261409c7c6eaa71ff848a90246d273a13d",
+        "type": "browser preview with production source labels and example app list",
+        "exif_and_text_metadata_present": false
+      },
+      {
+        "file": "docs/images/my-apps-earlier-in-car.png",
+        "sha256": "ce94662741a82ca6dde70c34d4a0ed9db3a7576098d830d9b6599b346cb24065",
+        "type": "earlier real vehicle capture, 2026-10-20",
+        "exif_and_text_metadata_present": false
+      }
+    ],
+    "preview_browser_errors": 0,
+    "new_vehicle_test_performed": false,
+    "privacy_review": "Only selected main-screen vehicle image published; no visible map, Bluetooth addresses, personal app list, or bundled raw session logs."
   }
 }

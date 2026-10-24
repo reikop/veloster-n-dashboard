@@ -41,6 +41,8 @@ adb -s "$VN_SERIAL" shell am start -n com.veloster.dashboard/.DashboardActivity
 
 ## ‘내 앱’ 설치 — 선택
 
+버튼별 기능과 화면은 [내 앱 사용법](MY_APPS_ko.md) · [English guide](MY_APPS.md)를 참고하세요.
+
 ```sh
 adb -s "$VN_SERIAL" push apks/My-Apps-v8-API17.apk /data/local/tmp/vn-public-hub-v8.apk
 adb -s "$VN_SERIAL" shell pm install -r /data/local/tmp/vn-public-hub-v8.apk

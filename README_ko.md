@@ -46,6 +46,16 @@ python3 scripts/verify_release.py
 
 차량 데이터 경로는 ECU 진단 요청을 새로 보내지 않는 수신 방식입니다. 미디어 제어와 ‘내 앱’의 설정 버튼은 각각 재생·기기 상태를 변경하므로 앱 전체를 읽기 전용이라고 부르지는 않습니다.
 
+## 내 앱 보조 앱
+
+‘내 앱’은 N 계기판·설치 앱 실행과 내비 설정 바로가기를 제공합니다. 목록 편집, USB 디버깅, 엔지니어링 모드, Android 기본 앱, Classic Bluetooth 페어링, 재시작 확인창을 한곳에 모았습니다. 순정 홈을 교체하거나 OEM 메뉴 진입점을 자동으로 만들지는 않습니다.
+
+<img src="docs/images/my-apps-v8-main-preview.png" alt="내 앱 v8 PC 미리보기 — 실차 캡처 아님" width="640">
+
+*현재 v8 소스의 문구를 이용한 PC 미리보기입니다. 앱 이름은 예시이며 Android·실차 캡처가 아닙니다.*
+
+[내 앱 사용법과 화면 설명](docs/MY_APPS_ko.md) · [English](docs/MY_APPS.md). 목록 편집·재시작 확인창과 이전 버전의 실제 차량 캡처도 구분해 실었습니다.
+
 ## 문서
 
 - [원본 다운로드부터 독립 앱까지](docs/RESEARCH_ko.md) · [English](docs/RESEARCH.md): 오픈소스 `nudl` 사용법, 정확한 모델·버전·해시, 추출·분석·ADB 연결·독립 앱 제작 과정.
