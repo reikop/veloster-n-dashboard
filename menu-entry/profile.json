@@ -1,0 +1,72 @@
+{
+  "product": "jsn_kr",
+  "incremental": "eng.vmadmin.20250902.081552",
+  "sdk": "17",
+  "signer_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+  "menus": {
+    "downloadmenu": {
+      "package": "com.hkmc.system.app.downloadmenu",
+      "file": "HKMC_DownloadMenu",
+      "apk_sha256": "3f03b259fbfd90c3e1d29d2eb6f5c48a60bf40825c0bd0b885bb3212366e43f1",
+      "odex_sha256": "b850dbf45f26e39225c091813a656c6c541ca31a56bcbf5104a27b1720cb2313",
+      "expected_payload_sha256": {
+        "candidate": "1ea29775b112bedc06158cd0587ac251eaf1cc2fcd0c3f9b1da9d3154b4b23ba",
+        "fallback": "57a261f26cdcf52505cd0f90386958dd1d24f4ee934e532c34e310d11d639f60"
+      },
+      "known_active_sha256": [
+        "69cdbfd626b6456625730cb68ed6f1a6012107186014986f5afd77eaa9094138",
+        "b8282fbeaf58d12bc6d8b6daf5f31615b2aaeec29fc6e14e3e4116a2754892e2"
+      ]
+    },
+    "allmenu": {
+      "package": "com.hkmc.system.app.allmenu",
+      "file": "HKMC_AllMenuKR",
+      "apk_sha256": "f4387db2314bd6a7f86cf361eb17b24db0d5ac3d8f6a9974d6b27fe5d45c97cc",
+      "odex_sha256": "666ddb655549c29629c414a681c488a3ecd95b9ad82f3830a0a1390ca6e3a793",
+      "expected_payload_sha256": {
+        "candidate": "c5d854be03556896b3cc25c4ed4b881424086f4bbef75322d242f91346501ff4",
+        "fallback": "76e59d987b9cac6dee402b385a01cd8f5a7d223c05fc00c10150649bc2db3ace"
+      },
+      "known_active_sha256": [
+        "870f8dd6d33f4ea2e9322cb38ae5c215444fe2b4642e7ee9abb17e2f38ed190f",
+        "0a40ddc62d7906594e610aa6ade72e191d2123402459a82055b06488c33554e7"
+      ]
+    }
+  },
+  "framework_sha256": {
+    "android.policy.jar": "82b12b14922decd42cb1e9dc982fca9e89553c8c9ccb1468c2191040bc85e20b",
+    "android.policy.odex": "467da2b0fe037e0e2c4ca412514dc34aa40c883c16d58a5195104b7907aaa8cc",
+    "apache-xml.jar": "1ff9cc4e90117008b361c71d35c47fb173b3f7ad284350f9275c63090e6456b7",
+    "apache-xml.odex": "89bc1c727ca779dfb6651f2fc868de161fcb9a697250c3b79df231c45c219e1e",
+    "automotive-service.jar": "42703fbbc68c64ce85987d4f9a82e3eaed7d0e038a123e79b4f1b440e93724e2",
+    "automotive-service.odex": "930e1de0cb57b945565e66d8856d1bccdebe36c6e44afd485c6894755ceb738a",
+    "automotive.jar": "dcbb3a23db582c5469d9d31f8f7e0a9cf7c9055ff1db25eafc98eb3e33ea2918",
+    "automotive.odex": "7558120aa847975fcb1c72cfc2ae3db5c20395b54a5b071232dcef3fc46845c8",
+    "bouncycastle.jar": "8f38cec1285b0b980fd05fc008c2d42c5a6b1c72f9edcb028024a8f33aa87ea6",
+    "bouncycastle.odex": "45e290cd802c817197e97e0bf086f661d7111930f0cd749486ffb59bbd3af785",
+    "com.broadcom.bt.jar": "14460adb6a91044e1377abd2823ea0cc130891c1acf301aa77af53ce1b95dbbc",
+    "com.broadcom.bt.odex": "91282999ae9f09af3740f13188b6de8ab2fb283699e1de0276749dc1d9c26696",
+    "com.infobank.jar": "3f77ec26591a96a5a6ec3241f1b2ff15a614675f9db62c04366afb62057acdbd",
+    "com.infobank.odex": "8b1d59708bc6c6cfee9ec506df5abdf1c58dca1f2817e39e66533d074a008705",
+    "core-junit.jar": "e08ce7c0816de5a52d435c99d57a6c6962c5527255ff66aab4d6a417b36bcfc8",
+    "core-junit.odex": "12dca92a25428f62229abfdef085153f113e65a01fe1248bea239ac072109817",
+    "core.jar": "19db22b13c56bf1d6833651ef7cffe9d06e4e2a0487770b5d7747be708aae0ec",
+    "core.odex": "b1550b707b9b776b3f3d8dd7cc33e7fc9f1672bb2714de0099d2fc9387c70d4d",
+    "ext.jar": "187e073350e9f644eb3663fdedb0ecdcaae638adaee745eebe41ddc496320bb8",
+    "ext.odex": "ba4ce96cf1d6b578fa2736124be86436ca3ac90b63a5ad5f2f1cad9f9041bd1c",
+    "framework.jar": "7fae7966f5873f5dba1b9189c58eb8a9dc3e627938e34fc44ada9bbe4179a8eb",
+    "framework.odex": "2bb04e498639fa7a6e0f9f8817f147d0140d0e614d1a89743bfc68c0465eabc6",
+    "mms-common.jar": "1f3072ed07b35097e9b2996ea58b323edc304f7dbf39c5d448b82605febd5bee",
+    "mms-common.odex": "bd41e97645c2668340e96097ccf98eb5a32ee4dd3f7f38bd4bbdbf00b4d619af",
+    "services.jar": "1f3072ed07b35097e9b2996ea58b323edc304f7dbf39c5d448b82605febd5bee",
+    "services.odex": "a0b7addd3d595a2c7cb077f863c1bc3f71d65e4569bb7a137850d85328413ac9",
+    "telephony-common.jar": "cb2f91c64166dde3c22a5e0aa2e35a92c47aed090bdd3128579900b5cf8a832e",
+    "telephony-common.odex": "068758b02a1c32bda2d82879e4a6b4d4b0e7d11f7e3f2bc2c95d7ac485106fde"
+  },
+  "tool_sha256": {
+    "android-api16.jar": "84072541cbb711eff89f7277100ff854929a446dba7ceb1b195c340e0b4fd3cb",
+    "r8.jar": "900dfbc649519969fc5a4c7520d6b7355338e565fa1249874e0190b8d61b1199",
+    "smali.jar": "9544299578b16f771d8aa8eaefe0d3718ca03478c16f3c356f2fcf1366bfb116",
+    "baksmali.jar": "d3116248cce4f82ec5a31eb7f95ee75daff42ddf6eed0ab573973dc53fbad2e5"
+  }
+}

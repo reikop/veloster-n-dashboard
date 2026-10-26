@@ -22,7 +22,7 @@ def main():
     hub = ROOT / "apps/hub/src/com/veloster/carplayhub"
     sources = [ROOT / "shared/src/com/veloster/vehicle/Telemetry.java",
                ROOT / "apps/dashboard/src/com/veloster/dashboard/HscanFrameDecoder.java"]
-    sources += [hub / (name + ".java") for name in ("RadioTrial", "BluetoothSession", "RebootRequest")]
+    sources += [hub / (name + ".java") for name in ("RadioTrial", "BluetoothSession", "RebootRequest", "QuickEntryPolicy")]
     tests = sorted((ROOT / "tests").glob("*Test.java"))
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:

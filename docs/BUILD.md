@@ -18,6 +18,7 @@
 
 ```sh
 python3 scripts/test.py --java /path/to/jdk17/bin/java
+python3 -m unittest discover -s tests -p 'test_*.py'
 python3 scripts/verify_release.py
 ```
 
@@ -50,3 +51,9 @@ python3 scripts/build.py hub \
 ## 공개 폴더를 유지할 때
 
 개인키, 원본 차량 로그/스크린샷, VIN·기기 일련번호·페어링 주소, 순정 APK/ODEX/펌웨어, 개인 백업은 추가하지 않습니다. `build/`, `private-backups/`, 키 확장자는 `.gitignore`에 제외되어 있습니다. 새 바이너리를 배포하면 `release.json`, `SHA256SUMS`, `VALIDATION.json`과 확인 범위를 함께 갱신합니다.
+
+## 실행 바로가기와 선택형 메뉴 도구
+
+현재 Hub 소스는 v9이며 부팅 시 직접 켜 둔 바로가기만 복원합니다. 호스트 검사는 실제 서비스·리시버를 작은 Android 스텁과 실행하지만 실제 차량 표시/부팅 전달을 대신하지 않습니다.
+
+[단일 설치 명령](INSTALL.md)은 Python 표준 라이브러리와 ADB만 사용합니다. 빌드 도구나 키가 필요하지 않습니다. [선택형 OEM 메뉴 재구성](MENU_ENTRY_ko.md)에만 별도 JDK·Androguard·smali·개인 원본이 필요합니다. 관련 소스는 `menu-entry/`와 `scripts/build_menu_entry.py`이며, 외부 키를 받아 해당 로컬 메뉴 APK를 서명하는 경로입니다. OEM 코드가 포함된 생성물을 공개하지 않습니다.

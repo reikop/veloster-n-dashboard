@@ -1,5 +1,5 @@
 {
-  "release_date": "2026-10-23",
+  "release_date": "2026-10-26",
   "scope": "Veloster N JSN KR Android API17; tested build eng.vmadmin.20250902.081552",
   "license": "MIT (project-authored code only)",
   "signer_certificate_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
@@ -14,6 +14,16 @@
       "bytes": 51062,
       "vehicle_install_observed": true,
       "scope": "Initial launch/telemetry checked; cold boot and extended operation not established."
+    },
+    {
+      "file": "apks/My-Apps-v9-API17.apk",
+      "package": "com.veloster.carplayhub",
+      "version_code": 9,
+      "version_name": "1.8-quick-entry",
+      "sha256": "3fe7279fcf9de603fbf81668c2121cdd524cbe03fc4572035db4153402a449d2",
+      "bytes": 34641,
+      "vehicle_install_observed": false,
+      "scope": "New opt-in standard Android floating/notification quick entry; API16 compilation, host lifecycle tests and API17 V1 signature checked. No vehicle/emulator or cold-boot test of v9 yet."
     },
     {
       "file": "apks/My-Apps-v8-API17.apk",

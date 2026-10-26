@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.carplayhub" android:versionCode="8" android:versionName="1.7-reboot-button">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.carplayhub" android:versionCode="9" android:versionName="1.8-quick-entry">
     <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="17" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -8,11 +8,21 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REBOOT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
     <application android:label="내 앱" android:allowBackup="false" android:debuggable="true" android:theme="@android:style/Theme.Holo.NoActionBar">
         <activity android:name="com.veloster.carplayhub.HubActivity" android:exported="true" android:screenOrientation="landscape" android:launchMode="singleTop">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
+        <service android:name="com.veloster.carplayhub.QuickEntryService" android:exported="false" />
+        <receiver android:name="com.veloster.carplayhub.QuickEntryReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

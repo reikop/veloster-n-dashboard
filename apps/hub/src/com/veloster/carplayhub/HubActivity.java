@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.UUID;
 import com.veloster.vehicle.UsbDebugControl;
 
-/** Separate ordinary-UID app. No boot receiver, firmware writes, CAN or OEM package patches. */
+/** Separate ordinary-UID app. Optional standard Android shortcut; no firmware writes, CAN or OEM package patches. */
 public final class HubActivity extends Activity {
     private static final String TAG = "VNCarPlayHub";
     private LinearLayout content;
@@ -55,6 +55,9 @@ public final class HubActivity extends Activity {
     private AlertDialog rebootDialog;
     private final String trialSsid = "VN-CarPlay";
     private String page = "apps";
+    private final Runnable quickEntryStatus=new Runnable(){public void run(){
+        runOnUiThread(new Runnable(){public void run(){if(!isFinishing()&&prefs!=null&&"apps".equals(page))render();}});
+    }};
 
     public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -69,17 +72,19 @@ public final class HubActivity extends Activity {
                 manager.reboot(null);
             }
         });
+        QuickEntryService.restore(this); // Restore only an already opted-in setting.
         showIntent(getIntent());
     }
     protected void onNewIntent(Intent intent) { super.onNewIntent(intent); setIntent(intent); showIntent(intent); }
-    protected void onResume() { super.onResume(); if(prefs!=null && !busy)render(); }
+    protected void onResume() { super.onResume(); QuickEntryService.observe(quickEntryStatus); if(prefs!=null && !busy)render(); }
     protected void onPause(){
+        QuickEntryService.unobserve(quickEntryStatus);
         if(bluetoothPanel!=null)bluetoothPanel.stop();
         if(rebootRequest!=null)rebootRequest.cancel();
         if(rebootDialog!=null){rebootDialog.dismiss();rebootDialog=null;}
         super.onPause();
     }
-    protected void onDestroy(){if(bluetoothPanel!=null)bluetoothPanel.stop();super.onDestroy();}
+    protected void onDestroy(){QuickEntryService.unobserve(quickEntryStatus);if(bluetoothPanel!=null)bluetoothPanel.stop();super.onDestroy();}
     private void showIntent(Intent intent) {
         page = "radio".equals(intent.getStringExtra("page")) ? "radio" : "apps";
         render();
@@ -117,6 +122,10 @@ public final class HubActivity extends Activity {
         return unique;
     }
     private void appsPage() {
+        add(content,"실행 바로가기 / Quick entry",new Runnable(){public void run(){quickEntry();}});
+        text("바로가기: "+QuickEntryService.status(this));
+        if(QuickEntryService.mode(this)==QuickEntryPolicy.OFF)
+            text("처음 설치했다면 실행 바로가기를 설정하세요. 순정 홈에는 앱이 자동으로 추가되지 않습니다.");
         LinearLayout first=new LinearLayout(this),second=new LinearLayout(this);
         add(first,"N 계기판",new Runnable(){public void run(){openDashboard();}});
         add(first,"USB 디버깅",new Runnable(){public void run(){usbDebug();}});
@@ -141,6 +150,23 @@ public final class HubActivity extends Activity {
         if (count == 0) text("표시할 설치 앱이 없습니다. 앱 설치 뒤 다시 열거나 목록 편집에서 선택하세요.");
         add(content,"목록 편집",new Runnable(){public void run(){editApps(all);}});
         text("일반 설치 앱은 자동 표시됩니다. 목록에서 숨겨도 앱은 삭제되지 않습니다.");
+    }
+    private void quickEntry(){
+        final int[] modes={QuickEntryPolicy.FLOATING,QuickEntryPolicy.NOTIFICATION,QuickEntryPolicy.OFF};
+        final int[] selected={2};int current=QuickEntryService.mode(this);
+        for(int i=0;i<modes.length;i++)if(modes[i]==current)selected[0]=i;
+        new AlertDialog.Builder(this).setTitle("실행 바로가기 / Quick entry")
+            .setSingleChoiceItems(new String[]{"가장자리 버튼 + 알림 / Floating + notification","알림만 / Notification only","사용 안 함 / Off"},selected[0],new android.content.DialogInterface.OnClickListener(){
+                public void onClick(android.content.DialogInterface dialog,int which){selected[0]=which;}
+            })
+            .setPositiveButton("저장 / Save",new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface dialog,int which){
+                boolean accepted=QuickEntryService.apply(HubActivity.this,modes[selected[0]]);render();
+                if(!accepted)new AlertDialog.Builder(HubActivity.this).setMessage("바로가기 시작 실패. 설정 상태와 시스템 권한을 확인하세요.").setPositiveButton("확인",null).show();
+            }}).setNegativeButton("취소 / Cancel",null)
+            .setNeutralButton("설명 / Help",new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface dialog,int which){
+                new AlertDialog.Builder(HubActivity.this).setMessage("켜면 재부팅 뒤에도 작은 바로가기만 복원합니다. 앱 화면은 자동으로 열지 않습니다. 가장자리 버튼은 끌어서 옮길 수 있습니다.\n\n시스템이 다른 앱 위 표시를 허용하지 않으면 알림만 유지합니다. 순정 화면에서 알림을 열 수 없는 경우에는 별도 메뉴 진입점이 필요합니다. 강제 종료하면 직접 앱을 다시 열 때까지 자동 복원이 중지될 수 있습니다.\n\nWhen enabled, reboot restores only the shortcut. Drag the edge button to move it. If overlays are denied, a notification remains. If the factory UI hides notifications too, use a separate menu entry. Force-stop may block restoration until My Apps is opened again.")
+                    .setPositiveButton("설정으로 / Back",new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int n){quickEntry();}}).show();
+            }}).show();
     }
     private void editApps(final List<ResolveInfo> all) {
         final boolean[] chosen = new boolean[all.size()]; String[] titles = new String[all.size()];

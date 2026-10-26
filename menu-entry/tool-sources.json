@@ -1,0 +1,34 @@
+[
+  {
+    "file": "baksmali.jar",
+    "url": "https://bitbucket.org/JesusFreke/smali/downloads/baksmali-2.5.2.jar",
+    "sha256": "d3116248cce4f82ec5a31eb7f95ee75daff42ddf6eed0ab573973dc53fbad2e5"
+  },
+  {
+    "file": "smali.jar",
+    "url": "https://bitbucket.org/JesusFreke/smali/downloads/smali-2.5.2.jar",
+    "sha256": "9544299578b16f771d8aa8eaefe0d3718ca03478c16f3c356f2fcf1366bfb116"
+  },
+  {
+    "file": "android-api16.jar",
+    "url": "https://repo.maven.apache.org/maven2/com/google/android/android/4.1.1.4/android-4.1.1.4.jar",
+    "sha256": "84072541cbb711eff89f7277100ff854929a446dba7ceb1b195c340e0b4fd3cb"
+  },
+  {
+    "file": "r8.jar",
+    "url": "https://storage.googleapis.com/r8-releases/raw/8.3.37/r8.jar",
+    "sha256": "900dfbc649519969fc5a4c7520d6b7355338e565fa1249874e0190b8d61b1199"
+  },
+  {
+    "url": "https://android.googlesource.com/platform/build/+/android-4.2.2_r1/target/product/security/platform.pk8?format=TEXT",
+    "file": "platform.pk8",
+    "sha256": "1ad8ef556870edb70f69a9d3c112544c07de5162ba440d84d33f8bb0c5962875",
+    "encoding": "base64"
+  },
+  {
+    "url": "https://android.googlesource.com/platform/build/+/android-4.2.2_r1/target/product/security/platform.x509.pem?format=TEXT",
+    "file": "platform.x509.pem",
+    "sha256": "9837de028f460c35cc8d3fa45f14eecce30f6fbfe4b93d399aef1acb80c20d14",
+    "encoding": "base64"
+  }
+]

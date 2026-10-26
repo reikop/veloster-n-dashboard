@@ -11,3 +11,6 @@ logs/
 *.keystore
 *.pem
 *.key
+*.pk8
+*.odex
+.menu-venv/

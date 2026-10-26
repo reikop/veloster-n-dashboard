@@ -171,5 +171,67 @@
     "preview_browser_errors": 0,
     "new_vehicle_test_performed": false,
     "privacy_review": "Only selected main-screen vehicle image published; no visible map, Bluetooth addresses, personal app list, or bundled raw session logs."
+  },
+  "initial_export_scope": "Fields dated 2026-10-23/25 describe the initial v5/v8/v3 export and historical preview. See quick_entry_release and menu_entry_tooling for the 2026-10-26 additions.",
+  "quick_entry_release": {
+    "date": "2026-10-26",
+    "version_code": 9,
+    "version_name": "1.8-quick-entry",
+    "apk_sha256": "3fe7279fcf9de603fbf81668c2121cdd524cbe03fc4572035db4153402a449d2",
+    "signature": {
+      "jar_signature_valid": true,
+      "covered_payload_entries": 3,
+      "signed_entries_absent_from_archive": [],
+      "signer_sha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+      "signer_subject": "1.2.840.113549.1.9.1=android@android.com,CN=Android,OU=Android,O=Android,L=Mountain View,ST=California,C=US"
+    },
+    "defined_classes": 70,
+    "only_project_classes": true,
+    "shared_uid": false,
+    "service_and_receiver_exported": false,
+    "unsigned_to_signed_payload_equal": true,
+    "api16_build": "passed",
+    "host_java_programs": 10,
+    "host_service_scenarios": 14,
+    "host_python_tests": 40,
+    "new_vehicle_test_performed": false,
+    "emulator_test_performed": false,
+    "cold_boot_verified": false,
+    "default_shortcut_mode": "off",
+    "opt_in_shortcut_boot_restore": true,
+    "automatic_fullscreen_boot_launch": false,
+    "source_sha256": {
+      "apps/hub/AndroidManifest.xml": "daf5a82226954a53209f22a9ed656ce07d127b7d6097ca177afcc48d0a79e5f6",
+      "apps/hub/src/com/veloster/carplayhub/BluetoothPanel.java": "73db0c2b96e8ac9c80711ec5c3b1dfeff22f0b7bb90e972195e636830a915a8a",
+      "apps/hub/src/com/veloster/carplayhub/BluetoothSession.java": "e711f9097488a54ac40385e4498a596afa0c29e5caf15f8bd2bb2a9c564e0bf7",
+      "apps/hub/src/com/veloster/carplayhub/HubActivity.java": "c4e1437f180e5bfde1f91ce7107d39df9372a832183b16ec443f52e39127c713",
+      "apps/hub/src/com/veloster/carplayhub/QuickEntryPolicy.java": "16b54f630acb062a5dbf5f0559074424eab86bcae0190d5fe86dd7f7407845aa",
+      "apps/hub/src/com/veloster/carplayhub/QuickEntryReceiver.java": "c8086ff9dc58abfd86a9ad45ca70bf74b7ecafd7a523842d8e0cd2541a3e8ff5",
+      "apps/hub/src/com/veloster/carplayhub/QuickEntryService.java": "8e758d23a6ccdb6f8270c35b17d1f66389e635b5d167f6116da549eff213f39b",
+      "apps/hub/src/com/veloster/carplayhub/RadioTrial.java": "952581f097094432f25fc960a4902585297ed3f3fe6d12b4898a80fd78d61aba",
+      "apps/hub/src/com/veloster/carplayhub/RebootRequest.java": "81d8187486ff9f918693592b359417c5f01934968d173e05264e1a4530a58ac7"
+    }
+  },
+  "menu_entry_tooling": {
+    "date": "2026-10-26",
+    "profile_sha256": "da0f6f72a61fbb8d8dfa35f97fa7e4804fa3f998336841114d9c98c0fbd86705",
+    "source_only_distribution": true,
+    "oem_apks_published": false,
+    "four_candidate_fallback_apks_rebuilt_and_verified": true,
+    "instructions_and_resources_equal_historical_reviewed_artifacts": true,
+    "api17_v1_signatures": "passed",
+    "independent_installer_payload_checks": "passed",
+    "pinned_external_tool_downloads_verified": true,
+    "new_vehicle_test_performed": false,
+    "menus": {
+      "downloadmenu": {
+        "candidate": "1ea29775b112bedc06158cd0587ac251eaf1cc2fcd0c3f9b1da9d3154b4b23ba",
+        "fallback": "57a261f26cdcf52505cd0f90386958dd1d24f4ee934e532c34e310d11d639f60"
+      },
+      "allmenu": {
+        "candidate": "c5d854be03556896b3cc25c4ed4b881424086f4bbef75322d242f91346501ff4",
+        "fallback": "76e59d987b9cac6dee402b385a01cd8f5a7d223c05fc00c10150649bc2db3ace"
+      }
+    }
   }
 }

@@ -1,31 +1,52 @@
-# 공개 배포 기록 — 2026-10-23
+# Release provenance — 2026-10-26 prerelease
 
-## 포함한 바이너리
+**v9 has not been tested on a vehicle or emulator.** The new shortcut and installation tooling passed host checks; actual HOME-screen visibility and restoration after a normal full reboot remain required. N Dashboard v5 is unchanged.
 
-| 앱 | 패키지 | versionCode | 상태 |
+## Current files
+
+| App | Package | versionCode | Evidence |
 | --- | --- | --- | --- |
-| N 계기판 v5 | `com.veloster.dashboard` | 5 | 현재 소스와 대응, 2026-10-22 실차 설치·최초 값 표시 확인 |
-| 내 앱 v8 | `com.veloster.carplayhub` | 8 | 현재 소스와 대응, 기존 실차 설치본과 동일한 서명본 |
-| N 계기판 v3 | `com.veloster.dashboard` | 3 | 이전 설치본 보관용. 이 폴더의 소스는 v3 소스가 아님 |
+| My Apps v9 | `com.veloster.carplayhub` | 9 | New opt-in standard Android floating/notification shortcut; API16 compilation, DEX035, API17-compatible V1 signature and host lifecycle checks |
+| N Dashboard v5 | `com.veloster.dashboard` | 5 | Unchanged release; installed and initial telemetry observed on 2026-10-22 |
+| My Apps v8 | `com.veloster.carplayhub` | 8 | Historical vehicle-installed APK without Quick entry; not the current hub source |
+| N Dashboard v3 | `com.veloster.dashboard` | 3 | Historical dashboard APK; not the current dashboard source |
 
-APK별 SHA-256, 크기, versionName은 [release.json](../release.json)에 기록합니다. 파일을 재압축하거나 다시 서명하지 않고 설치 확인된 바이트를 그대로 복사했습니다. v5와 v8 소스는 원래 빌드 기록의 소스 해시와 대조했습니다. v8은 원래 로컬 테스트 서명 산출물이 아니라 차량 설치에 사용한 재서명본이며, 코드 payload는 동일합니다.
+Hashes, sizes and version names are in [release.json](../release.json) and [SHA256SUMS](../SHA256SUMS). Current source corresponds to dashboard v5 and hub v9. The v8 source remains in repository history at commit `c00c650`; its original APK bytes have not changed. Restoring an older APK may be blocked by version checks and can require data loss; historical files are not an automatic rollback mechanism.
 
-공통 서명 인증서 SHA-256:
+## What changed
+
+The old public package omitted the menu modifications used to make My Apps reachable on the research car. The new default route uses **My Apps → Quick entry → Floating + notification → Save**, followed by a screen-only HOME/reopen test. It does not require an OEM home modification and does not opt users in merely by installing the APK.
+
+The [guided installer](INSTALL_EN.md) now checks the exact supported target, creates unique backups, verifies uploaded and installed APKs, and opens My Apps only after successful installation. It records launch acknowledgement separately from actual shortcut visibility and reboot acceptance. It does not report those screen checks as passed.
+
+The [optional OEM-menu kit](MENU_ENTRY.md) rebuilds the known factory-menu additions from a user's privately captured, exact-match originals. Four generated candidate/fallback APKs were rebuilt offline, checked against pinned payloads, and compared with the historical reviewed code/resources. OEM APKs, framework implementations and keys are **not bundled**. The optional downloader retrieves external hash-pinned tools and the public AOSP test key into a private local build folder.
+
+## Verification
+
+- 10 Java host test programs, including telemetry and quick-entry state/position checks.
+- 40 Python unittest cases: 28 guarded installer cases, 10 guided-install cases, and 2 quick-entry integration checks. The latter execute 14 scenarios against the actual service/receiver with small Android stubs and inspect manifest isolation.
+- My Apps v9 unsigned build payload matches its signed APK, V1 signature is cryptographically checked, and defined classes remain project-authored `com.veloster` classes.
+- Native menu output: original resources/instructions preserved except the reviewed hooks; DEX roundtrips, API17 signatures and payload identities checked. The new tools have not been installed on a vehicle.
+- [Installation audit](INSTALL_AUDIT.md) records remaining gaps, including a static PGS startup-retry issue in unchanged dashboard v5.
+
+These checks are not a real Android window manager, notification panel, boot delivery, vehicle display or long-duration telemetry test. Detailed records and source hashes are in [VALIDATION.json](../VALIDATION.json); earlier dated fields retain their initial-export meaning.
+
+Common signing certificate SHA-256:
 
 ```text
 c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8
 ```
 
-이 인증서는 공개 AOSP platform 테스트 인증서입니다. 해시 일치와 V1 서명 검증은 파일 일관성을 확인하며, 공개 키라는 특성상 배포자만 서명할 수 있다는 의미는 아닙니다. 신뢰할 수 있는 경로에서 파일과 해시를 함께 받으세요.
+This is a public AOSP platform test certificate, not a private publisher identity or OTA key. File hashes and valid V1 signatures establish consistency, not exclusive authorship or universal installation permission. Ordinary source app builds remain unsigned; no signing key is bundled.
 
-## 공개 전 검사 범위
+## Archives and images
 
-공개 준비 과정에서 APK의 V1 서명·전체 payload 해시·DEX 035·패키지/버전·정의 클래스 네임스페이스를 확인합니다. 제조사 클래스 구현이 APK에 포함되지 않았는지 점검하고, 개인 경로·기기 식별자·개인키·원본 로그·OEM 바이너리를 배포 파일에서 제외합니다. 검사 결과는 [VALIDATION.json](../VALIDATION.json)에 기록합니다.
+`v2026.10.26` contains a new complete ZIP with the current apps, sources, scripts and guides. The original `v2026.10.23` APKs and ZIP are retained unchanged and do not contain the new entry solution. Use the new complete archive for the guided installer rather than downloading only an APK.
 
-공개 호스트 테스트는 합성 입력을 사용합니다. 내부 분석에 사용한 차량 로그와 전체 캡처 묶음은 배포하지 않습니다. 별도로 차주가 공개를 요청한 실차 전체조망 사진 한 장을 `docs/images/dashboard-overview-in-car.jpg`로 제공합니다. 사진 픽셀과 표시 방향을 유지하고 GPS·촬영기기·날짜·내장 보조 이미지 메타데이터는 제거했습니다. 이 사진 추가가 새로운 실차 시험이나 장시간 검증을 뜻하지는 않습니다.
+The owner-provided overview photo is an actual car image. Its pixels/orientation were retained while GPS, camera/date metadata and auxiliary MPO images were removed. The My Apps v8 previews are historical browser renderings, not v9 or vehicle captures. The selected earlier car screenshot is dated 2026-10-20. No new screenshots were presented as evidence of v9 running on a vehicle.
 
-2026-10-25에는 [내 앱 사용법](MY_APPS_ko.md)에 현재 v8의 PC 미리보기 3장과 선별한 이전 버전 실차 캡처 1장을 추가했습니다. 실차 캡처는 2026-10-20 자료로 현재 버전과 구분했고 지도·기기 주소·개인 앱 목록이 없는 화면을 선택했습니다. 미리보기는 브라우저 렌더링이며 실차/Android 동작 증거가 아닙니다.
+## 한국어
 
-기존 비공개 로그 재생과 실차 시험 기록을 공개 테스트로 재현했다고 주장하지 않습니다. `v2026.10.23`에 첨부된 최초 배포 ZIP은 사진 추가 전의 묶음이며, 사진과 최신 문서는 저장소 main에서 확인할 수 있습니다.
+이번 v9는 **실차 시험 전 사전 배포본**입니다. 설치만 하고 ‘내 앱’을 찾을 수 없었던 문제를 해결하기 위해 표준 Android 가장자리 버튼·알림을 추가하고, 백업·설치·재조회·첫 실행을 한 명령으로 묶었습니다. 바로가기는 사용자가 켜야 하며 홈에서 재실행·완전 재부팅 복원을 실제 차량에서 확인해야 합니다. 기존 계기판 v5는 변경하지 않았습니다.
 
-소스 빌드는 외부 도구를 지정해 **서명 전 APK**까지 수행하며 기존 배포 APK의 바이트 단위 재현은 보장하지 않습니다. 라이선스는 자체 코드에 MIT를 적용했습니다. 공개용 폴더 정리는 GitHub 저장소 생성·업로드를 뜻하지 않습니다.
+순정 메뉴 경로는 별도 선택 사항입니다. 정확한 원본·빌드에만 적용하고, 제조사 APK는 각 사용자 PC에서 생성합니다. 새로운 앱의 실차 동작을 이전 v8 설치 이력으로 보증하지 않습니다. 원래 릴리스는 그대로 보존하고 새 전체 ZIP에 이번 도구·설치 안내를 포함합니다.
