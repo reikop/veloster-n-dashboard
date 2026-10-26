@@ -1,10 +1,12 @@
-# My Apps v9: reopen without modifying the factory home menu
+# My Apps v10: reopen without modifying the factory home menu
+
+See [Language settings](LANGUAGES.md) for Korean/English selection. Button labels follow the chosen app language.
 
 **English** | [한국어](QUICK_ENTRY_ko.md) | [Installation](INSTALL_EN.md)
 
-My Apps v9 adds an **optional edge button and persistent notification**. These use standard Android services/windows rather than vehicle-specific OEM menu hooks. They do not replace the factory home screen. “Generic entry” describes this design; it does **not** establish compatibility with every head unit or Android version.
+My Apps v10 adds an **optional edge button and persistent notification**. These use standard Android services/windows rather than vehicle-specific OEM menu hooks. They do not replace the factory home screen. “Generic entry” describes this design; it does **not** establish compatibility with every head unit or Android version.
 
-**v9 is a prerelease:** compilation, signatures and host lifecycle tests passed, but actual vehicle overlay visibility and delivery of the boot broadcast have not been checked for this version. Do not describe a host test as a successful vehicle installation. The dashboard's vehicle interfaces still have their own compatibility requirements.
+**v10 is a prerelease:** compilation, signatures and host lifecycle tests passed, but actual vehicle overlay visibility and delivery of the boot broadcast have not been checked for this version. Do not describe a host test as a successful vehicle installation. The dashboard's vehicle interfaces still have their own compatibility requirements.
 
 ## First installation — finish before disconnecting
 

@@ -1,5 +1,6 @@
 package com.veloster.vehicle;
 
+import com.veloster.i18n.UiText;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -21,15 +22,15 @@ public final class GaugeRenderer {
         if("rpm".equals(u))return 8000;if("km/h".equals(u))return 300;if("%".equals(u))return 100;
         if("°C".equals(u))return 160;if("G".equals(u))return 2;if("PS".equals(u)||"hp".equals(u))return 350;
         if("Nm".equals(u)||"N·m".equals(u))return 500;if("kPa".equals(u))return 250;
-        if("bar".equals(u))return i==10?100:2.5f;if(Telemetry.LABELS[i].contains("조향"))return 540;
+        if("bar".equals(u))return i==10?100:2.5f;if(i==Telemetry.STEERING)return 540;
         return i==8?6:100;
     }
     private static String axis(float value){return String.format(Locale.US,value==(int)value?"%.0f":"%.1f",value);}
     public void draw(Canvas c,Telemetry data,long now,GaugeLayout layout){
         int save=c.save();c.clipRect(0,52,800,480);p.setColor(0xff070b0e);c.drawRect(0,52,800,480,p);
-        text(c,"게이지를 길게 눌러 항목 · 모양 · 위치 편집",300,71,13,MUTED);
+        text(c,UiText.t("게이지를 길게 눌러 항목 · 모양 · 위치 편집"),300,71,13,MUTED);
         p.setColor(0xff233b46);c.drawRoundRect(new RectF(650,54,788,78),5,5,p);
-        text(c,layout.dense()?"3 × 2 보기":"4 × 3 보기",719,71,14,BLUE);
+        text(c,layout.dense()?UiText.t("3 × 2 보기"):UiText.t("4 × 3 보기"),719,71,14,BLUE);
         Telemetry.Sample[] samples=data.snapshot(now);
         for(int slot=0;slot<layout.count();slot++){
             int i=layout.signal(slot),style=layout.style(slot);Telemetry.Sample s=samples[i];
@@ -39,7 +40,7 @@ public final class GaugeRenderer {
             c.translate(cx-126*scale,t);c.scale(scale,scale);l=0;t=0;cx=126;
             p.setStyle(Paint.Style.FILL);p.setColor(0xff101920);c.drawRoundRect(new RectF(l,t,l+252,t+190),10,10,p);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(LINE);c.drawRoundRect(new RectF(l,t,l+252,t+190),10,10,p);p.setStyle(Paint.Style.FILL);
-            text(c,Telemetry.LABELS[i],cx,t+25,17,BLUE);
+            text(c,UiText.t(Telemetry.LABELS[i]),cx,t+25,17,BLUE);
             boolean ok=s.valid&&!Float.isNaN(s.value)&&!Float.isInfinite(s.value);
             float displayed=Telemetry.displayValue(i,s.value);
             String value=ok?(i==8?Telemetry.gearLabel((int)s.value):String.format(Locale.US,"rpm".equals(u)||"km/h".equals(u)?"%.0f":"G".equals(u)?"%+.2f":i==Telemetry.STEERING?"%+.1f":"%.1f",displayed)):"—";

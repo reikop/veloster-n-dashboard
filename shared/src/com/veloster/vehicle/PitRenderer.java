@@ -1,5 +1,6 @@
 package com.veloster.vehicle;
 
+import com.veloster.i18n.UiText;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -63,12 +64,13 @@ public final class PitRenderer {
         box(c,0,0,800,52,0xff090b0c);box(c,18,51,782,52,LINE);
         stroke(c,19,16,13,35,RED,4);stroke(c,27,16,21,35,BLUE,4);
         text(c,"N / PIT",36,33,23,WHITE,true);
-        button(c,"전체 조망",144,8,100,38,!cluster&&gaugeLayout==null&&graphLayout==null,BLUE);
+        button(c,UiText.t("전체 조망"),144,8,100,38,!cluster&&gaugeLayout==null&&graphLayout==null,BLUE);
         button(c,"F1",250,8,72,38,cluster&&gaugeLayout==null&&graphLayout==null,BLUE);
-        button(c,"게이지",328,8,84,38,gaugeLayout!=null,BLUE);
-        button(c,"그래프",418,8,110,38,graphLayout!=null,BLUE);
-        centered(c,clock(),596,33,22,WHITE,true);
-        button(c,"돌아가기",666,8,116,38,false,BLUE);
+        button(c,UiText.t("게이지"),328,8,84,38,gaugeLayout!=null,BLUE);
+        button(c,UiText.t("그래프"),418,8,110,38,graphLayout!=null,BLUE);
+        button(c,UiText.language().toUpperCase(Locale.US),534,8,48,38,false,BLUE);
+        centered(c,clock(),620,33,22,WHITE,true);
+        button(c,UiText.t("돌아가기"),666,8,116,38,false,BLUE);
         if(graphLayout!=null)graphRenderer.draw(c,model,now,graphLayout);
         else if(gaugeLayout!=null)gaugeRenderer.draw(c,model,now,gaugeLayout);
         else if(mediaPage)drawCombined(c);else if(cluster)drawCluster(c);else drawDashboard(c);
@@ -137,7 +139,7 @@ public final class PitRenderer {
     private void drawArtworkToggle(Canvas c){
         panel(c,18,436,52,44,mediaPage?0xff233b46:PANEL,mediaPage?BLUE:LINE);
         cover(c,24,438,40);
-        text(c,music==null||music.source.length()==0?"음악":music.source,80,451,11,BLUE,true);
+        text(c,music==null||music.source.length()==0?UiText.t("음악"):music.source,80,451,11,BLUE,true);
         ellipsis(c,music==null||music.title.length()==0?"♪":music.title,80,472,13,120,MUTED);
     }
     private void drawCombined(Canvas c){
@@ -162,8 +164,8 @@ public final class PitRenderer {
         centered(c,"rpm",398,280,12,MUTED,false);
         text(c,"OIL",32,372,11,MUTED,true);text(c,value("오일 온도")+" °C",116,375,22,WHITE,true);
         text(c,"COOLANT",258,372,11,MUTED,true);text(c,value("냉각수 온도")+" °C",368,375,22,WHITE,true);
-        compactPedal(c,"스로틀","스로틀 %","%",32,208,BLUE,100);
-        compactPedal(c,"브레이크","브레이크 압력 bar","bar",258,212,RED,100);
+        compactPedal(c,UiText.t("스로틀"),"스로틀 %","%",32,208,BLUE,100);
+        compactPedal(c,UiText.t("브레이크"),"브레이크 압력 bar","bar",258,212,RED,100);
         panel(c,494,60,288,388,0xff12212a,LINE);
         cover(c,518,72,240);
         text(c,music==null||music.source.length()==0?"MEDIA":music.source,510,333,12,BLUE,true);
@@ -173,11 +175,11 @@ public final class PitRenderer {
             text(c,MediaState.time(music.positionMs)+" / "+MediaState.time(music.durationMs),510,413,13,WHITE,false);
             box(c,510,428,766,432,LINE);box(c,510,428,510+256*music.progress(),432,BLUE);
         }
-        button(c,"−",210,452,42,27,false,BLUE);text(c,"목표 "+shiftTarget+" rpm",267,471,12,BLUE,true);
+        button(c,"−",210,452,42,27,false,BLUE);text(c,UiText.t("목표 ")+shiftTarget+" rpm",267,471,12,BLUE,true);
         button(c,"+",440,452,42,27,false,BLUE);
-        button(c,"이전",494,452,86,27,false,BLUE);
+        button(c,UiText.t("이전"),494,452,86,27,false,BLUE);
         button(c,music!=null&&music.playState==1?"Ⅱ":music!=null&&music.playState==0?"▶":"▶ / Ⅱ",588,452,98,27,false,BLUE);
-        button(c,"다음",694,452,88,27,false,BLUE);
+        button(c,UiText.t("다음"),694,452,88,27,false,BLUE);
     }
     private void compactPedal(Canvas c,String label,String prefix,String unit,int x,int width,int color,float maximum){
         text(c,label,x,420,11,MUTED,true);
@@ -189,7 +191,8 @@ public final class PitRenderer {
     private void button(Canvas c,String s,float x,float y,float w,float h,boolean on,int accent){
         panel(c,x,y,w,h,on?0xff233b46:0xff111415,on?accent:LINE);
         if(on)box(c,x+9,y+h-3,x+w-9,y+h-1,accent);
-        text(c,s,x+12,y+h/2+5,14,on?accent:MUTED,true);
+        paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(14);float measured=paint.measureText(s);
+        text(c,s,x+12,y+h/2+5,measured>w-24?14*(w-24)/measured:14,on?accent:MUTED,true);
     }
     private void centered(Canvas c,String s,float x,float y,float size,int color,boolean bold){
         paint.setTextSize(size);paint.setTypeface(bold?Typeface.DEFAULT_BOLD:Typeface.DEFAULT);
@@ -240,21 +243,21 @@ public final class PitRenderer {
         pedal(c,"THROTTLE", "스로틀 %", "%",18,BLUE,100);
         pedal(c,"BRAKE PRESSURE", "브레이크 압력 bar", "bar",406,RED,100);
         button(c,"−",548,452,42,27,false,BLUE);
-        text(c,"목표 "+shiftTarget+" rpm",604,471,12,BLUE,true);
+        text(c,UiText.t("목표 ")+shiftTarget+" rpm",604,471,12,BLUE,true);
         button(c,"+",740,452,42,27,false,BLUE);
     }
     private void drawDashboard(Canvas c){
         String[] names={"SPEED / km/h","ENGINE / rpm","EMS GEAR","THROTTLE / %","BRAKE / bar"};
         for(int slot=0;slot<overviewLayout.count();slot++){
             int i=overviewLayout.signalAt(slot);boolean head=overviewLayout.headline(i);
-            if(overviewLayout.grouped(i))groupCard(c,i);else overviewCard(c,i,head?names[slot]:Telemetry.LABELS[i]);
+            if(overviewLayout.grouped(i))groupCard(c,i);else overviewCard(c,i,head?names[slot]:UiText.t(Telemetry.LABELS[i]));
         }
     }
     private void groupCard(Canvas c,int i){
         float x=overviewLayout.left(i),y=overviewLayout.top(i),w=overviewLayout.width(i);
         panel(c,x,y,w,overviewLayout.height(i),PANEL,LINE);box(c,x+10,y,x+53,y+2,BLUE);
         if(i==Telemetry.TPMS_FL){
-            fitted(c,"타이어 공기압",x+10,y+20,13,w-20,MUTED);
+            fitted(c,UiText.t("타이어 공기압"),x+10,y+20,13,w-20,MUTED);
             String[] corners={"FL","FR","RL","RR"};
             for(int n=0;n<4;n++){
                 float l=x+10+(n%2)*69,t=y+44+(n/2)*25;
@@ -266,8 +269,8 @@ public final class PitRenderer {
             fitted(c,"TCS · ESC · ABS",x+10,y+20,13,w-20,MUTED);
             for(int n=0;n<3;n++){
                 float t=y+43+n*22;Telemetry.Sample s=samples[i+n];
-                text(c,Telemetry.LABELS[i+n],x+10,t,12,MUTED,false);
-                text(c,s.valid?(s.value==1?"작동":"비작동"):"—",x+66,t,16,s.valid&&s.value==1?RED:BLUE,true);
+                text(c,UiText.t(Telemetry.LABELS[i+n]),x+10,t,12,MUTED,false);
+                text(c,s.valid?(s.value==1?UiText.t("작동"):UiText.t("비작동")):"—",x+66,t,16,s.valid&&s.value==1?RED:BLUE,true);
             }
         }
     }

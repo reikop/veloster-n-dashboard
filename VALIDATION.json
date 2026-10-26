@@ -233,5 +233,84 @@
         "fallback": "76e59d987b9cac6dee402b385a01cd8f5a7d223c05fc00c10150649bc2db3ace"
       }
     }
+  },
+  "multilingual_release": {
+    "date": "2026-10-26",
+    "tag": "v2026.10.26-i18n",
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "catalog_entries": 220,
+    "default": "Korean for Korean system language; English otherwise",
+    "manual_selection": "per-app saved auto/ko/en; does not change system locale",
+    "host_java_programs": 11,
+    "host_python_tests": 43,
+    "host_service_scenarios": 16,
+    "vehicle_or_emulator_test_performed": false,
+    "apk_checks": {
+      "hub": {
+        "file": "apks/My-Apps-v10-API17.apk",
+        "package": "com.veloster.carplayhub",
+        "version_code": 10,
+        "version_name": "1.9-i18n",
+        "sha256": "6351e5d0806fecf2cf5e5901a67c33a7a5ab337513dce1a62b30c9318d352680",
+        "bytes": 42487,
+        "v1_signature_valid": true,
+        "only_project_classes": true,
+        "defined_classes": 76,
+        "signed_payload_matches_unsigned": true,
+        "vehicle_install_observed": false
+      },
+      "dashboard": {
+        "file": "apks/N-Dashboard-v6-API17.apk",
+        "package": "com.veloster.dashboard",
+        "version_code": 6,
+        "version_name": "1.5-i18n",
+        "sha256": "e2bf05c2fa955b7a60dc74705e48de67582956a9e3c4ee45473b88a9093830e2",
+        "bytes": 61229,
+        "v1_signature_valid": true,
+        "only_project_classes": true,
+        "defined_classes": 64,
+        "signed_payload_matches_unsigned": true,
+        "vehicle_install_observed": false
+      },
+      "unchanged_data_methods": 137
+    },
+    "source_sha256": {
+      "apps/dashboard/src/com/veloster/dashboard/DashboardActivity.java": "c78546e23276a7acf911982fb995c5e2ed9165e961348d84b0745f77acd1f67b",
+      "apps/dashboard/src/com/veloster/dashboard/HscanDataClient.java": "a094fc8fbc20f891f947d1c9992d03b6e7a9566ce774fdbd4dc08356f18119ea",
+      "apps/dashboard/src/com/veloster/dashboard/HscanFrameDecoder.java": "50238716ae78e4f17248f8de0e13581ff824d55a96dc16d1e9ea2e339cb0ed0b",
+      "apps/dashboard/src/com/veloster/dashboard/VehicleDataClient.java": "89cba1e9345d45a292c47bf9f7531d6ecece6b9bed7daefcdda6221aadebfbe6",
+      "apps/hub/src/com/veloster/carplayhub/BluetoothPanel.java": "0ca103ccf666dcbc37984f34ccffd262015c492a669a2611777e84d09fd2b840",
+      "apps/hub/src/com/veloster/carplayhub/BluetoothSession.java": "e711f9097488a54ac40385e4498a596afa0c29e5caf15f8bd2bb2a9c564e0bf7",
+      "apps/hub/src/com/veloster/carplayhub/HubActivity.java": "56b62dcd0764b5d2e57245733b71b1b5aff394908a0dbf76626d4d8c28fa4178",
+      "apps/hub/src/com/veloster/carplayhub/QuickEntryPolicy.java": "16b54f630acb062a5dbf5f0559074424eab86bcae0190d5fe86dd7f7407845aa",
+      "apps/hub/src/com/veloster/carplayhub/QuickEntryReceiver.java": "c8086ff9dc58abfd86a9ad45ca70bf74b7ecafd7a523842d8e0cd2541a3e8ff5",
+      "apps/hub/src/com/veloster/carplayhub/QuickEntryService.java": "36c3549949c9c94d977f1ae6fd73f2cffa99d9985d020b6cf6dd27c5fa5b87a6",
+      "apps/hub/src/com/veloster/carplayhub/RadioTrial.java": "952581f097094432f25fc960a4902585297ed3f3fe6d12b4898a80fd78d61aba",
+      "apps/hub/src/com/veloster/carplayhub/RebootRequest.java": "81d8187486ff9f918693592b359417c5f01934968d173e05264e1a4530a58ac7",
+      "shared/src/com/veloster/i18n/LanguageSettings.java": "a1ffe9d017b0fc1349f81d1f45ce9223a2000e2eb8af69a3b69bd51d2ee706cd",
+      "shared/src/com/veloster/i18n/UiText.java": "4ccf8344aad0e6d217542722912ba7a2e87f055f05d652aeda472748b5f5f45c",
+      "shared/src/com/veloster/vehicle/ArtworkLoader.java": "9649d503eddbdb310f6b367537e184738212ced3246b4a45cb0b9a2352024fb9",
+      "shared/src/com/veloster/vehicle/GaugeEditor.java": "e4e0bfedca2811abb8c2c4584fc22ca0e5c8896233fbdc85c4e11de3e311531a",
+      "shared/src/com/veloster/vehicle/GaugeLayout.java": "9b263c3d7e1c28f6b61a789a1d92082ba92964e0177d9cc51a2c191b7213730e",
+      "shared/src/com/veloster/vehicle/GaugeRenderer.java": "a53de51f904ba52096414e6f2d71fd6647212fc96f17360ddb51fade52b48f2b",
+      "shared/src/com/veloster/vehicle/GraphEditor.java": "15fba0fcffdb7d43e6f07615f207b13bf8651395126eff2f011fb55fb54364b8",
+      "shared/src/com/veloster/vehicle/GraphLayout.java": "b5f3e2b109b50a8f2c5f5db160e08f8f325560708824cb4e7d0b8de3e6016427",
+      "shared/src/com/veloster/vehicle/GraphRenderer.java": "7f42450d8980ca8cd234ae2bfbff5fd792f86913753a77faaee75b1581d8eb0c",
+      "shared/src/com/veloster/vehicle/MediaControl.java": "cec4ac8a6ceb1ba3043f12c1881b5a128109d44c9fc65a1ade1aa26a03164620",
+      "shared/src/com/veloster/vehicle/MediaReceiver.java": "e6e1c6346cf065acb8ba9c016ac7320d30b089cfaef1c4d920fe6a1023071000",
+      "shared/src/com/veloster/vehicle/MediaState.java": "014c00ef40142ef8c8e47eaf7237e3c271a1f0351744d8b69bcea9c394255fa3",
+      "shared/src/com/veloster/vehicle/OverviewLayout.java": "62c074322ff012dc42d2f19fe6adaafa7bb38dbfcea5010005dab651d85b05ca",
+      "shared/src/com/veloster/vehicle/PitRenderer.java": "2c37b88d0b4c471faf239e3bbe063ad52312a8887e6ac0354f31ac288fb0d2ff",
+      "shared/src/com/veloster/vehicle/RegulationState.java": "49f6e15831077eaaa47ce88adca9f87c2b65c7dab0d9fb6365737ad03c040055",
+      "shared/src/com/veloster/vehicle/ShiftGuide.java": "b5f5e7dd23bd92b8a885020f544b14d904f51e233b3920ba8d442afa5e150e8d",
+      "shared/src/com/veloster/vehicle/Telemetry.java": "3904d9f24318244d013192eae30152479dc74ffc03347d00c399dba5e1ac3271",
+      "shared/src/com/veloster/vehicle/UsbDebugControl.java": "4140a2c3c25f83d106d04627228ea61a77d3f2bead1276c023234b5bf848e17d",
+      "shared/src/com/veloster/vehicle/VehicleDash.java": "1997bed90f4f3bed50c11d55968639b4c1fc5676c4eac32861c65cd37f2f75de",
+      "translations/en.json": "82ebfa1934950344f5ba624a5ed986fec4033990a524c4e569a2082c23fad645",
+      "translations/ko.json": "ee1404fb3abd9da6f0cd7f23232a4f3cc54dfcb5f148d0fadf8ac3ecfdb3c3e2"
+    }
   }
 }

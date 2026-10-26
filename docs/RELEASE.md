@@ -1,8 +1,20 @@
+# Current release: v2026.10.26-i18n — prerelease
+
+My Apps **v10 / 1.9-i18n** and N Dashboard **v6 / 1.5-i18n** add Korean/English display text, system-language defaults, per-app saved selection, localized launcher labels, and live language refresh for the edge shortcut/notification. [Language guide](LANGUAGES.md).
+
+ADB entry and the single installation command are unchanged. The complete archive is `veloster-n-dashboard-v2026.10.26-i18n.zip`. Current source corresponds to v6/v10; the prior v5/v9 source is retained at `e02bc1f`. Older APKs and release archives remain unchanged.
+
+Both new APKs are API17/DEX035 with verified V1 signatures and payload preservation. **Neither new version has been tested on a vehicle or emulator.** 11 Java host programs and 43 Python tests pass, including 16 service/language lifecycle scenarios under stubs. 137 vehicle data/subscription/layout methods match v5 instructions; stored signal/layout IDs and system/numeric locale are unchanged. No ECU communication behavior was added.
+
+한국어: 다국어 업데이트는 계기판 v6·내 앱 v10입니다. 설치 방법은 같고 언어를 앱별로 선택해 저장합니다. 차량 데이터 처리 코드는 유지했으며 새 버전의 실차 확인은 남아 있습니다. 아래는 이전 v9 진입점 개선 배포 당시의 기록입니다.
+
+---
+
 # Release provenance — 2026-10-26 prerelease
 
 **v9 has not been tested on a vehicle or emulator.** The new shortcut and installation tooling passed host checks; actual HOME-screen visibility and restoration after a normal full reboot remain required. N Dashboard v5 is unchanged.
 
-## Current files
+## Historical v2026.10.26 files
 
 | App | Package | versionCode | Evidence |
 | --- | --- | --- | --- |
@@ -11,7 +23,7 @@
 | My Apps v8 | `com.veloster.carplayhub` | 8 | Historical vehicle-installed APK without Quick entry; not the current hub source |
 | N Dashboard v3 | `com.veloster.dashboard` | 3 | Historical dashboard APK; not the current dashboard source |
 
-Hashes, sizes and version names are in [release.json](../release.json) and [SHA256SUMS](../SHA256SUMS). Current source corresponds to dashboard v5 and hub v9. The v8 source remains in repository history at commit `c00c650`; its original APK bytes have not changed. Restoring an older APK may be blocked by version checks and can require data loss; historical files are not an automatic rollback mechanism.
+Hashes, sizes and version names are in [release.json](../release.json) and [SHA256SUMS](../SHA256SUMS). At that release, source corresponded to dashboard v5 and hub v9. The v8 source remains in repository history at commit `c00c650`; its original APK bytes have not changed. Restoring an older APK may be blocked by version checks and can require data loss; historical files are not an automatic rollback mechanism.
 
 ## What changed
 

@@ -1,17 +1,19 @@
 # Installation, launch, and recovery
 
+See [Language settings](LANGUAGES.md) for Korean/English selection. Button labels follow the chosen app language.
+
 **English** | [한국어](INSTALL.md)
 
-**Installing the apps and enabling a way to reopen them are separate steps.** The APKs do not automatically appear in the factory home menu. The recommended path is installation → first ADB launch → enable the v9 [quick-entry shortcut](QUICK_ENTRY.md) → verify reopening from HOME. OEM menu modification is an optional fallback, not a requirement for every user.
+**Installing the apps and enabling a way to reopen them are separate steps.** The APKs do not automatically appear in the factory home menu. The recommended path is installation → first ADB launch → enable the v10 [quick-entry shortcut](QUICK_ENTRY.md) → verify reopening from HOME. OEM menu modification is an optional fallback, not a requirement for every user.
 
 This procedure is limited to **product `jsn_kr`, Android API `17`, incremental `eng.vmadmin.20250902.081552`**. The new installation tool checks that identity; it does not provide a bypass for other builds. Factory-menu modification additionally requires matching original APK and ODEX files. Similar vehicle names, Android versions, or hardware do not establish compatibility.
 
-The installation tooling and documentation were revised on **2026-10-26**. This is not a new vehicle-installation or cold-boot test. N Dashboard v5 retains its historical verification scope. My Apps v9 is a signed, host-checked prerelease with no vehicle or emulator test; see [release provenance (Korean)](RELEASE.md).
+The installation tooling and documentation were revised on **2026-10-26**. This is not a new vehicle-installation or cold-boot test. N Dashboard v6 adds localized UI and is not vehicle-tested; its data-processing code is unchanged from the previously observed v5. My Apps v10 is a signed, host-checked prerelease with no vehicle or emulator test; see [release provenance (Korean)](RELEASE.md).
 
 ## 1. Prepare the computer and vehicle
 
 1. Park the vehicle where you can inspect its screen, and establish ADB using the [connection guide](ADB_EN.md). Initial debugging access cannot be enabled through My Apps before My Apps is installed and reachable.
-2. Download and extract the **complete latest repository or the `v2026.10.26` release bundle**, not only the APK files. Open a terminal in the project directory containing `README.md`, `scripts/`, and `apks/`. The original `v2026.10.23` ZIP predates the new installation/menu tooling.
+2. Download and extract the **complete latest repository or the `v2026.10.26-i18n` release bundle**, not only the APK files. Open a terminal in the project directory containing `README.md`, `scripts/`, and `apks/`. The original `v2026.10.23` ZIP predates the new installation/menu tooling.
 3. Install Python 3.9+ and Android SDK Platform-Tools so that `adb` is available. Run these commands on the computer. Examples use macOS/Linux bash or zsh syntax. On Windows, you can use `py -3` instead of `python3` and replace `"$VN_SERIAL"` directly with your device serial. Do not paste POSIX variable assignments into PowerShell unchanged.
 
 ```sh
@@ -43,7 +45,7 @@ python3 scripts/install.py --serial "$VN_SERIAL" --check
 
 `--parked` records your confirmation that the vehicle is parked; the tool does not sense the vehicle's motion.
 
-This step checks release integrity and the target device, preserves any existing app APKs in the new backup directory, and installs N Dashboard v5 and My Apps v9. Uploaded and installed APKs are read back for verification; a successful PC-side exit code alone is not treated as installation success with old adbd. If the tool stops, preserve the error output and backups. Do not bypass failures by deleting existing apps or forcing unknown files over them. The two installations are not atomic: if the second fails, the first may already be updated.
+This step checks release integrity and the target device, preserves any existing app APKs in the new backup directory, and installs N Dashboard v6 and My Apps v10. Uploaded and installed APKs are read back for verification; a successful PC-side exit code alone is not treated as installation success with old adbd. If the tool stops, preserve the error output and backups. Do not bypass failures by deleting existing apps or forcing unknown files over them. The two installations are not atomic: if the second fails, the first may already be updated.
 
 An APK backup is **not an app-data backup**. Both apps declare `allowBackup=false`; restoring gauge, graph, or app-list preferences through ordinary ADB is not guaranteed. Keep the backup directory private.
 
@@ -67,7 +69,7 @@ adb -s "$VN_SERIAL" shell am start -n com.veloster.dashboard/.DashboardActivity
 
 See the [My Apps guide](MY_APPS.md) for button meanings. USB debugging OFF, Restart, and the experimental hotspot screen are not required to verify installation. USB OFF or Restart can interrupt your PC connection.
 
-## 4. Enable v9 Quick entry and check it on screen
+## 4. Enable v10 Quick entry and check it on screen
 
 1. In My Apps, tap **실행 바로가기 / Quick entry** at the top.
 2. Select **가장자리 버튼 + 알림 / Floating + notification**, then **저장 / Save**. The default is OFF; installation does not silently enable it.
@@ -80,7 +82,7 @@ This feature uses standard Android service, overlay, and notification facilities
 
 ### Alternative: an existing launcher or optional OEM menu
 
-An existing compatible launcher or app list may also open either app. If neither the v9 button nor its notification is accessible, consider the [factory-menu procedure](MENU_ENTRY.md). This is optional and limited to builds whose original APK and ODEX identities match the supported originals.
+An existing compatible launcher or app list may also open either app. If neither the v10 button nor its notification is accessible, consider the [factory-menu procedure](MENU_ENTRY.md). This is optional and limited to builds whose original APK and ODEX identities match the supported originals.
 
 The menu tool checks originals captured from your vehicle and builds the modification and recovery APKs locally. OEM APKs are not publicly distributed. It stops for unsupported originals; do not install another vehicle's modification. Reinstalling the ordinary app APKs does not add a factory-menu icon.
 
@@ -88,15 +90,15 @@ The menu tool checks originals captured from your vehicle and builds the modific
 
 ## After disconnecting or rebooting
 
-Once running, the dashboard obtains vehicle data from services inside the head unit. A PC cable is not needed to keep it running. Disconnecting the cable or normally rebooting does not require reinstalling the apps. **Only the explicitly enabled v9 shortcut service requests restoration at boot; it does not open My Apps or the dashboard full-screen.** Tap its button/notification to open the app. Force-stop or device policy can prevent restoration until you open My Apps manually. OFF does not request restoration.
+Once running, the dashboard obtains vehicle data from services inside the head unit. A PC cable is not needed to keep it running. Disconnecting the cable or normally rebooting does not require reinstalling the apps. **Only the explicitly enabled v10 shortcut service requests restoration at boot; it does not open My Apps or the dashboard full-screen.** Tap its button/notification to open the app. Force-stop or device policy can prevent restoration until you open My Apps manually. OFF does not request restoration.
 
-The previously checked OEM-menu route on the research vehicle is below. You do not need this menu modification when the v9 shortcut works:
+The previously checked OEM-menu route on the research vehicle is below. You do not need this menu modification when the v10 shortcut works:
 
 1. Wait until startup completes and the home menu responds.
 2. Open **HOME → All menus → page 2 → Information (정보) → My Apps (내 앱)**.
 3. Tap **N Dashboard (N 계기판)**. The old button inside factory N Mode belongs to the earlier integrated approach, not the current independent app.
 
-This menu route was checked by touching the vehicle screen after separate OEM-menu modifications on 2026-10-20. Menu position/order can differ with device state. Publishing the new tool does not establish v5 cold-boot/extended telemetry reliability or v9 vehicle shortcut restoration. On each newly configured vehicle, separately check the menu route and reception after a normal shutdown/reboot while parked.
+This menu route was checked by touching the vehicle screen after separate OEM-menu modifications on 2026-10-20. Menu position/order can differ with device state. Publishing the new tool does not establish v5 cold-boot/extended telemetry reliability or v10 vehicle shortcut restoration. On each newly configured vehicle, separately check the menu route and reception after a normal shutdown/reboot while parked.
 
 If neither shortcut nor menu is available, reconnect the computer and use step 3. Check [quick-entry settings and errors](QUICK_ENTRY.md) first, then the optional [menu guide](MENU_ENTRY.md) if needed. A returned `pm path` means the app is installed even if its icon is absent. Do not immediately uninstall or reinstall it.
 
@@ -104,7 +106,7 @@ If neither shortcut nor menu is available, reconnect the computer and use step 3
 
 | Symptom | Next check |
 | --- | --- |
-| Installation succeeds but My Apps is not visible | Launch using step 3, then configure and test [v9 Quick entry](QUICK_ENTRY.md). |
+| Installation succeeds but My Apps is not visible | Launch using step 3, then configure and test [v10 Quick entry](QUICK_ENTRY.md). |
 | `pm path` returns no package path | Verify the target serial and installation-tool result. |
 | My Apps opens but N Dashboard does not | Check `pm path com.veloster.dashboard` and the launch error. |
 | App opens but extra readings show `-` | Check the exact supported build, ignition/service readiness, actual reception, and 60-second expiry. Do not send ECU requests to fill missing values. |
@@ -122,7 +124,7 @@ To stop only the standalone dashboard:
 adb -s "$VN_SERIAL" shell am force-stop com.veloster.dashboard
 ```
 
-`scripts/install.py` and the advanced `menu_entry.py install-apps` command install the current v5/v9 releases; it is not an arbitrary-backup or v3 rollback command. For an advanced run with an explicit backup location, use `python3 scripts/menu_entry.py install-apps --serial "$VN_SERIAL" --backup private-backups/apps-01 --parked`, where the directory does not yet exist. That lower-level command is separate from the basic helper's automatic launch request. Restore menu modifications using the separate [menu recovery procedure](MENU_ENTRY.md). Uninstalling the dashboard does not restore modified OEM menus.
+`scripts/install.py` and the advanced `menu_entry.py install-apps` command install the current v6/v10 releases; it is not an arbitrary-backup or v3 rollback command. For an advanced run with an explicit backup location, use `python3 scripts/menu_entry.py install-apps --serial "$VN_SERIAL" --backup private-backups/apps-01 --parked`, where the directory does not yet exist. That lower-level command is separate from the basic helper's automatic launch request. Restore menu modifications using the separate [menu recovery procedure](MENU_ENTRY.md). Uninstalling the dashboard does not restore modified OEM menus.
 
 A personal backup APK with the same signer and the same or a higher version may be restored manually using `push`, uploaded-file readback/hash comparison, `pm install -r`, and installed-file readback/hash comparison. Use a new temporary filename and a fresh backup directory every time, verify each step, and never overwrite the only original backup.
 

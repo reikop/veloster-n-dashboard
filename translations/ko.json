@@ -1,0 +1,13 @@
+{
+  "내 앱 / My Apps": "내 앱",
+  "실행 바로가기 / Quick entry": "실행 바로가기",
+  "가장자리 버튼 + 알림 / Floating + notification": "가장자리 버튼 + 알림",
+  "알림만 / Notification only": "알림만",
+  "사용 안 함 / Off": "사용 안 함",
+  "저장 / Save": "저장",
+  "취소 / Cancel": "취소",
+  "설명 / Help": "설명",
+  "설정으로 / Back": "설정으로",
+  "내 앱 열기 · 길게 끌어서 위치 변경 / My Apps": "내 앱 열기 · 끌어서 위치 변경",
+  "켜면 재부팅 뒤에도 작은 바로가기만 복원합니다. 앱 화면은 자동으로 열지 않습니다. 가장자리 버튼은 끌어서 옮길 수 있습니다.\n\n시스템이 다른 앱 위 표시를 허용하지 않으면 알림만 유지합니다. 순정 화면에서 알림을 열 수 없는 경우에는 별도 메뉴 진입점이 필요합니다. 강제 종료하면 직접 앱을 다시 열 때까지 자동 복원이 중지될 수 있습니다.\n\nWhen enabled, reboot restores only the shortcut. Drag the edge button to move it. If overlays are denied, a notification remains. If the factory UI hides notifications too, use a separate menu entry. Force-stop may block restoration until My Apps is opened again.": "켜면 재부팅 뒤에도 작은 바로가기만 복원합니다. 앱 화면은 자동으로 열지 않습니다. 가장자리 버튼은 끌어서 옮길 수 있습니다.\n\n시스템이 다른 앱 위 표시를 허용하지 않으면 알림만 유지합니다. 순정 화면에서 알림을 열 수 없는 경우에는 별도 메뉴 진입점이 필요합니다. 강제 종료하면 직접 앱을 다시 열 때까지 자동 복원이 중지될 수 있습니다."
+}

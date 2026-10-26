@@ -1,5 +1,6 @@
 package com.veloster.vehicle;
 
+import com.veloster.i18n.UiText;
 import android.content.Context;
 
 /** Exact OEM Factory Test USB mode operations. No shell, TCP ADB or settings writes. */
@@ -16,9 +17,9 @@ public final class UsbDebugControl {
             boolean ium=Boolean.TRUE.equals(feature.getMethod("hasFeature",String.class).invoke(null,"com.hkmc.software.ium"));
             String key=ium?"sys.usb.config":"persist.sys.dipo.state";
             String value=(String)Class.forName("android.os.SystemProperties").getMethod("get",String.class,String.class).invoke(null,key,"");
-            if((ium&&"adb".equals(value)) || (!ium&&"debug".equals(value)))return "설정: ON";
-            if((ium&&"host".equals(value)) || (!ium&&"carplay".equals(value)))return "설정: OFF";
+            if((ium&&"adb".equals(value)) || (!ium&&"debug".equals(value)))return UiText.t("설정: ON");
+            if((ium&&"host".equals(value)) || (!ium&&"carplay".equals(value)))return UiText.t("설정: OFF");
         } catch(Exception e) { /* Unknown is distinct from OFF. */ }
-        return "설정 상태 확인 불가";
+        return UiText.t("설정 상태 확인 불가");
     }
 }

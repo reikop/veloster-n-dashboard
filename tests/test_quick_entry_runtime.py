@@ -61,6 +61,15 @@ public class Context {
  public Intent registerReceiver(BroadcastReceiver r,IntentFilter f){if(env.failRegister)throw new SecurityException("denied");env.receiver=r;return null;}
  public void unregisterReceiver(BroadcastReceiver r){env.unregisters++;if(env.receiver==r)env.receiver=null;}
 }''',
+"android/content/DialogInterface.java": '''package android.content;public interface DialogInterface {interface OnClickListener {void onClick(DialogInterface d,int n);}}''',
+"android/app/Activity.java": '''package android.app;public class Activity extends android.content.Context {}''',
+"android/app/AlertDialog.java": '''package android.app;import android.content.Context;import android.content.DialogInterface;
+public class AlertDialog {public static class Builder {
+ public Builder(Context c){}public Builder setTitle(CharSequence s){return this;}public Builder setMessage(CharSequence s){return this;}
+ public Builder setSingleChoiceItems(CharSequence[] s,int n,DialogInterface.OnClickListener l){return this;}
+ public Builder setPositiveButton(CharSequence s,DialogInterface.OnClickListener l){return this;}public Builder setNegativeButton(CharSequence s,DialogInterface.OnClickListener l){return this;}
+ public AlertDialog show(){return new AlertDialog();}
+}}''',
 "android/app/Service.java": '''package android.app;
 import android.content.Context;import android.content.Intent;import android.content.res.Configuration;import android.os.IBinder;
 public abstract class Service extends Context {
@@ -120,7 +129,7 @@ public class WindowManager {
  public void updateViewLayout(View v,LayoutParams p){updates++;if(denyUpdate)throw new IllegalStateException("window disappeared");last=p;}
 }''',
 "android/widget/Button.java": '''package android.widget;import android.content.Context;import android.view.View;
-public class Button extends View {public Button(Context c){}public void setText(CharSequence s){}public void setTextSize(float s){}
+public class Button extends View {public String label;public Button(Context c){}public void setText(CharSequence s){label=s.toString();}public void setTextSize(float s){}
  public void setPadding(int a,int b,int c,int d){}public void setMinWidth(int i){}public void setMinimumWidth(int i){}public void setMinHeight(int i){}public void setMinimumHeight(int i){}
 }''',
 "android/R.java": '''package android;public class R {public static class drawable {public static final int ic_menu_view=1,ic_menu_close_clear_cancel=2;}}''',
@@ -217,11 +226,34 @@ public final class QuickEntryRuntimeHarness {
   Context c=reset();mode(2);Context.env.failStart=true;check(!QuickEntryService.restore(c),"service-start denial reported");
   check(Context.env.activities==0&&Context.env.prefs.getString("error","").length()>0,"denied restore never opens Activity");
  }
+ static void languagePreferences(){
+  Context c=reset();com.veloster.i18n.LanguageSettings.init(c);
+  check("ko".equals(com.veloster.i18n.UiText.language()),"auto follows Korean system");
+  check(com.veloster.i18n.LanguageSettings.save(c,"en"),"save English preference");
+  com.veloster.i18n.LanguageSettings.init(c);
+  check("en".equals(com.veloster.i18n.UiText.language()),"saved override survives re-init");
+  check(java.util.Locale.getDefault().equals(java.util.Locale.KOREAN),"never change system locale");
+  Context.env.prefs.values.put("language",Integer.valueOf(3));com.veloster.i18n.LanguageSettings.init(c);
+  check("ko".equals(com.veloster.i18n.UiText.language()),"wrong preference type falls back safely");
+ }
+ static void languageRefresh(){
+  Context c=reset();QuickEntryService s=start(2);
+  check("앱".equals(((android.widget.Button)Context.env.windows.view).label),"Korean overlay");
+  com.veloster.i18n.LanguageSettings.save(c,"en");s.onStartCommand(null,0,2);
+  check("Apps".equals(((android.widget.Button)Context.env.windows.view).label),"existing overlay rebuilt in English");
+  Context.env.prefs.edit().putString("error","바로가기 서비스 종료 요청에 실패했습니다.").commit();
+  check(QuickEntryService.status(c).contains("Could not request"),"persisted error key translated at display");
+  check(Context.env.windows.adds-Context.env.windows.removes==1,"language refresh leaves exactly one overlay");
+  com.veloster.i18n.LanguageSettings.save(c,"ko");s.onStartCommand(null,0,3);
+  check("앱".equals(((android.widget.Button)Context.env.windows.view).label),"Korean switch back");s.onDestroy();
+ }
  public static void main(String[] args){
+  java.util.Locale.setDefault(java.util.Locale.KOREAN);
   optedOutBoot();enabledBoot();unknownStartCannotEnable();floatingAndScreenLifecycle();modeChangeAndOff();deniedOverlayFallsBack();
   missingWindowServiceFallsBack();receiverFailureFallsBack();notificationFailureStops();offActionAndStickyRestart();rotationAndDrag();
   updateFailureRemovesOverlay();modernReflectionPath();deniedServiceStart();
-  System.out.println("PASS: 14 actual service/receiver lifecycle scenarios under host Android stubs (not device runtime)");
+  languagePreferences();languageRefresh();
+  System.out.println("PASS: 16 actual service/receiver lifecycle scenarios under host Android stubs (not device runtime)");
  }
 }
 '''
@@ -255,6 +287,7 @@ class QuickEntryRuntimeTests(unittest.TestCase):
             harness.write_text(HARNESS, encoding="utf-8")
             sources.append(harness)
             production = ROOT / "apps/hub/src/com/veloster/carplayhub"
+            sources.extend((ROOT / "shared/src/com/veloster/i18n" / (name + ".java")) for name in ("UiText", "LanguageSettings"))
             sources.extend(production / (name + ".java") for name in ("QuickEntryPolicy", "QuickEntryService", "QuickEntryReceiver"))
             classes = base / "classes"
             classes.mkdir()
@@ -264,7 +297,7 @@ class QuickEntryRuntimeTests(unittest.TestCase):
             ran = subprocess.run([java, "-cp", str(classes), "com.veloster.carplayhub.QuickEntryRuntimeHarness"],
                                  capture_output=True, text=True)
             self.assertEqual(ran.returncode, 0, ran.stdout + ran.stderr)
-            self.assertIn("PASS: 14", ran.stdout)
+            self.assertIn("PASS: 16", ran.stdout)
 
     def test_manifest_keeps_controls_private_and_boot_scoped(self):
         manifest = ET.parse(ROOT / "apps/hub/AndroidManifest.xml").getroot()

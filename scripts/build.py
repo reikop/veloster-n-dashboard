@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +27,7 @@ def main():
     parser.add_argument("--java", default="java")
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
+    subprocess.run([sys.executable, str(ROOT / "scripts/generate_translations.py"), "--check"], check=True)
     java = executable(args.java)
     javac = executable(java.with_name("javac.exe" if os.name == "nt" else "javac"))
     aapt2 = executable(args.aapt2)
@@ -59,6 +61,7 @@ def main():
         sources += sorted(p for p in shared.rglob("*.java") if p.name != "UsbDebugControl.java")
     else:
         sources.append(shared / "com/veloster/vehicle/UsbDebugControl.java")
+        sources += sorted((shared / "com/veloster/i18n").rglob("*.java"))
     run("javac", [javac, "-encoding", "UTF-8", "-source", "7", "-target", "7",
                   "-classpath", classpath, "-d", classes, *sources])
     # Only app classes enter D8; compile-only OEM declarations never enter the APK.
@@ -69,7 +72,11 @@ def main():
         raise SystemExit("Unexpected DEX version; API17 requires DEX035")
     if list(out.glob("classes[2-9]*.dex")):
         raise SystemExit("Multidex output is not supported by this build")
-    run("manifest", [aapt2, "link", "-I", sdk, "--manifest", app / "AndroidManifest.xml",
+    resources = []
+    if (app / "res").is_dir():
+        run("resources", [aapt2, "compile", "--dir", app / "res", "-o", out / "resources.zip"])
+        resources = ["--auto-add-overlay", "-R", out / "resources.zip"]
+    run("manifest", [aapt2, "link", "-I", sdk, "--manifest", app / "AndroidManifest.xml", *resources,
                      "--min-sdk-version", "17", "--target-sdk-version", "17", "-o", out / "base.apk"])
     target = out / (args.app + "-UNSIGNED.apk")
     with zipfile.ZipFile(out / "base.apk") as source, zipfile.ZipFile(target, "w") as archive:

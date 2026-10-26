@@ -1,5 +1,7 @@
 package com.veloster.vehicle;
 
+import com.veloster.i18n.UiText;
+import com.veloster.i18n.LanguageSettings;
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.os.SystemClock;
@@ -59,7 +61,7 @@ public final class VehicleDash extends View implements Runnable {
             if(old!=null && old.activity==a) return;
             final VehicleDash dash=new VehicleDash(a);
             parent.addView(dash,new FrameLayout.LayoutParams(-1,-1));
-            Button button=new Button(a); dash.entry=button; button.setText("N 계기판");
+            Button button=new Button(a); dash.entry=button; button.setText(UiText.t("N 계기판"));
             FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(-2,48,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL);
             parent.addView(button,lp);
             button.setOnClickListener(new OnClickListener() { public void onClick(View v) {
@@ -105,8 +107,8 @@ public final class VehicleDash extends View implements Runnable {
     private void tryRequestedEntry(){
         if(entryRequestUntil==0||!resumed)return;
         int state=RegulationState.read(activity);
-        if(state==1){entryRequestUntil=0;policy(true,"entry-service");Toast.makeText(activity,"현재 차량 표시 제한으로 N 계기판을 열 수 없습니다.",Toast.LENGTH_SHORT).show();return;}
-        if(SystemClock.elapsedRealtime()>=entryRequestUntil){entryRequestUntil=0;Toast.makeText(activity,"차량 표시 상태를 확인하지 못했습니다. N 계기판 버튼으로 다시 열어주세요.",Toast.LENGTH_SHORT).show();return;}
+        if(state==1){entryRequestUntil=0;policy(true,"entry-service");Toast.makeText(activity,UiText.t("현재 차량 표시 제한으로 N 계기판을 열 수 없습니다."),Toast.LENGTH_SHORT).show();return;}
+        if(SystemClock.elapsedRealtime()>=entryRequestUntil){entryRequestUntil=0;Toast.makeText(activity,UiText.t("차량 표시 상태를 확인하지 못했습니다. N 계기판 버튼으로 다시 열어주세요."),Toast.LENGTH_SHORT).show();return;}
         if(state==0){entryRequestUntil=0;policy(false,"entry-service");showDashboard();}
     }
     public static void hide(Activity a) {
@@ -177,8 +179,8 @@ public final class VehicleDash extends View implements Runnable {
         final int displayedMode=MediaState.modeForSource(displayed.source);
         new Thread(new Runnable(){public void run(){
             String error=null;
-            try{if(!(command==0?MediaControl.toggle(activity,displayedMode,displayed.playState):MediaControl.step(activity,command>0,displayedMode)))error="현재 재생 소스에서 음악을 제어할 수 없습니다";}
-            catch(Exception e){android.util.Log.e("VehicleDash","Media control unavailable",e);error="음악 제어 요청을 보낼 수 없습니다";}
+            try{if(!(command==0?MediaControl.toggle(activity,displayedMode,displayed.playState):MediaControl.step(activity,command>0,displayedMode)))error=UiText.t("현재 재생 소스에서 음악을 제어할 수 없습니다");}
+            catch(Exception e){android.util.Log.e("VehicleDash","Media control unavailable",e);error=UiText.t("음악 제어 요청을 보낼 수 없습니다");}
             final String message=error;
             activity.runOnUiThread(new Runnable(){public void run(){
                 mediaPending.set(false);
@@ -236,6 +238,7 @@ public final class VehicleDash extends View implements Runnable {
         else if(x>=250 && x<=322 && downX>=250 && downX<=322) { cluster=true;gauges=false;graphs=false;invalidate(); }
         else if(x>=328 && x<=412 && downX>=328 && downX<=412) { gauges=true;cluster=false;graphs=false;invalidate(); }
         else if(x>=418 && x<=528 && downX>=418 && downX<=528) { graphs=true;gauges=false;cluster=false;invalidate(); }
+        else if(x>=534 && x<=582 && downX>=534 && downX<=582){LanguageSettings.show(activity,new Runnable(){public void run(){invalidate();}});}
         else if(x>=666 && x<=782 && downX>=666 && downX<=782)close();
         return true;
     }

@@ -1,5 +1,7 @@
 package com.veloster.carplayhub;
 
+import com.veloster.i18n.UiText;
+import com.veloster.i18n.LanguageSettings;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -36,6 +38,7 @@ public final class QuickEntryService extends Service {
     private WindowManager.LayoutParams layout;
     private int width,height,size;
     private boolean registered,overlayFailed;
+    private String renderedLanguage;
     private final BroadcastReceiver screen=new BroadcastReceiver(){public void onReceive(Context context,Intent intent){
         if(Intent.ACTION_SCREEN_OFF.equals(intent.getAction()))removeOverlay();else refreshOverlay();
     }};
@@ -47,11 +50,12 @@ public final class QuickEntryService extends Service {
     public static void observe(Runnable observer){statusObserver=new WeakReference<Runnable>(observer);}
     public static void unobserve(Runnable observer){if(statusObserver.get()==observer)statusObserver.clear();}
     public static String status(Context context){
+        LanguageSettings.init(context);
         int mode=mode(context);
-        String base=mode==QuickEntryPolicy.FLOATING?"가장자리 버튼 + 알림":mode==QuickEntryPolicy.NOTIFICATION?"알림만":"사용 안 함";
+        String base=mode==QuickEntryPolicy.FLOATING?UiText.t("가장자리 버튼 + 알림"):mode==QuickEntryPolicy.NOTIFICATION?UiText.t("알림만"):UiText.t("사용 안 함");
         String error;
         try{error=prefs(context).getString("error","");}catch(ClassCastException ignored){error="";}
-        return error.length()==0?"설정: "+base:"설정: "+base+"\n"+error;
+        return error.length()==0?UiText.t("설정: ")+base:UiText.t("설정: ")+base+"\n"+UiText.t(error);
     }
     private static void error(Context context,String message){
         prefs(context).edit().putString("error",message).commit();
@@ -79,9 +83,11 @@ public final class QuickEntryService extends Service {
         }catch(LinkageError e){error(context,"이 시스템에서 바로가기 서비스를 시작할 수 없습니다.");return false;}
     }
     public void onCreate(){
-        super.onCreate();prefs=prefs(this);windows=(WindowManager)getSystemService(WINDOW_SERVICE);
+        super.onCreate();LanguageSettings.init(this);prefs=prefs(this);windows=(WindowManager)getSystemService(WINDOW_SERVICE);
     }
     public int onStartCommand(Intent intent,int flags,int startId){
+        LanguageSettings.init(this);
+        if(!UiText.language().equals(renderedLanguage)){removeOverlay();renderedLanguage=UiText.language();}
         if(intent!=null&&STOP.equals(intent.getAction())){
             prefs.edit().putInt("mode",QuickEntryPolicy.OFF).commit();error(this,"");
         }
@@ -109,9 +115,9 @@ public final class QuickEntryService extends Service {
         PendingIntent open=PendingIntent.getActivity(this,0,hubIntent(),flags);
         PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,QuickEntryService.class).setAction(STOP),flags);
         Notification.Builder builder=new Notification.Builder(this).setSmallIcon(android.R.drawable.ic_menu_view)
-            .setContentTitle("내 앱 / My Apps").setContentText("눌러서 N 계기판과 앱 목록 열기")
+            .setContentTitle(UiText.t("내 앱 / My Apps")).setContentText(UiText.t("눌러서 N 계기판과 앱 목록 열기"))
             .setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel,"바로가기 끄기",stop);
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel,UiText.t("바로가기 끄기"),stop);
         if(Build.VERSION.SDK_INT>=26)Notification.Builder.class.getMethod("setChannelId",String.class).invoke(builder,CHANNEL);
         return builder.build();
     }
@@ -138,8 +144,8 @@ public final class QuickEntryService extends Service {
             layout=new WindowManager.LayoutParams(size,size,Build.VERSION.SDK_INT>=26?2038:WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,PixelFormat.TRANSLUCENT);
             layout.gravity=Gravity.TOP|Gravity.LEFT;layout.x=QuickEntryPolicy.edge(storedRight(),width,size);layout.y=QuickEntryPolicy.y(storedY(),height,size);
-            final Button created=new Button(this);created.setText("앱");created.setTextSize(14);created.setPadding(0,0,0,0);created.setMinWidth(0);created.setMinimumWidth(0);created.setMinHeight(0);created.setMinimumHeight(0);
-            created.setContentDescription("내 앱 열기 · 길게 끌어서 위치 변경 / My Apps");
+            final Button created=new Button(this);created.setText(UiText.t("앱"));created.setTextSize(14);created.setPadding(0,0,0,0);created.setMinWidth(0);created.setMinimumWidth(0);created.setMinHeight(0);created.setMinimumHeight(0);
+            created.setContentDescription(UiText.t("내 앱 열기 · 길게 끌어서 위치 변경 / My Apps"));
             created.setOnClickListener(new View.OnClickListener(){public void onClick(View view){
                 if(!unlockedScreen())return;
                 try{startActivity(hubIntent());}catch(RuntimeException e){error(QuickEntryService.this,"앱 화면을 열지 못했습니다. 알림에서 다시 시도하세요.");}
@@ -182,7 +188,7 @@ public final class QuickEntryService extends Service {
         Button old=button;button=null;
         if(old!=null&&windows!=null)try{windows.removeView(old);}catch(RuntimeException ignored){}
     }
-    public void onConfigurationChanged(Configuration configuration){super.onConfigurationChanged(configuration);removeOverlay();refreshOverlay();}
+    public void onConfigurationChanged(Configuration configuration){super.onConfigurationChanged(configuration);removeOverlay();onStartCommand(null,0,0);}
     public void onDestroy(){
         removeOverlay();if(registered){try{unregisterReceiver(screen);}catch(RuntimeException ignored){}registered=false;}
         stopForeground(true);super.onDestroy();

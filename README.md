@@ -16,16 +16,16 @@ Actual owner-provided photo of the overview screen on the factory head unit. Una
 
 ## Download
 
-[Download the complete v2026.10.26 installation ZIP](https://github.com/reikop/veloster-n-dashboard/releases/download/v2026.10.26/veloster-n-dashboard-v2026.10.26.zip) — includes both apps, the installer and guides. **Prerelease: v9 vehicle/reboot testing is still pending.**
+[Download the complete v2026.10.26-i18n installation ZIP](https://github.com/reikop/veloster-n-dashboard/releases/download/v2026.10.26-i18n/veloster-n-dashboard-v2026.10.26-i18n.zip) — includes both apps, the installer and guides. **Prerelease: v6/v10 vehicle/reboot testing is still pending.**
 
 | APK | Purpose | Verification scope |
 | --- | --- | --- |
-| [N Dashboard v5](apks/N-Dashboard-v5-API17.apk) | Current dashboard | Installed on the target vehicle; initial telemetry display verified |
-| [My Apps v9 — prerelease](apks/My-Apps-v9-API17.apk) | Opt-in floating/notification shortcut, app list, head-unit controls | Signed and host-checked; not yet tested on a vehicle or emulator |
+| [N Dashboard v6](apks/N-Dashboard-v6-API17.apk) | Current Korean/English dashboard | Host/build/signature checked; v6 vehicle test pending |
+| [My Apps v10 — prerelease](apks/My-Apps-v10-API17.apk) | Opt-in floating/notification shortcut, app list, head-unit controls | Signed and host-checked; not yet tested on a vehicle or emulator |
 | [My Apps v8](apks/My-Apps-v8-API17.apk) | Historical app without the new shortcut | Previously installed on the target vehicle; not the current source version |
 | [N Dashboard v3](apks/rollback/N-Dashboard-v3-API17.apk) | Previous release for recovery | Previously tested; downgrade and data retention require care |
 
-Download the complete latest repository or the `v2026.10.26` release bundle on your computer and follow the [installation guide](docs/INSTALL_EN.md). The original `v2026.10.23` ZIP remains unchanged and does not include the new tooling. **A working ADB connection is required for initial installation.** Copying an APK to an SD card does not install it. Check file integrity before proceeding:
+Download the complete latest repository or the `v2026.10.26-i18n` release bundle on your computer and follow the [installation guide](docs/INSTALL_EN.md). The original `v2026.10.23` ZIP remains unchanged and does not include the new tooling. **A working ADB connection is required for initial installation.** Copying an APK to an SD card does not install it. Check file integrity before proceeding:
 
 ```sh
 python3 scripts/verify_release.py
@@ -48,7 +48,11 @@ python3 scripts/install.py --serial YOUR_DEVICE_SERIAL --parked
 
 Use `--check` instead of `--parked` for inspection/backups without installing or launching. An accepted launch request is not a completed screen check. Verify HOME → edge button → My Apps → N Dashboard before disconnecting; separately check reopening after a normal full reboot while parked.
 
-The new shortcut uses standard Android facilities without modifying OEM menus. It defaults to OFF and must be enabled explicitly. A general design does **not** establish compatibility with every head unit; v9 is an untested-on-vehicle prerelease. [Quick-entry setup and limitations](docs/QUICK_ENTRY.md)
+The new shortcut uses standard Android facilities without modifying OEM menus. It defaults to OFF and must be enabled explicitly. A general design does **not** establish compatibility with every head unit; v10 is an untested-on-vehicle prerelease. [Quick-entry setup and limitations](docs/QUICK_ENTRY.md)
+
+## Language
+
+Korean and English are included in both apps. System language selects the default; each app also saves a manual choice. Use **Language / 언어** in My Apps, or **KO / EN** beside the dashboard clock. [Language and update guide](docs/LANGUAGES.md). Installation and ADB entry are unchanged.
 
 ## Features
 
@@ -56,7 +60,7 @@ The new shortcut uses standard Android facilities without modifying OEM menus. I
 - A 20-card overview, per-card number/bar/arc display options, editable 6-slot or 12-slot gauges, graphs, and a clock. Display settings persist locally.
 - RPM, speed, temperatures, throttle, brake, steering, and other available vehicle data. Four TPMS pressures share one card; they are not tire temperatures.
 - Additional v5 decoding for intake temperature, battery voltage/SOC, steering speed, TCS/ESC/ABS state, and wheel speeds from an existing head-unit data stream. Missing data is not fabricated.
-- My Apps v9: opt-in movable edge button and notification for reopening the app, dashboard shortcut, editable app list, engineering mode shortcut, USB debugging controls, Android utilities, Classic Bluetooth discovery/pairing, and restart with confirmation.
+- My Apps v10: opt-in movable edge button and notification for reopening the app, dashboard shortcut, editable app list, engineering mode shortcut, USB debugging controls, Android utilities, Classic Bluetooth discovery/pairing, and restart with confirmation.
 
 Vehicle telemetry uses existing receive paths without issuing new ECU diagnostic requests. Media controls and explicit settings actions in My Apps do change playback or device state.
 
@@ -66,25 +70,25 @@ My Apps opens N Dashboard, other installed apps, and available head-unit setting
 
 <img src="docs/images/my-apps-v8-main-preview.png" alt="My Apps v8 PC preview, not an in-car screenshot" width="640">
 
-*Historical v8 layout preview; v9 adds Quick entry above these controls. This image is not the current v9 screen or an Android/in-car capture.*
+*Historical v8 layout preview; v10 adds Quick entry above these controls. This image is not the current v10 screen or an Android/in-car capture.*
 
 [My Apps guide and screenshots](docs/MY_APPS.md) · [한국어 설명](docs/MY_APPS_ko.md). The guide also includes list editing, restart confirmation, and a clearly labelled earlier real vehicle screenshot.
 
 ## Important limitations
 
-- **The factory home screen may not show newly installed apps.** Configure and verify the v9 quick-entry button/notification after the first ADB launch. OEM menus are not changed by this feature. If neither shortcut is accessible, an alternative entry is still required.
+- **The factory home screen may not show newly installed apps.** Configure and verify the v10 quick-entry button/notification after the first ADB launch. OEM menus are not changed by this feature. If neither shortcut is accessible, an alternative entry is still required.
 - The dashboard requires the OEM `automotive` library. Its additional HSCAN receiver only connects on the exact product/build listed above.
 - Readings expire 60 seconds after the last received update. Repeated reception of an unchanged value refreshes that timer; sensor-level freshness cannot always be determined.
 - Exhaust temperature and e-LSD values remain unverified. Wireless CarPlay, GPS track timing, and automatic updates are not implemented. My Apps retains an experimental hotspot screen; this does not provide wireless CarPlay.
-- Initial operation has been checked, but cold boot, extended operation, and actual ABS/TCS/ESC intervention transitions are not fully validated.
+- Earlier v5 initial operation was checked. New v6/v10 UI versions have host checks only; cold boot, extended operation and active ABS/TCS/ESC transitions remain unverified.
 
 ## Launching after disconnecting or rebooting
 
-Once installed, the dashboard reads vehicle data inside the head unit; a PC or USB debugging connection is not required for normal use. Unplugging the cable does not uninstall the app. After a reboot, the enabled v9 shortcut service requests restoration of the button/notification; it does not automatically open a full-screen app. Tap the available shortcut to open My Apps and the dashboard. Force-stop or device policy can block restoration; v9 boot behavior has not been vehicle-validated.
+Once installed, the dashboard reads vehicle data inside the head unit; a PC or USB debugging connection is not required for normal use. Unplugging the cable does not uninstall the app. After a reboot, the enabled v10 shortcut service requests restoration of the button/notification; it does not automatically open a full-screen app. Tap the available shortcut to open My Apps and the dashboard. Force-stop or device policy can block restoration; v10 boot behavior has not been vehicle-validated.
 
 On our research vehicle, with its separately configured OEM menu entry, the route is **HOME → All menus → page 2 → Information (정보) → My Apps (내 앱) → N Dashboard (N 계기판)**. That menu route was checked during prior vehicle work; v5 cold-boot operation remains unverified. A compatible launcher can also open N Dashboard directly.
 
-**The public APKs do not create the OEM Information/My Apps entry.** That path is optional when the v9 shortcut works. If no entry is available, reconnect ADB; reinstalling the same APK does not add a home icon. See the [disconnect/reboot procedure and ADB fallback](docs/INSTALL_EN.md#after-reboot).
+**The public APKs do not create the OEM Information/My Apps entry.** That path is optional when the v10 shortcut works. If no entry is available, reconnect ADB; reinstalling the same APK does not add a home icon. See the [disconnect/reboot procedure and ADB fallback](docs/INSTALL_EN.md#after-reboot).
 
 ## How this project started
 

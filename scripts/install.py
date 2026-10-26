@@ -67,7 +67,7 @@ def install(args, root=ROOT):
     print("While parked, on the head-unit screen:")
     print("  1. Open 실행 바로가기 / Quick entry in My Apps.")
     print("  2. Select 가장자리 버튼 + 알림 / Floating + notification, then 저장 / Save.")
-    print("  3. Go HOME; tap the small 앱 button and open N 계기판 / N Dashboard.")
+    print("  3. Go HOME; tap the small 앱 / Apps button and open N 계기판 / N Dashboard.")
     print("  4. Only after this works, disconnect the PC. Check the same route after a normal full reboot while parked.")
     print("If the button is missing, keep ADB connected and follow docs/QUICK_ENTRY.md; do not assume reinstalling adds a home icon.")
     print("No shortcut preference was enabled automatically. Receipt: " + str(journal.path))

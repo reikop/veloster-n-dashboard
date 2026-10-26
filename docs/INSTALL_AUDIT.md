@@ -1,5 +1,7 @@
 # Installation audit — 2026-10-26
 
+Subsequent update: [Korean/English UI in v6/v10](LANGUAGES.md). This audit retains the v9 entry-fix history below.
+
 This audit responds to reports that installers could not find **My Apps** on the factory screen. It reviews the public package, source, historical vehicle records, and installation tooling. It is not a new vehicle session or a new compatibility claim.
 
 ## Primary finding
