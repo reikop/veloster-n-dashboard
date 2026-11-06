@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 
 /** Never opens a claim against an unpinned OEM JAR or a stale boot epoch. */
 public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerSource.Provider {
@@ -57,7 +58,7 @@ public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerS
     private static int code(ReceiverHardwareConsumerSource.Route route){return route==ReceiverHardwareConsumerSource.Route.CLAIMED?1:route==ReceiverHardwareConsumerSource.Route.QUARANTINED?2:0;}
     public static final class Lease implements ReceiverHardwareConsumerSource.Lease,IBinder.DeathRecipient {
         private final IBinder remote;private final String boot;private final ReceiverHardwareConsumerSource.Listener listener;
-        private volatile String epoch,token;private boolean closed;
+        private volatile String epoch,token;private boolean closed,releaseStarted,releaseDone;private IOException releaseFailure;
         private final Binder callback=new Binder(){protected boolean onTransact(int code,Parcel data,Parcel reply,int flags)throws RemoteException{
             if(code<1||code>3)return super.onTransact(code,data,reply,flags);
             data.enforceInterface(CALLBACK);String sourceBoot=data.readString(),sourceEpoch=data.readString(),sourceToken=data.readString();int usage=data.readInt();
@@ -82,11 +83,30 @@ public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerS
             }catch(Exception failure){retire();if(failure instanceof IOException)throw (IOException)failure;throw new IOException("OEM media renew failed",failure);}finally{reply.recycle();data.recycle();}
         }
         public void close()throws IOException{
-            String old=token;retire();remote.unlinkToDeath(this,0);if(old==null)return;
-            Parcel data=Parcel.obtain(),reply=Parcel.obtain();try{
-                data.writeInterfaceToken(ABI);data.writeString(old);
-                if(!remote.transact(3,data,reply,0))throw new IOException("OEM media release rejected");reply.readException();
-            }catch(Exception failure){if(failure instanceof IOException)throw (IOException)failure;throw new IOException("OEM media release failed",failure);}finally{reply.recycle();data.recycle();}
+            String old;synchronized(this){
+                if(releaseStarted){if(!releaseDone)throw new IOException("OEM media release pending");
+                    if(releaseFailure!=null)throw releaseFailure;return;}
+                releaseStarted=true;old=token;
+            }
+            IOException failed=null;boolean acknowledged=false;Parcel data=null,reply=null;try{
+                retire();
+                try{remote.unlinkToDeath(this,0);}catch(NoSuchElementException alreadyRemoved){}
+                if(old!=null){
+                    data=Parcel.obtain();reply=Parcel.obtain();
+                    data.writeInterfaceToken(ABI);data.writeString(old);
+                    if(!remote.transact(3,data,reply,0))throw new IOException("OEM media release rejected");reply.readException();
+                }
+                acknowledged=true;
+            }catch(Exception failure){failed=failure instanceof IOException?(IOException)failure:new IOException("OEM media release failed",failure);}
+             catch(LinkageError failure){failed=new IOException("OEM media release API unavailable",failure);}
+            finally{
+                try{if(reply!=null)reply.recycle();if(data!=null)data.recycle();}
+                catch(RuntimeException failure){if(failed==null)failed=new IOException("OEM media release cleanup failed",failure);}
+                catch(LinkageError failure){if(failed==null)failed=new IOException("OEM media release cleanup API unavailable",failure);}
+                synchronized(this){if(!acknowledged&&failed==null)failed=new IOException("OEM media release not confirmed");
+                    releaseFailure=failed;releaseDone=true;}
+            }
+            if(failed!=null)throw failed;
         }
     }
 }

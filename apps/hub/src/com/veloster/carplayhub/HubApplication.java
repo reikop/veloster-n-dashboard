@@ -53,7 +53,7 @@ public final class HubApplication extends Application implements WirelessCarPlay
     private volatile IOException nativeModeFailure;
     private volatile boolean nativeModesStopped;
     // Optional, locally reviewed OEM producer. Digest does not include or ship OEM code.
-    private static final String OEM_SERVICES_JAR_SHA256="a4bb6bf5527956616999518a86dd4c4881a2af63aeab4050b865f04dd76f570e";
+    private static final String OEM_SERVICES_JAR_SHA256="03c4a6112aac92b1cbb1c34f11684deca2f54849e352b1d563278a71457915c9";
     interface HistoryReader {NativeModeHistory.Snapshot read()throws IOException;}
     private HistoryReader historyReader=new HistoryReader(){public NativeModeHistory.Snapshot read()throws IOException{return AndroidNativeModeHistory.read(OEM_SERVICES_JAR_SHA256);}};
     private final ExecutorService historyWork=Executors.newSingleThreadExecutor(new ThreadFactory(){public Thread newThread(Runnable task){Thread thread=new Thread(task,"vn-native-history");thread.setDaemon(true);return thread;}});
