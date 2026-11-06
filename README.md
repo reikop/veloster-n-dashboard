@@ -20,7 +20,7 @@ Owner-provided in-car photo. Missing readings display a dash. Location/camera me
 | Media controls and artwork when available from the source | Bluetooth pairing and restart confirmation |
 | Saved display layouts and Korean/English selection | Editable app list and Korean/English selection |
 
-Vehicle telemetry uses existing receive paths without adding ECU diagnostic requests. Missing or expired readings stay unknown. Bluetooth album-art reception, exhaust temperature and e-LSD remain unresolved; wireless CarPlay and automatic updates are not implemented. [Full limitations](docs/LIMITATIONS.md)
+Vehicle telemetry uses existing receive paths without adding ECU diagnostic requests. Missing or expired readings stay unknown. Bluetooth album-art reception, exhaust temperature and e-LSD remain unresolved. Released APKs do not provide wireless CarPlay or automatic updates. An unreleased [wireless receiver preview](docs/WIRELESS_CARPLAY.md) connects the app, Service, AP preparation and JNI; real-phone/vehicle operation and installation integration remain unverified. [Full limitations](docs/LIMITATIONS.md)
 
 ## Compatibility
 
@@ -76,6 +76,6 @@ Once installed, normal use does not require a PC. If neither the edge button nor
 
 [`apps/`](apps/) contains the two apps; [`shared/`](shared/) contains dashboard/UI/data code. [`compile-stubs/`](compile-stubs/) supplies build-only OEM declarations. [`scripts/`](scripts/) and [`tests/`](tests/) provide build, integrity and host checks. [`experimental/`](experimental/README.md) indexes separate local research; its experimental source is not included in this update.
 
-[Build and test](docs/BUILD.md) · [Research walkthrough](docs/RESEARCH.md) · [NEMESIS review](docs/NEMESIS_REVIEW.md)
+[Build and test](docs/BUILD.md) · [Wireless CarPlay preview](docs/WIRELESS_CARPLAY.md) · [Research walkthrough](docs/RESEARCH.md) · [NEMESIS review](docs/NEMESIS_REVIEW.md)
 
-Project-authored code and documentation: [MIT](LICENSE). [Dependency and signing notices](NOTICE.md). The public AOSP test certificate is not a private publisher identity or an OTA key. Source builds are unsigned. OEM firmware/APKs, private logs, identifiers and signing keys are not distributed. Unofficial project; no manufacturer affiliation.
+Project-authored code and documentation: [MIT](LICENSE), except the separately licensed [GPLv3 wireless receiver module](third_party/wireless-carplay/README.md). [Dependency and signing notices](NOTICE.md). The public AOSP test certificate is not a private publisher identity or an OTA key. Source builds are unsigned. OEM firmware/APKs, private logs, identifiers and signing keys are not distributed. Unofficial project; no manufacturer affiliation.

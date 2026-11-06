@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-05",
+  "scope": "Post-v24 development source; local test target only, no new installation candidate or public release",
+  "passed": true,
+  "test_apk_sha256": "7e2a751ed3f82af8f07bd6f6828ed3225ffce8713923cc382d5246aea5813fec",
+  "preserved_v24_installation_apk_sha256": "8cfd9fa5a18419f372122e84edd7900d1087da5e9e8c54b52ad21a74cd8e2bc9",
+  "production_java_sources": 199,
+  "source_manifest_sha256": "7d6e4e7b2b07853dec5e9ae5974b340ff68d252f0a8e7a850acce1d12e7b0a2a",
+  "tests": {
+    "volume_host_and_API17_each": 74,
+    "partial_screen_teardown_host_and_API17_each": 50,
+    "receiver_session_host": 47,
+    "receiver_headless_API17": 4,
+    "receiver_legacy_and_attached_UI_API17_each": 9,
+    "background_Hub_API17": 8,
+    "durable_Service_API17": 8,
+    "actual_Service_close_retain_API17": 3,
+    "Hub_close_retain_predecessor_API17": 2,
+    "Hub_regression_API17": 26,
+    "normal_app_UI_JNI_hide_keepalive_and_explicit_stop": true,
+    "full_factory_auth_video_pixels_audio_touch_Siri_speech_telephony_and_EOF_cleanup": true
+  },
+  "environments": [
+    "generic Android4.2.2/API17 ARM emulator",
+    "Final Hub/factory rerun uses a fresh userdata image and dalvik.vm.execution-mode=int:fast; no single-cause conclusion about earlier emulator errors"
+  ],
+  "limits": [
+    "Phone, Bluetooth, AP and OEM authentication counterparts are explicit fixtures",
+    "Emulator microphone input is silent; no acoustic or physical synchronization claim",
+    "Headless registration approval is refused; complete HTTP registration is covered separately by the factory fixture",
+    "OS BOOT_COMPLETED and sticky process restart are not established by direct callback tests",
+    "Pre-bond discovery, USB initial enrollment, native last-user-mode restoration, vehicle sensor/dead-reckoning and remaining protocol gaps are incomplete",
+    "No vehicle access, real iPhone interoperability result, MFi certification or public release"
+  ],
+  "overlapping_tests_are_not_independent_supported_features": true,
+  "failed_runs_preserved": true,
+  "test_packages_and_temporary_network_removed": true
+}

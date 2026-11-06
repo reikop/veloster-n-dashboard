@@ -1,6 +1,6 @@
 # 권리 및 외부 의존성
 
-이 폴더에서 직접 작성한 Java/Python 코드와 문서는 MIT 라이선스로 배포합니다. `compile-stubs/`는 호환성 컴파일을 위해 작성한 최소 클래스·메서드 선언이며 제조사 구현을 제공하지 않습니다. APK의 정의된 클래스는 `com.veloster` 네임스페이스에 한정됩니다.
+별도 라이선스를 명시한 모듈을 제외하고, 이 폴더에서 직접 작성한 Java/Python 코드와 문서는 MIT 라이선스로 배포합니다. `compile-stubs/`는 호환성 컴파일을 위해 작성한 최소 클래스·메서드 선언이며 제조사 구현을 제공하지 않습니다. 기존 배포 APK의 정의된 클래스는 `com.veloster` 네임스페이스에 한정됩니다. 새 무선 수신기 preview에는 아래 JmDNS 클래스도 포함됩니다.
 
 [연구 과정](docs/RESEARCH_ko.md)에 소개한 외부 도구 `nudl`은 GPL-3.0-only이며 별도로 설치합니다. 해당 도구 소스를 이 MIT 프로젝트로 복사하거나 라이선스를 변경해 배포하지 않습니다. 다운로더가 오픈소스라는 것과 내려받은 제조사 펌웨어의 권리는 구분합니다.
 
@@ -11,3 +11,17 @@
 Hyundai, Veloster N, Android, CarPlay 등 명칭은 기기·호환 대상 설명에 사용합니다. 해당 회사의 공식 앱이나 승인된 제품이라는 뜻이 아닙니다. `com.veloster.carplayhub`는 초기 실험에서 남은 패키지 이름이며, 무선 CarPlay 기능 제공을 뜻하지 않습니다.
 
 선택형 `menu-entry/`에는 직접 작성한 메뉴 연결 helper, 컴파일 선언, 원본 식별 해시만 제공합니다. 빌드 스크립트는 사용자가 제공한 정확한 OEM 원본을 로컬에서 재구성합니다. 생성 APK와 디컴파일 트리는 제조사 코드를 포함하므로 MIT 프로젝트 산출물로 재배포하지 않습니다. `prepare_menu_tools.py`가 받는 외부 JAR·공개 AOSP 테스트 키·인증서는 출처별 권리가 적용되며 저장소/릴리스에 번들하지 않습니다.
+
+## Optional native HTTPS build
+
+New My Apps preview builds may include separately built curl, OpenSSL, optional c-ares and a Mozilla CA bundle. These components retain their upstream licenses; the project MIT license covers project-authored code. [Source pins, full notices and reproduction](third_party/network/README.md) describe this optional build. Existing published v6/v10 APKs are unchanged. No private key or OEM component is distributed with these TLS inputs.
+
+## Wireless receiver preview
+
+The [wireless receiver module](third_party/wireless-carplay/README.md) is GPL-3.0-only,
+with attributed Apache-2.0 JmDNS/compatibility components and optional Apache-2.0
+OpenSSL JNI. Its complete corresponding Java/C sources and notices are retained
+separately. The root MIT license does not relicense that module; combined Hub
+preview builds contain GPLv3 code. Existing published APKs remain unchanged.
+No Apple SDK implementation, OEM code or private key is bundled. This integration
+does not imply Apple certification or verified wireless CarPlay operation.

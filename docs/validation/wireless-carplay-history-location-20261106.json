@@ -1,0 +1,86 @@
+{
+  "passed": true,
+  "date": "2026-11-06",
+  "scope": "Selected offline development milestone, not whole CarPlay completion",
+  "production_Java": 210,
+  "exported_files": 227,
+  "export_manifest_sha256": "2a6e0902da12440c74535d11d1bcbae6e4fdcac96b1095cab626fbe84c975992",
+  "local_test_APK_sha256": "e743e092d46c94a70281f174acda19ebc12b7cdc3313fb719f56e826f29858a3",
+  "local_test_APK_entire_binary_executed": false,
+  "Hub49_executed_APK_sha256": "57d0b039de4a7aa8c9f3edcb1d3d3439db772f9957b4b7b9055aafef2386d937",
+  "Hub49_exact_relevant_classes_reused": 204,
+  "only_app_delta_after_Hub49": "NmeaLocationSource raw valid-fix field checks, separately host/API17 tested",
+  "native_history": {
+    "host_and_API17_storage": "38 existing + 100 history checks",
+    "process_gap_fixture_phases": 13,
+    "Android_prefs_checks": 12,
+    "original_and_candidate_Runnable_cases_each": 48,
+    "OEM_outer_calls_are_stubs": true,
+    "process_gap_LastUserModes_precedes_equal_millisecond_fix": true,
+    "final_storage_tests_cover_equal_millisecond_fix": true,
+    "optional_OEM_JAR_installed": false
+  },
+  "GPS": {
+    "measured_fix_only": true,
+    "actual_listener_probe_mask": 2,
+    "raw_GGA_hardware_verified": false,
+    "raw_field_host_and_API17": "21 existing suites + 31 checks",
+    "full_NMEA_conformance_claimed": false
+  },
+  "wheel": {
+    "host_checks": 23,
+    "API17_checks": 26,
+    "retained_stationary_records": 115,
+    "measurement_timestamp_known": false,
+    "slip_known": false,
+    "default_backend_advertises_PASCD": false
+  },
+  "location_wire": {
+    "API17_generations": 6,
+    "updates": 9,
+    "PASCD_updates": 3,
+    "sensor_and_phone_are_fixtures": true,
+    "precedes_final_raw_checker_by_one_source": [
+      "tools/wireless-carplay/location/com/veloster/carplay/location/NmeaLocationSource.java"
+    ]
+  },
+  "full_factory": {
+    "API17": 17,
+    "production_source_set_matches_current_export": true,
+    "explicit_choices": true,
+    "approval_video_audio_touch": true,
+    "Siri_pairs": 3,
+    "source6_and7_actual_8k_capture": true,
+    "partial_voice_end_keeps_main": true,
+    "control_EOF_cleanup": true,
+    "physical_counterparts_are_fixtures": true,
+    "VM_microphone_input_is_silent": true
+  },
+  "owned_factory_cleanup": true,
+  "prior_vm_Rosetta_failures_preserved": true,
+  "evidence_receipt_sha256": {
+    "app_build": "28916b24067001aef0d676c0e6b55a3039c186f70cbeb6c01119d8654eb95784",
+    "Hub49": "9a96a7fe9cd901f873512a13409bd1df99164505b3b55ed5bf1e6ca1d68eeb64",
+    "Hub49_class_reuse": "59c20a0e0ed495159727150eec407c1fa3ec2a6184bc2ec9e5d2b60845bbc41c",
+    "history_storage": "109b452fad5d0df7b46992a814705b9237be2ee8cad335f9074c8aad5b88a5ec",
+    "history_process_gap": "a376fbf8bfd290cf79f28bc07080442a727279f08144accb4114b2ae1a82c414",
+    "original_hook_replay": "5cd2f02389c21acb12f32d18a5ab33a45c5f380e92f1ab32820aebbdd45e350c",
+    "GPS_fix": "f351f21f9875c5d26aefdc6b6ee79e197f665ed903a5be7e6b050e752877bb68",
+    "GPS_listener_RMC_only": "aade1bd69aeef05c0bc725d262dce387ecd20a4d60caf57450e92e1d22123d2b",
+    "raw_GPS": "c904f2e60531e8c968781dea8b68d6fc27f9ca59b2f17c7d52e0dfecba256215",
+    "wheel_source": "4622c853f5628188a1e779c250ca1b07e5c1f18c0a52e7e1ee6d7f8b2490a042",
+    "encrypted_location_wire": "26fab97bed6b18ede5931322e8218fbb1b3e4ab47f7f8dff4af7339d391024ce",
+    "factory_build": "c2b45cf0dc0fd671955232642d93a2189eb2dd65e4386226ce1a2e9faf63728f",
+    "factory_run": "3d979e989162cb80f76d9bf08dff3d4e62f74f3c8c06642a0ab5310c589b55de",
+    "factory_cleanup": "1f143af2c00c495c4a5bb4b4c95fdd75c4e80618cf1b9c58b0d559904754f0a5"
+  },
+  "vehicle_accessed": false,
+  "published_or_pushed": false,
+  "whole_CarPlay_goal_complete": false,
+  "remaining": [
+    "USB durable import and real bond callback with approved attachment/owner and completion ACK",
+    "OEM candidate install/boot compatibility",
+    "wheel/PASCD production integration with justified slip data",
+    "physical phone/radio/OEM/audio operation; vehicle connection excluded from goal"
+  ]
+}

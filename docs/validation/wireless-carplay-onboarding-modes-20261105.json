@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-05",
+  "development_source_after_frozen_v24": true,
+  "new_public_release": false,
+  "source_java_count": 202,
+  "export_manifest_sha256": "8226213c3be587ce1e2e01adfef9542a9f3c15c90d83c0f5f63873aeb60089ac",
+  "test_only_apk_sha256": "8b3db78272bf0e7d58f8b10f888c139aa5bafcd095c503715f9f05c9bc31cff0",
+  "frozen_install_apk_sha256": "8cfd9fa5a18419f372122e84edd7900d1087da5e9e8c54b52ad21a74cd8e2bc9",
+  "prebond": {
+    "implemented": true,
+    "host_pairing": 7,
+    "host_scope_AP_journal_product": 6,
+    "prior_product_regression": 12,
+    "EIR_core_client_service": [
+      15,
+      18,
+      15
+    ],
+    "actual_OEM_SSP_or_EIR_acceptance": false
+  },
+  "iap130_partial": {
+    "host_checks": 70,
+    "independent_encrypted_runtime_generations": 2,
+    "new_API17_run": false
+  },
+  "explicit_app_screen_media_choices": {
+    "store_assertions": 38,
+    "actual_encrypted_sender_assertions": 32,
+    "mode_suites": 16,
+    "Siri_suites": 17,
+    "presentation_policy_suites": 12,
+    "Android_UI_runtime": false,
+    "native_OEM_choice_observer": false,
+    "post_process_restart_requires_explicit_selection": true
+  },
+  "USB_enrollment_complete": false,
+  "public_host_programs": 14,
+  "full_current_factory_run": false,
+  "new_API17_runtime_run": false,
+  "reason": "Owned generic ARM/API17 emulators exited with Rosetta errors before these runtime tests. Prior API17 receipts apply to prior sources.",
+  "vehicle_or_iPhone_or_OEM_hardware": false
+}

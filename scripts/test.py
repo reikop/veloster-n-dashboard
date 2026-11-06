@@ -24,7 +24,10 @@ def main():
                ROOT / "shared/src/com/veloster/i18n/UiText.java",
                ROOT / "apps/dashboard/src/com/veloster/dashboard/HscanFrameDecoder.java"]
     sources += [hub / (name + ".java") for name in ("RadioTrial", "BluetoothSession", "RebootRequest", "QuickEntryPolicy")]
-    tests = sorted((ROOT / "tests").glob("*Test.java"))
+    # Android-facing selection settings have their own fixture SDK/thread harness
+    # in tests/test_wireless_carplay_settings.py; keep this runner host-only.
+    tests = sorted(p for p in (ROOT / "tests").glob("*Test.java")
+                   if p.name != "WirelessCarPlaySettingsTest.java")
     sources += [ROOT / "shared/src/com/veloster/diagnostics/ErrorLog.java", ROOT / "shared/src/com/veloster/vehicle/DashboardPage.java"]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
