@@ -16,11 +16,20 @@ checks. A joined generic API17 fixture passed 44 checks using the production
 producer and cross-UID client, actual PairVerify and encrypted Consumer HID
 reports/ACKs, including wrong-ACK and service-death retirement. Its test-only
 service triggered keys; the OEM JAR was only a pinned hash asset.
+A separate runtime check copied the exact current unsigned Hub payload, added a
+test-only signature, and ran the resulting APK on generic API17. All 28 original
+payload entries matched byte-for-byte. The real Hub UI opened settings and the
+receiver screen, retained its service when the screen closed, and stopped it on
+explicit Stop. Seven in-app checks confirmed packaged crypto JNI and fail-closed
+OEM Consumer availability; eight screenshots and exact test-package cleanup were
+recorded. The original unsigned APK was not installed or product-signed.
 A reordered full-factory API17 fixture passed
 compressed speech/telephony and 48k output. A later diagnostic fixture also passed
 the original order; the earlier failure did not reproduce and remains unexplained.
-These fixtures did not run the refreshed unsigned public Hub APK.
-Vehicle, real iPhone, OEM boot/key dispatch and acoustic operation remain unverified.
+The full-factory and joined-key fixtures did not run the refreshed public Hub
+APK; the test-key derivative ran its unchanged production payload without a
+phone session. Vehicle, real iPhone, OEM boot/key dispatch, AP hardware and
+acoustic operation remain unverified.
 
 The current Hub pins the `03c4a611…` OEM composite JAR, built on the corrected
 `a28006e0…` Hub-signer candidate. The earlier `a4bb6bf5…` candidate is superseded:

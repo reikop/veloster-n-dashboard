@@ -1,6 +1,6 @@
 {
   "date": "2026-11-07",
-  "scope": "Refreshed unsigned public Hub source/build inspection and separate joined generic API17 fixture; no public APK runtime, release, or OEM installation",
+  "scope": "Current unsigned public Hub source/build plus generic API17 test-key payload derivative runtime; no product signing, vehicle deployment, OEM key or phone session",
   "source_manifest_sha256": "228e792006046adaf83961619935c0abc1a6068d4f25ea3f2c83fc7aad10c0b7",
   "exported_files": 254,
   "production_java": 229,
@@ -69,10 +69,10 @@
     "diagnostic_scope": "Later diagnostic factory APK passed the original order. It differs from frozen r4 at 11 Java inputs; the earlier failure did not reproduce and remains unexplained. This is not the public Hub APK."
   },
   "limits": [
-    "No signing, APK installation, OEM JAR installation, deployment or vehicle access for this public build.",
+    "The current unsigned public APK remained unsigned and was not installed as a product; its payload-identical test-key derivative and a test-only probe APK were installed only on a generic API17 VM.",
     "The first original-order factory owner/deadline failure remains unexplained despite later reordered and diagnostic passes.",
     "No complete schema2 product-signed candidate/fallback, exact target readback, AP predecessor or kernel/UDC proof.",
-    "Joined generic API17 fixture used a test-only service trigger and local encrypted peer; the refreshed unsigned public Hub APK itself was not installed or executed."
+    "Joined generic API17 key fixture used a test-only service trigger and local encrypted peer; the separate current-Hub derivative UI test did not establish OEM key, phone, AP or acoustic success."
   ],
   "superseded_oem_jar_pin": "a4bb6bf5527956616999518a86dd4c4881a2af63aeab4050b865f04dd76f570e",
   "prior_callback_death_failure": "java.util.NoSuchElementException on duplicate callback unlinkToDeath after timeout; fixed candidate rechecked separately",
@@ -122,7 +122,8 @@
       "classes.dex",
       "assets/wireless/build.json"
     ],
-    "public_apk_executed": false
+    "public_apk_executed": false,
+    "test_key_payload_derivative_executed": true
   },
   "separate_joined_api17_consumer": {
     "passed": true,
@@ -140,5 +141,48 @@
     "remote_fixture_cleanup_verified": true,
     "candidate_jar_used_as_hash_asset_only": true,
     "scope": "Test-only Service trigger, c8-signed fixture Hub, actual production producer/client/ReceiverHardwareConsumerSource/ConsumerKeySession/PairVerify/EncryptedEvents and local encrypted fixture peer; no actual ModeKeyDispatcher, physical button, iPhone, or public Hub APK execution."
+  },
+  "current_public_hub_generic_api17_runtime": {
+    "passed": true,
+    "original_unsigned_apk_sha256": "785c5603f1e301906799826445b0d81cca7142ba3a7e47bef8a29e22a6100006",
+    "test_signed_derivative_apk_sha256": "b786bed7bce37ea56b9d42743db56fa02b56c110f461341aeec4c975429ebd94",
+    "test_only_instrumentation_apk_sha256": "06e19a6db5dfcb0501649db3d684c8eddf31e833530d4100742f0bb1c2b3d774",
+    "original_payload_entries": 28,
+    "original_meta_inf_entries": 0,
+    "derivative_meta_inf_signature_entries": [
+      "META-INF/MANIFEST.MF",
+      "META-INF/CERT.SF",
+      "META-INF/CERT.RSA"
+    ],
+    "all_original_payload_entry_bytes_equal_in_derivative": true,
+    "generic_build_checker_excludes_meta_inf": true,
+    "generic_checker_limit": "This exact pinned original had no META-INF payload, so the blanket META-INF exclusion loses no original entry here; a future unsigned input with non-signature META-INF content needs a narrower predicate.",
+    "api17_vm": "emulator-5680",
+    "app_uid": 10047,
+    "in_app_checks": 7,
+    "oem_consumer_available": false,
+    "oem_claim_refused": true,
+    "packaged_crypto_jni_vector_passed": true,
+    "actual_hub_ui": {
+      "settings_no_phone_selected": true,
+      "auto_connect": false,
+      "receiver_screen_opened": true,
+      "service_retained_after_screen_hide": true,
+      "service_absent_after_explicit_stop": true,
+      "screenshots": 8,
+      "screenshot_dimensions": [
+        800,
+        480
+      ]
+    },
+    "installed_test_packages_removed": true,
+    "boot_and_property_unchanged": true,
+    "cleanup_passed": true,
+    "build_receipt_sha256": "33deb1edf0e1e72a8c37e395c753256fc2474a5f97c7dcb6531ced14316c6c5e",
+    "runtime_validation_sha256": "0c9cc68585f0e81aa2dc8bb377996174ae37468fda091175d26d58b4ef768a68",
+    "final_receipt_sha256": "3a2a493a5ed850a7d92ba18d89b8e36d1dac4381dbb936e68543bfcb59940f90",
+    "original_public_apk_product_signed_or_installed": false,
+    "vehicle_or_physical_microphone_accessed": false,
+    "scope": "Unmodified production APK payload under a test-only signature on generic API17; test-only instrumentation probes target process and existing UI smoke drives real current Hub screens. No real OEM source, iPhone, AP hardware or phone PairVerify."
   }
 }

@@ -17,9 +17,14 @@ A joined generic API17 fixture passed 44 checks through the production Binder
 client, PairVerify, encrypted Consumer HID reports/ACKs, and exact source
 retirement after service death. It used a test-only key trigger and peer; the
 OEM JAR was a hash asset, not installed. The new unsigned public Hub APK itself
-was built and inspected, not executed. Both the reordered frozen factory fixture
+remains unsigned and was not installed. A test-key derivative preserved all 28
+original APK payload entries and ran on a generic API17 VM. The actual Hub UI
+opened settings and the receiver screen, retained the service when the screen
+closed, and stopped it on explicit Stop. Seven in-app checks confirmed the
+packaged crypto JNI and refusal of unavailable OEM Consumer service; eight
+screens and package cleanup were recorded. Both the reordered frozen factory fixture
 and a later diagnostic fixture in the original order passed. The earlier failure
-remains unexplained; these fixtures did not run the current Hub APK. OEM boot,
+remains unexplained. The test-key derivative did not perform a phone session. OEM boot,
 physical keys, iPhone/radio operation and complete installation/rollback remain
 unverified. See [the current wireless scope](WIRELESS_CARPLAY.md).
 Historical version-specific results below apply only to their named snapshots.
