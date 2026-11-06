@@ -1,12 +1,12 @@
 {
   "date": "2026-11-07",
-  "scope": "Unsigned public Hub source/build inspection; no release or OEM installation",
-  "source_manifest_sha256": "3b1a32372e2c5f64675f60eabd7c3bada504f01a915180535aa924ecf455ec45",
+  "scope": "Refreshed unsigned public Hub source/build inspection and separate joined generic API17 fixture; no public APK runtime, release, or OEM installation",
+  "source_manifest_sha256": "228e792006046adaf83961619935c0abc1a6068d4f25ea3f2c83fc7aad10c0b7",
   "exported_files": 254,
   "production_java": 229,
-  "unsigned_apk_sha256": "ad9b0d31361449fa4e551054dc13d86719b687ac20db199e3a45606e07f31ca1",
-  "dex_sha256": "b5e867d1f710a780ac2ff0405975078a956bcc53dcf48e1f04372e8839daf25f",
-  "build_manifest_sha256": "e7e17aa61abc60d3a171002db061f6cb1650c23532026de2b58388caa2520f9c",
+  "unsigned_apk_sha256": "785c5603f1e301906799826445b0d81cca7142ba3a7e47bef8a29e22a6100006",
+  "dex_sha256": "d2a8c862f15b3827738396c53fc2c0533807369d886c57855010c4ef145be183",
+  "build_manifest_sha256": "7d5d493b3a490cf53d18856f4036eccbedb4150ad46c0290424909f1810f3fe8",
   "build_source_inputs_checked": 276,
   "oem_composite_jar_pin": "03c4a6112aac92b1cbb1c34f11684deca2f54849e352b1d563278a71457915c9",
   "oem_producer_or_jar_bundled": false,
@@ -48,7 +48,10 @@
     "public_selection_settings": 11,
     "public_host_programs": 14,
     "hub_consumer_composition": 4,
-    "private_receipt_sha256": "46264c00b18379ebe9824dfe30c02ecf829c694b7cadd72220cd4628b193df19"
+    "build_inputs_log_sha256": "61988d78c60ae612493a548ef74fdce802e5c3da8bc271acf721571288d8621b",
+    "selection_settings_log_sha256": "1d42ad5f7d6160dcb0d5e507a991cda5d1097c9b30b46578e8b3057485a2f6cc",
+    "public_host_log_sha256": "d43089e315ac4f6f063267d88969fc862a192b32e258ff708e248c6a8c401126",
+    "hub_composition_log_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854"
   },
   "separate_api17_consumer_gate": {
     "passed": true,
@@ -67,9 +70,9 @@
   },
   "limits": [
     "No signing, APK installation, OEM JAR installation, deployment or vehicle access for this public build.",
-    "Generic API17 fixed OEM Binder fixture did not execute actual ModeKeyDispatcher, OEM boot, physical keys, phone media ACK or full encrypted receiver session.",
     "The first original-order factory owner/deadline failure remains unexplained despite later reordered and diagnostic passes.",
-    "No complete schema2 product-signed candidate/fallback, exact target readback, AP predecessor or kernel/UDC proof."
+    "No complete schema2 product-signed candidate/fallback, exact target readback, AP predecessor or kernel/UDC proof.",
+    "Joined generic API17 fixture used a test-only service trigger and local encrypted peer; the refreshed unsigned public Hub APK itself was not installed or executed."
   ],
   "superseded_oem_jar_pin": "a4bb6bf5527956616999518a86dd4c4881a2af63aeab4050b865f04dd76f570e",
   "prior_callback_death_failure": "java.util.NoSuchElementException on duplicate callback unlinkToDeath after timeout; fixed candidate rechecked separately",
@@ -96,9 +99,46 @@
     "scope": "Test-only producer/client Binder trigger and client path adaptation on generic API17. OEM JAR was a hash asset, not installed; actual ModeKeyDispatcher, OEM boot and current Hub APK did not run."
   },
   "schema2_offline_draft": {
-    "profile_sha256": "1179ca35e691cf4240bb4d0aaa08c39c22051a550566aef7f613399951cd760e",
+    "profile_sha256": "ea08a19433e1617e3c2e0b6120bfc3f7a357164e374031a274e65fa66c5e80a2",
     "blockers": 17,
     "offline_ready": false,
-    "signed_or_installed": false
+    "signed_or_installed": false,
+    "revision": "r5"
+  },
+  "confirmed_death_refresh": {
+    "prior_deathlink_snapshot": {
+      "source_manifest_sha256": "3b1a32372e2c5f64675f60eabd7c3bada504f01a915180535aa924ecf455ec45",
+      "unsigned_apk_sha256": "ad9b0d31361449fa4e551054dc13d86719b687ac20db199e3a45606e07f31ca1",
+      "dex_sha256": "b5e867d1f710a780ac2ff0405975078a956bcc53dcf48e1f04372e8839daf25f",
+      "build_manifest_sha256": "e7e17aa61abc60d3a171002db061f6cb1650c23532026de2b58388caa2520f9c"
+    },
+    "fixed_client_sha256": "a161e58f78a96f3e3e24be2b97fcf54e3afac926e133a6e520358799c8b45ddc",
+    "host_lease_receipt_sha256": "dcaba4b1647eaa45cbf53b55dbfb44dc640e0d9cc2861c7192507612c56e0048",
+    "changed_exported_files": [
+      "source/media-keys-oem/client/com/veloster/carplay/mediaoem/AndroidOemMediaKeyClient.java"
+    ],
+    "unchanged_tls_ca_crypto_eld_and_notices": true,
+    "apk_entries_changed_from_prior": [
+      "classes.dex",
+      "assets/wireless/build.json"
+    ],
+    "public_apk_executed": false
+  },
+  "separate_joined_api17_consumer": {
+    "passed": true,
+    "checks": 44,
+    "encrypted_hid_reports": 7,
+    "cross_uid": {
+      "hub": 10047,
+      "system_producer": 1000
+    },
+    "unknown_ack_retired_exact_session": true,
+    "service_death_release_ack_and_owner_cleanup": true,
+    "test_only_build_validation_sha256": "83ef1bdc450879043b297a20bf31d1df8b18670ae7da781de215de478061e57c",
+    "runtime_validation_sha256": "f696548d6959ce5889f72dfd3746886d53d535261178bdb3ef88eb2a400b6c93",
+    "joined_receipt_sha256": "301d9ad266cf964482847ee5585e706572a0c99e4155fe9642c8a3e99733e1bc",
+    "remote_fixture_cleanup_verified": true,
+    "candidate_jar_used_as_hash_asset_only": true,
+    "scope": "Test-only Service trigger, c8-signed fixture Hub, actual production producer/client/ReceiverHardwareConsumerSource/ConsumerKeySession/PairVerify/EncryptedEvents and local encrypted fixture peer; no actual ModeKeyDispatcher, physical button, iPhone, or public Hub APK execution."
   }
 }

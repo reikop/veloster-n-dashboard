@@ -2,6 +2,7 @@
 package com.veloster.carplay.mediaoem;
 
 import android.os.Binder;
+import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
@@ -58,7 +59,8 @@ public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerS
     private static int code(ReceiverHardwareConsumerSource.Route route){return route==ReceiverHardwareConsumerSource.Route.CLAIMED?1:route==ReceiverHardwareConsumerSource.Route.QUARANTINED?2:0;}
     public static final class Lease implements ReceiverHardwareConsumerSource.Lease,IBinder.DeathRecipient {
         private final IBinder remote;private final String boot;private final ReceiverHardwareConsumerSource.Listener listener;
-        private volatile String epoch,token;private boolean closed,releaseStarted,releaseDone;private IOException releaseFailure;
+        private volatile String epoch,token;private volatile boolean deathConfirmed;
+        private boolean closed,releaseStarted,releaseDone;private IOException releaseFailure;
         private final Binder callback=new Binder(){protected boolean onTransact(int code,Parcel data,Parcel reply,int flags)throws RemoteException{
             if(code<1||code>3)return super.onTransact(code,data,reply,flags);
             data.enforceInterface(CALLBACK);String sourceBoot=data.readString(),sourceEpoch=data.readString(),sourceToken=data.readString();int usage=data.readInt();
@@ -73,14 +75,15 @@ public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerS
         }};
         private Lease(IBinder remote,String boot,ReceiverHardwareConsumerSource.Listener listener){this.remote=remote;this.boot=boot;this.listener=listener;}
         private void retire(){boolean send;synchronized(this){send=!closed;closed=true;}if(send)listener.retired();}
-        public void binderDied(){retire();}
+        public void binderDied(){deathConfirmed=true;retire();}
         public void renew(boolean enabled)throws IOException{
             String current=token;synchronized(this){if(closed||current==null)throw new IOException("OEM media lease closed");}
             Parcel data=Parcel.obtain(),reply=Parcel.obtain();try{
                 data.writeInterfaceToken(ABI);data.writeString(current);data.writeInt(enabled?1:0);
                 if(!remote.transact(2,data,reply,0))throw new IOException("OEM media renew rejected");reply.readException();
                 if(reply.readInt()!=1)throw new IOException("OEM media lease stale");
-            }catch(Exception failure){retire();if(failure instanceof IOException)throw (IOException)failure;throw new IOException("OEM media renew failed",failure);}finally{reply.recycle();data.recycle();}
+            }catch(DeadObjectException gone){binderDied();throw new IOException("OEM media service died",gone);}
+            catch(Exception failure){retire();if(failure instanceof IOException)throw (IOException)failure;throw new IOException("OEM media renew failed",failure);}finally{reply.recycle();data.recycle();}
         }
         public void close()throws IOException{
             String old;synchronized(this){
@@ -90,16 +93,21 @@ public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerS
             }
             IOException failed=null;boolean acknowledged=false;Parcel data=null,reply=null;try{
                 retire();
-                try{remote.unlinkToDeath(this,0);}catch(NoSuchElementException alreadyRemoved){}
-                if(old!=null){
+                // Death of this exact remote proves it cannot retain its claim.
+                // Keep the death recipient linked until the release attempt ends.
+                if(old!=null&&!deathConfirmed){
                     data=Parcel.obtain();reply=Parcel.obtain();
                     data.writeInterfaceToken(ABI);data.writeString(old);
                     if(!remote.transact(3,data,reply,0))throw new IOException("OEM media release rejected");reply.readException();
                 }
                 acknowledged=true;
-            }catch(Exception failure){failed=failure instanceof IOException?(IOException)failure:new IOException("OEM media release failed",failure);}
+            }catch(DeadObjectException gone){binderDied();acknowledged=true;}
+             catch(Exception failure){failed=failure instanceof IOException?(IOException)failure:new IOException("OEM media release failed",failure);}
              catch(LinkageError failure){failed=new IOException("OEM media release API unavailable",failure);}
             finally{
+                try{remote.unlinkToDeath(this,0);}catch(NoSuchElementException alreadyRemoved){}
+                catch(RuntimeException failure){if(failed==null)failed=new IOException("OEM media death-link cleanup failed",failure);}
+                catch(LinkageError failure){if(failed==null)failed=new IOException("OEM media death-link cleanup API unavailable",failure);}
                 try{if(reply!=null)reply.recycle();if(data!=null)data.recycle();}
                 catch(RuntimeException failure){if(failed==null)failed=new IOException("OEM media release cleanup failed",failure);}
                 catch(LinkageError failure){if(failed==null)failed=new IOException("OEM media release cleanup API unavailable",failure);}

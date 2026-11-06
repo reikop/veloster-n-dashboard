@@ -9,14 +9,17 @@ AAC-ELD codecs, plus optional Consumer HID Next/Previous input. ELD16k mono (bit
 probes for the current attempt. ELD48k stereo (bit25) is output-only and requires
 a separate decoder proof. Static declarations cannot bypass these checks.
 
-The current unsigned Hub passed 11 build-input, 11 selection/settings, 14 host
-program and 4 Consumer composition checks. The separate actual API17 Consumer
-gate fixture passed 9 checks. The fixed OEM producer/client passed generic API17
-Binder death/retirement tests with cleanup; the OEM JAR was not installed.
+The refreshed unsigned Hub includes the confirmed Binder-death client cleanup
+and passed 11 build-input, 11 selection/settings, 14 host program and 4 Consumer
+composition checks. The separate actual API17 Consumer gate fixture passed 9
+checks. A joined generic API17 fixture passed 44 checks using the production
+producer and cross-UID client, actual PairVerify and encrypted Consumer HID
+reports/ACKs, including wrong-ACK and service-death retirement. Its test-only
+service triggered keys; the OEM JAR was only a pinned hash asset.
 A reordered full-factory API17 fixture passed
 compressed speech/telephony and 48k output. A later diagnostic fixture also passed
 the original order; the earlier failure did not reproduce and remains unexplained.
-These fixtures did not run the current unsigned Hub APK.
+These fixtures did not run the refreshed unsigned public Hub APK.
 Vehicle, real iPhone, OEM boot/key dispatch and acoustic operation remain unverified.
 
 The current Hub pins the `03c4a611…` OEM composite JAR, built on the corrected

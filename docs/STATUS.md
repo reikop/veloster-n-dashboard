@@ -10,11 +10,14 @@ The latest source exports 229 Java / 254 pinned module files with conditional
 ELD16k input/output, ELD48k output, owned cleanup and optional Consumer HID
 Next/Previous input. The Hub pins the corrected `03c4a611…` composite OEM JAR; its
 read-only availability check runs on a worker before Consumer HID is declared.
-The current unsigned Hub build passed 11 build-input, 11 selection/settings,
-14 host-program and 4 composition checks. A separate API17 Consumer gate
-fixture passed 9 checks. A separate generic API17 Binder fixture passed the
-producer death/retirement case after the prior `a4bb6bf5…` callback crash was
-fixed; it did not install the OEM JAR. Both the reordered frozen factory fixture
+The refreshed unsigned Hub build includes the confirmed Binder-death client
+cleanup and passed 11 build-input, 11 selection/settings, 14 host-program and
+4 composition checks. A separate API17 Consumer gate fixture passed 9 checks.
+A joined generic API17 fixture passed 44 checks through the production Binder
+client, PairVerify, encrypted Consumer HID reports/ACKs, and exact source
+retirement after service death. It used a test-only key trigger and peer; the
+OEM JAR was a hash asset, not installed. The new unsigned public Hub APK itself
+was built and inspected, not executed. Both the reordered frozen factory fixture
 and a later diagnostic fixture in the original order passed. The earlier failure
 remains unexplained; these fixtures did not run the current Hub APK. OEM boot,
 physical keys, iPhone/radio operation and complete installation/rollback remain
