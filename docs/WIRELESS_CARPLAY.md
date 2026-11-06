@@ -12,8 +12,9 @@ a separate decoder proof. Static declarations cannot bypass these checks.
 The current unsigned Hub passed 11 build-input, 11 selection/settings, 14 host
 program and 4 Consumer composition checks. The separate actual API17 Consumer
 gate fixture passed 9 checks. A reordered full-factory API17 fixture passed
-compressed speech/telephony and 48k output; its earlier original-order failure
-remains unexplained. These fixtures did not run the current unsigned Hub APK.
+compressed speech/telephony and 48k output. A later diagnostic fixture also passed
+the original order; the earlier failure did not reproduce and remains unexplained.
+These fixtures did not run the current unsigned Hub APK.
 Vehicle, real iPhone, OEM boot/key dispatch and acoustic operation remain unverified.
 
 The current Hub pins the `a4bb6bf5…` OEM composite JAR, built on the corrected

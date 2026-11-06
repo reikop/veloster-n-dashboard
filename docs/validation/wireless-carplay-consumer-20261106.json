@@ -60,7 +60,10 @@
     "reordered_r2_passed": true,
     "r2_validation_sha256": "3319339c2d4f909ac7ea955ff604cccbdea56a360d4f4e3eff8c10ee7488950d",
     "first_original_order_r1_failure_explained": false,
-    "scope": "Previous factory fixture on a generic API17 emulator; does not exercise this new public Hub APK or physical OEM buttons."
+    "scope": "Previous factory fixture on a generic API17 emulator; does not exercise this new public Hub APK or physical OEM buttons.",
+    "diagnostic_original_order_passed": true,
+    "diagnostic_original_order_validation_sha256": "bf4c0238e939e60ea2e28563a779b057938ea9c090052e50b421c4dd40d1ea64",
+    "diagnostic_scope": "Later diagnostic factory APK passed the original order. It differs from frozen r4 at 11 Java inputs; the earlier failure did not reproduce and remains unexplained. This is not the public Hub APK."
   },
   "limits": [
     "No signing, APK installation, OEM JAR installation, deployment or vehicle access for this public build.",

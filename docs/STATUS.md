@@ -12,9 +12,9 @@ Next/Previous input. The Hub pins the `a4bb6bf5…` composite OEM JAR; its
 read-only availability check runs on a worker before Consumer HID is declared.
 The current unsigned Hub build passed 11 build-input, 11 selection/settings,
 14 host-program and 4 composition checks. A separate API17 Consumer gate
-fixture passed 9 checks. The reordered full-factory API17 fixture passed, but
-the first ordering's failure remains unexplained and neither fixture ran the
-current Hub APK. OEM boot, physical keys, iPhone/radio operation and complete
+fixture passed 9 checks. Both the reordered frozen factory fixture and a later
+diagnostic fixture in the original order passed. The earlier failure remains
+unexplained; these fixtures did not run the current Hub APK. OEM boot, physical keys, iPhone/radio operation and complete
 installation/rollback remain unverified. See [the current wireless scope](WIRELESS_CARPLAY.md).
 Historical version-specific results below apply only to their named snapshots.
 
