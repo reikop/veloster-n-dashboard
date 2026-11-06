@@ -431,7 +431,8 @@ public final class IndependentSessionBackend implements SessionServiceController
             admission=ApPeerAdmission.withBootstrap(scope,monitor,index,new ApPeerAdmission.Generation(){public void checkCurrent(ReceiverScope value)throws IOException{exact(value);}},bootstrap);
             final TouchHid touch=new TouchHid(product.metadata.main.width,product.metadata.main.height);stage(Stage.USER_INTERFACE);
             try{ui=uiHost.open(scope,touch);}catch(SessionCoordinator.FactoryCleanupException partial){partialUi=partial.pendingResources;throw partial;}
-            if(ui==null)throw new IOException("Receiver UI unavailable");current();metadata=new ReceiverMetadata(pairings,product.metadata,ui.session.initialModes(),attemptAudio,touch);
+            if(ui==null)throw new IOException("Receiver UI unavailable");current();
+            metadata=new ReceiverMetadata(pairings,product.metadata,ui.session.initialModes(),attemptAudio,touch,ui.session.consumerDeclaration());
             receiver=new IndependentReceiverControl(scope,new IndependentReceiverControl.Generation(){public void checkCurrent(ReceiverScope value)throws IOException{exact(value);}},
                 new IndependentReceiverControl.Factory(){public ReceiverRuntime open(ReceiverScope value,RuntimeSessionTracker tracker)throws IOException{
                     exact(value);if(eld!=null)eld.output.checkCurrent();if(eld48!=null)eld48.checkCurrent();stage(Stage.RECEIVER);runtime=new ReceiverRuntime(pairings,admission,ui.session.approval,metadata,ui.session.screens,ui.session.audio,tracker,null,0,ui.session.input,

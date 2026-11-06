@@ -3,6 +3,8 @@ package com.veloster.carplay.control;
 import com.veloster.carplay.pairing.PairVerify;
 import com.veloster.carplay.tunnel.IapDataTunnel;
 import com.veloster.carplay.input.TouchHid;
+import com.veloster.carplay.input.ConsumerHid;
+import com.veloster.carplay.mediakeys.ConsumerKeySession;
 import java.io.*;
 import java.net.*;
 import java.util.Arrays;
@@ -24,6 +26,7 @@ public final class EncryptedEvents implements IapDataTunnel.EventChannel,Closeab
     private final CountDownLatch stopped=new CountDownLatch(3);
     private final ScreenRecovery[] recovery=new ScreenRecovery[2];
     private TouchChannel touch;
+    private ConsumerChannel consumer;
     private SiriChannel siri;
     /** One tunnel generation. Cancellation stops new writes; a written command
      * retains the shared sender until its exact ACK arrives, preserving CSeq and
@@ -73,6 +76,35 @@ public final class EncryptedEvents implements IapDataTunnel.EventChannel,Closeab
     private void checkTouch(TouchChannel supplied)throws IOException{
         check();if(supplied.cancelled||supplied.metadata.inputFor(session)!=supplied.declaration||!session.mediaAllowed(binding))
             throw new IOException("Touch input not permitted");
+    }
+    /** One declared Consumer HID sender on this verified event connection. */
+    public final class ConsumerChannel implements ConsumerKeySession.ConsumerChannel {
+        private final ReceiverMetadata metadata;private final ConsumerHid declaration;private volatile boolean cancelled;
+        private ConsumerChannel(ReceiverMetadata metadata,ConsumerHid declaration){this.metadata=metadata;this.declaration=declaration;}
+        public ConsumerHid declaration(){return declaration;}
+        public boolean send(byte[] report,long timeoutMillis,ConsumerKeySession.Current current)throws IOException{
+            if(timeoutMillis<1||timeoutMillis>30000)throw new IOException("Consumer send bounds");
+            if(current==null)throw new NullPointerException();
+            ConsumerHid.validate(report);byte[] copy=report.clone();
+            try{checkConsumer(this);ConsumerCommand command=new ConsumerCommand(this,copy,current);
+                sendCommand(null,null,null,null,null,null,command,timeoutMillis);return command.sent;
+            }finally{Arrays.fill(copy,(byte)0);}
+        }
+        public void close(){cancelled=true;synchronized(state){state.notifyAll();}}
+    }
+    private static final class ConsumerCommand {
+        final ConsumerChannel channel;final byte[] report;final ConsumerKeySession.Current current;boolean sent;
+        ConsumerCommand(ConsumerChannel channel,byte[] report,ConsumerKeySession.Current current){this.channel=channel;this.report=report;this.current=current;}
+    }
+    public ConsumerChannel consumerChannel(PairVerify.VerifiedSession supplied,ReceiverMetadata metadata)throws IOException{
+        if(supplied!=session||metadata==null)throw new IOException("Foreign Consumer session");check();
+        ConsumerHid declaration=metadata.consumerFor(session);
+        synchronized(state){checkOpen();if(consumer!=null)throw new IOException("Consumer channel already claimed");
+            consumer=new ConsumerChannel(metadata,declaration);return consumer;}
+    }
+    private void checkConsumer(ConsumerChannel supplied)throws IOException{
+        check();if(supplied!=consumer||supplied.cancelled||supplied.metadata.consumerFor(session)!=supplied.declaration||!session.mediaAllowed(binding))
+            throw new IOException("Consumer input not permitted");
     }
     /** One exact-session Siri sender. I/O and ACK wait belong to a tracked input worker. */
     public final class SiriChannel implements Closeable {
@@ -259,32 +291,40 @@ public final class EncryptedEvents implements IapDataTunnel.EventChannel,Closeab
     private boolean cancelled(ScreenRecovery recovery,TouchCommand touch,SiriCommand siri){
         return cancelled(recovery,touch)||siri!=null&&(siri.channel.cancelled||!siri.guard.current());
     }
+    private boolean cancelled(ScreenRecovery recovery,TouchCommand touch,SiriCommand siri,ConsumerCommand consumer){
+        return cancelled(recovery,touch,siri)||consumer!=null&&(consumer.channel.cancelled||!consumer.current.current());
+    }
     private ModeControl.Result sendCommand(byte[] data,ScreenRecovery recovery,ModeChanges changes,TouchCommand touch,SiriCommand siri,long timeoutMillis)throws IOException{
         return sendCommand(data,recovery,changes,touch,siri,null,timeoutMillis);
     }
     private ModeControl.Result sendCommand(byte[] data,ScreenRecovery recovery,ModeChanges changes,TouchCommand touch,SiriCommand siri,IapChannel iap,long timeoutMillis)throws IOException{
+        return sendCommand(data,recovery,changes,touch,siri,iap,null,timeoutMillis);
+    }
+    private ModeControl.Result sendCommand(byte[] data,ScreenRecovery recovery,ModeChanges changes,TouchCommand touch,SiriCommand siri,IapChannel iap,ConsumerCommand consumer,long timeoutMillis)throws IOException{
         final long deadline=System.nanoTime()+TimeUnit.MILLISECONDS.toNanos(timeoutMillis);boolean locked=false,restoreInterrupt=false,written=false;
         try{
             while(!locked){
-                if(cancelled(recovery,touch,siri)||iap!=null&&iap.cancelled)return null;
+                if(cancelled(recovery,touch,siri,consumer)||iap!=null&&iap.cancelled)return null;
                 check();long left=deadline-System.nanoTime();if(left<=0)throw new IOException("Event sender busy");
                 locked=sender.tryLock(Math.min(left,TimeUnit.MILLISECONDS.toNanos(100)),TimeUnit.NANOSECONDS);
             }
             check();Pending request;
             synchronized(state){
                 sendDeadline=deadline;
-                while(!connected&&!closed.get()&&!cancelled(recovery,touch,siri)&&!(iap!=null&&iap.cancelled))waitUntil(deadline);checkOpen();
-                if(cancelled(recovery,touch,siri)||iap!=null&&iap.cancelled)return null;
+                while(!connected&&!closed.get()&&!cancelled(recovery,touch,siri,consumer)&&!(iap!=null&&iap.cancelled))waitUntil(deadline);checkOpen();
+                if(cancelled(recovery,touch,siri,consumer)||iap!=null&&iap.cancelled)return null;
                 if(sequence==Integer.MAX_VALUE)throw new IOException("Event CSeq exhausted");
                 request=new Pending(++sequence,changes!=null,deadline);pending=request;
             }
             if(touch!=null){if(cancelled(null,touch))return null;checkTouch(touch.channel);}
             if(siri!=null){if(cancelled(null,null,siri))return null;checkSiri(siri.channel);}
+            if(consumer!=null){if(cancelled(null,null,null,consumer))return null;checkConsumer(consumer.channel);}
             if(iap!=null&&iap.cancelled)return null;
-            write(siri!=null?ControlMessage.siriCommand(request.seq,siri.action):touch!=null?ControlMessage.touchCommand(request.seq,touch.report):changes!=null?ControlMessage.modeCommand(request.seq,changes):
+            write(consumer!=null?ControlMessage.consumerCommand(request.seq,consumer.report):siri!=null?ControlMessage.siriCommand(request.seq,siri.action):touch!=null?ControlMessage.touchCommand(request.seq,touch.report):changes!=null?ControlMessage.modeCommand(request.seq,changes):
                 recovery!=null?ControlMessage.keyframeCommand(request.seq,recovery.uuid):ControlMessage.iapCommand(request.seq,data));
             written=true;
             if(siri!=null)siri.sent=true;
+            if(consumer!=null)consumer.sent=true;
             synchronized(state){while(!request.done&&!closed.get()){
                 try{waitUntil(deadline);}
                 catch(InterruptedException e){
@@ -342,6 +382,7 @@ public final class EncryptedEvents implements IapDataTunnel.EventChannel,Closeab
         synchronized(state){
             if(touch!=null)touch.close();
             if(siri!=null)siri.close();
+            if(consumer!=null)consumer.close();
             for(ScreenRecovery value:recovery)if(value!=null){value.cancelled=true;value.pending=false;}
             Socket current=socket;if(current!=null)try{current.close();}catch(IOException ignored){}state.notifyAll();
         }

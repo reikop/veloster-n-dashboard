@@ -18,6 +18,8 @@ import com.veloster.carplay.nativemodes.NativeModeObserver;
 import com.veloster.carplay.nativemodes.NativeModeHistory;
 import com.veloster.carplay.nativemodes.AndroidNativeModeHistory;
 import com.veloster.carplay.sirioem.AndroidOemSiriProvider;
+import com.veloster.carplay.mediaoem.AndroidOemMediaKeyClient;
+import com.veloster.carplay.mediakeys.ReceiverHardwareConsumerSource;
 import com.veloster.carplay.audiooem.OptionalOemAlternateAudioFactory;
 import com.veloster.diagnostics.ErrorLog;
 import com.veloster.i18n.UiText;
@@ -51,7 +53,7 @@ public final class HubApplication extends Application implements WirelessCarPlay
     private volatile IOException nativeModeFailure;
     private volatile boolean nativeModesStopped;
     // Optional, locally reviewed OEM producer. Digest does not include or ship OEM code.
-    private static final String OEM_SERVICES_JAR_SHA256="a28006e0449e991018a21c5ed46f98b3e4fdbdcc6febab1eb73928d8c769909f";
+    private static final String OEM_SERVICES_JAR_SHA256="a4bb6bf5527956616999518a86dd4c4881a2af63aeab4050b865f04dd76f570e";
     interface HistoryReader {NativeModeHistory.Snapshot read()throws IOException;}
     private HistoryReader historyReader=new HistoryReader(){public NativeModeHistory.Snapshot read()throws IOException{return AndroidNativeModeHistory.read(OEM_SERVICES_JAR_SHA256);}};
     private final ExecutorService historyWork=Executors.newSingleThreadExecutor(new ThreadFactory(){public Thread newThread(Runnable task){Thread thread=new Thread(task,"vn-native-history");thread.setDaemon(true);return thread;}});
@@ -412,7 +414,16 @@ public final class HubApplication extends Application implements WirelessCarPlay
                     public IndependentSessionBackend.Phone open(String ap,String phone)throws IOException{return selectedPhone(ap,phone);}
                     public void checkRadioRecovery()throws IOException{Api17BluetoothRadio.recover(root);}
                 },
-                new IndependentSessionBackend.UiHost(){public IndependentSessionBackend.UiLease open(ReceiverScope scope,TouchHid touch)throws IOException,InterruptedException{return openUi(scope,touch);}},
+                new IndependentSessionBackend.UiHost(){public IndependentSessionBackend.UiLease open(ReceiverScope scope,TouchHid touch)throws IOException,InterruptedException{
+                    Permit expected=permit;
+                    if(!matches(expected,scope))throw new IOException("Receiver selection unavailable");
+                    ReceiverHardwareConsumerSource.Provider consumer=null;
+                    try{AndroidOemMediaKeyClient candidate=new AndroidOemMediaKeyClient(OEM_SERVICES_JAR_SHA256);
+                        if(candidate.available())consumer=candidate;
+                    }catch(IOException unavailable){}catch(RuntimeException unavailable){}catch(LinkageError unavailable){}
+                    if(permit!=expected)throw new IOException("Receiver selection changed during OEM probe");
+                    return openUi(scope,touch,expected,consumer);
+                }},
                 baseAudio,new IndependentSessionBackend.Progress(){public void stage(IndependentSessionBackend.Stage value){stage=value.name();}},
                 new IndependentSessionBackend.CompressedAudioProfiles(){
                     public AudioCapabilities create(long speech,long call)throws IOException{return ReceiverAudioProfiles.create(speech,call);}
@@ -485,21 +496,28 @@ public final class HubApplication extends Application implements WirelessCarPlay
         requireMain();PendingIntent open=PendingIntent.getActivity(this,45,new Intent(this,CarPlayReceiverActivity.class),PendingIntent.FLAG_UPDATE_CURRENT);
         return new Notification.Builder(this).setSmallIcon(android.R.drawable.stat_notify_sync).setContentTitle(UiText.t("무선 CarPlay")).setContentText(UiText.t(status)).setContentIntent(open).setOngoing(true).build();
     }
-    private IndependentSessionBackend.UiLease openUi(ReceiverScope scope,TouchHid touch)throws IOException,InterruptedException{
-        UiRequest request=new UiRequest(scope,touch);if(!main.post(request))throw new IOException("UI dispatcher unavailable");
+    private static boolean matches(Permit permission,ReceiverScope scope){
+        return permission!=null&&scope!=null&&permission.ap.equals(scope.apSession)
+            &&permission.phone.equals(scope.selectedBluetooth)&&permission.generation==scope.generation;
+    }
+    private IndependentSessionBackend.UiLease openUi(ReceiverScope scope,TouchHid touch,Permit expected,ReceiverHardwareConsumerSource.Provider consumer)throws IOException,InterruptedException{
+        UiRequest request=new UiRequest(scope,touch,expected,consumer);if(!main.post(request))throw new IOException("UI dispatcher unavailable");
         try{if(!request.ready.await(5000,TimeUnit.MILLISECONDS))throw new IOException("Receiver UI preparation timed out");
             if(request.failure!=null)throw request.failure;if(request.lease==null)throw new IOException("Receiver UI unavailable");return request.lease;
         }catch(IOException failure){request.cancelled=true;throw new SessionCoordinator.FactoryCleanupException("Receiver UI cleanup required",request,failure);}
          catch(InterruptedException failure){request.cancelled=true;throw new SessionCoordinator.FactoryCleanupException("Receiver UI interrupted",request,failure);}
     }
     private final class UiRequest implements Runnable,Closeable {
-        final ReceiverScope scope;final TouchHid touch;final CountDownLatch ready=new CountDownLatch(1);
+        final ReceiverScope scope;final TouchHid touch;final Permit expected;final ReceiverHardwareConsumerSource.Provider consumer;
+        final CountDownLatch ready=new CountDownLatch(1);
         volatile boolean cancelled,retiring;volatile IOException failure;volatile IndependentSessionBackend.UiLease lease;
         CarPlayReceiverActivity owner;AndroidReceiverUi value;AndroidReceiverSession session;boolean closed,screenLaunchPending;
-        UiRequest(ReceiverScope scope,TouchHid touch){this.scope=scope;this.touch=touch;}
+        UiRequest(ReceiverScope scope,TouchHid touch,Permit expected,ReceiverHardwareConsumerSource.Provider consumer){
+            this.scope=scope;this.touch=touch;this.expected=expected;this.consumer=consumer;
+        }
         public void run(){try{
             Permit permission=permit;
-            if(cancelled||activeUi!=null||permission==null||!permission.ap.equals(scope.apSession)||!permission.phone.equals(scope.selectedBluetooth))throw new IOException("Receiver selection unavailable");
+            if(cancelled||activeUi!=null||permission!=expected||!matches(permission,scope))throw new IOException("Receiver selection unavailable");
             session=new AndroidReceiverSession(HubApplication.this,scope,touch,new AndroidReceiverSession.PresentationEvents(){
                 private void stop(final boolean manual){if(!retiring)main.post(new Runnable(){public void run(){if(activeUi==UiRequest.this&&!retiring)stopConnection(manual);}});}
                 public void failed(IOException error){stop(false);}public void stopRequested(){stop(true);}
@@ -510,7 +528,9 @@ public final class HubApplication extends Application implements WirelessCarPlay
                 }
                 public void nativeScreenRequested(){if(activeUi==UiRequest.this){chooseModes(LastUserModes.NATIVE,null);if(owner!=null)owner.finish();}}
             },AndroidApprovalUi.Labels.localized(),volumes,userModes,new OptionalOemAlternateAudioFactory(HubApplication.this,OEM_SERVICES_JAR_SHA256));
-            session.setHardwareSiriSource(new AndroidOemSiriProvider(HubApplication.this,OEM_SERVICES_JAR_SHA256));activeUi=this;
+            session.setHardwareSiriSource(new AndroidOemSiriProvider(HubApplication.this,OEM_SERVICES_JAR_SHA256));
+            if(consumer!=null)session.setHardwareConsumerSource(consumer);
+            activeUi=this;
             CarPlayReceiverActivity shown=view.get();if(shown!=null&&shown.foreground())attachRenderer(shown);
             lease=new IndependentSessionBackend.UiLease(session){public void close()throws IOException{UiRequest.this.close();}};
         }catch(RuntimeException error){failure=new IOException("Receiver view initialization failed",error);}

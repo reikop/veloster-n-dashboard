@@ -3,28 +3,32 @@
 [Documentation / 문서 안내](README.md) · [Status / 확인 범위](STATUS.md) · [Build / 빌드](BUILD.md)
 
 **2026-11-06 — current development source after the frozen v24 candidate.**
-The exported module contains 225 production Java files / 248 pinned files. It
+The exported module contains 229 production Java files / 254 pinned files. It
 includes screen-independent Siri, optional OEM history/PTT/audio adapters and
-AAC-ELD codecs. ELD16k mono (bit26) is advertised only after input and output
+AAC-ELD codecs, plus optional Consumer HID Next/Previous input. ELD16k mono (bit26) is advertised only after input and output
 probes for the current attempt. ELD48k stereo (bit25) is output-only and requires
 a separate decoder proof. Static declarations cannot bypass these checks.
 
-Host validation passed 81 Python tests, 14 Java programs and 35 audio-profile
-checks. Separate generic API17 fixtures exercised ELD capture, authenticated
-packets, decoding and Binder delivery. Full-factory compressed speech/telephony/
-48k runtime remains incomplete: emulator input and host crashes prevented a
-complete run. These fixture results do not certify the entire unsigned Hub APK.
+The current unsigned Hub passed 11 build-input, 11 selection/settings, 14 host
+program and 4 Consumer composition checks. The separate actual API17 Consumer
+gate fixture passed 9 checks. A reordered full-factory API17 fixture passed
+compressed speech/telephony and 48k output; its earlier original-order failure
+remains unexplained. These fixtures did not run the current unsigned Hub APK.
 Vehicle, real iPhone, OEM boot/key dispatch and acoustic operation remain unverified.
 
-The current Hub pins the corrected OEM composite JAR `a28006e0…`, whose clients
-expect the actual Hub signer. The previous `a764bb42…` composite used a test
+The current Hub pins the `a4bb6bf5…` OEM composite JAR, built on the corrected
+`a28006e0…` Hub-signer candidate. The previous `a764bb42…` composite used a test
 fixture signer and is not a compatible product candidate. The unsigned Bluetooth
 v22 candidate combines EIR and guarded USB registration in one package. Installing
 the old EIR-only and USB-only packages sequentially would replace one with the
 other; the existing installer profile does not yet install the complete new set.
-The latest inspection build also includes the prior TLS helper, CA and notices.
+The latest inspection build retains the prior TLS helper, CA and JNI bytes. Its
+new Consumer client uses an exact-JAR, boot and service check on a worker; absent
+or unverified service leaves the Consumer device undeclared. The OEM producer is
+not shipped in the app, and physical key/iPhone delivery is unverified.
 These are development sources and local unsigned artifacts, not a new release.
-[Build hashes and validation scope](validation/wireless-carplay-audio-integrated-20261106.json).
+[Current build hashes and validation scope](validation/wireless-carplay-consumer-20261106.json) ·
+[previous audio snapshot](validation/wireless-carplay-audio-integrated-20261106.json).
 
 마지막 로컬 설치 후보는 v24 / `1.23`이며 APK SHA256은
 `8cfd9fa5a18419f372122e84edd7900d1087da5e9e8c54b52ad21a74cd8e2bc9`다.

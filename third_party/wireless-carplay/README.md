@@ -16,6 +16,12 @@ Android Binder tests use a synthetic service and do not prove OEM boot/runtime
 compatibility. A read-only wheel-speed source and PASCD encoder are also included,
 but the default backend uses GPS only; unknown wheel slip is not invented. See the [current validation scope](../../docs/WIRELESS_CARPLAY.md).
 
+An optional Consumer HID device and exact-JAR-pinned client are included for
+Next/Previous media input. The OEM producer is not included. The client checks
+availability before declaration; later source loss retires the owned session.
+The HID contract and source notices are in `media-keys/NOTICE.md` and
+`media-keys-oem/NOTICE.md`. Physical OEM dispatch and phone acceptance remain unverified.
+
 The receiver module is GPL-3.0-only. JmDNS and its logging compatibility adapter
 retain their Apache-2.0 notices. The MIT license of other project files does not
 relicense this module. A combined Hub build includes GPLv3 code and its

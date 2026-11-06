@@ -132,6 +132,13 @@ public final class ControlMessage {
         command.put("uuid",com.veloster.carplay.input.TouchHid.UUID);command.put("hidReport",report);
         return eventCommand(cseq,command);
     }
+    /** One report for the separately declared Consumer Control HID device. */
+    public static byte[] consumerCommand(int cseq,byte[] report)throws IOException{
+        com.veloster.carplay.input.ConsumerHid.validate(report);
+        Map<String,Object> command=new LinkedHashMap<String,Object>();command.put("type","hidSendReport");
+        command.put("uuid",com.veloster.carplay.input.ConsumerHid.UUID);command.put("hidReport",report);
+        return eventCommand(cseq,command);
+    }
     /** Verified Siri button actions, not a Siri-dismiss or microphone-start command. */
     public static byte[] siriCommand(int cseq,int action)throws IOException{
         if(action!=2&&action!=3)throw new IOException("Unsupported Siri button action");

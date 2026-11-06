@@ -10,6 +10,7 @@ import com.veloster.carplay.control.*;
 import com.veloster.carplay.input.*;
 import com.veloster.carplay.media.*;
 import com.veloster.carplay.pairing.PairVerify;
+import com.veloster.carplay.mediakeys.ReceiverHardwareConsumerSource;
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -23,15 +24,19 @@ public final class AndroidReceiverSession implements Closeable {
     private final ReceiverScope scope;private final PairVerify.Context pairingContext;
     private final AndroidReceiverUi.Events events;private final AndroidApprovalUi.Labels labels;
     private final ModePresentation presentation;private final ApprovalRouter approvals=new ApprovalRouter();
-    private AndroidReceiverUi renderer,retiring;private boolean closing,closed,screenEnabled,phoneScreenVisible;
+    private AndroidReceiverUi renderer,retiring;private volatile boolean closing,closed,mediaPresentationEnabled=true,consumerMediaSelected;
+    private boolean screenEnabled,phoneScreenVisible;
     private LastUserModes lastUserModes;
     private ReceiverModeInput modeInput;private volatile ModeControl modeOwner;
-    private ReceiverHardwareSiriSource hardwareControls;
+    private volatile ReceiverHardwareSiriSource hardwareControls;
+    private volatile ReceiverHardwareConsumerSource hardwareConsumer;
+    private boolean consumerConfigurationSealed;
     private final Handler main=new Handler(Looper.getMainLooper());
     public interface PresentationEvents extends AndroidReceiverUi.Events {void screenAvailable();void nativeScreenRequested();}
     /** Explicit app choices only. Legacy callers retain the absent /info modes field. */
     public ModeChanges initialModes(){return lastUserModes==null?null:lastUserModes.snapshot().modes();}
-    public IapSetupHandler.SessionControlFactory sessionControlFactory(){return hardwareControls!=null?hardwareControls:modeInput==null?sessionControls:modeInput;}
+    private IapSetupHandler.SessionControlFactory baseSessionControlFactory(){return hardwareControls!=null?hardwareControls:modeInput==null?sessionControls:modeInput;}
+    public IapSetupHandler.SessionControlFactory sessionControlFactory(){return hardwareConsumer!=null?hardwareConsumer:baseSessionControlFactory();}
     /** Configure the optional, pinned OEM source before handing the session to
      * ReceiverRuntime. Opening/renewing it runs on a tracked verified worker. */
     public void setHardwareSiriSource(ReceiverHardwareSiriSource.Provider provider){requireMain();
@@ -39,6 +44,21 @@ public final class AndroidReceiverSession implements Closeable {
         hardwareControls=new ReceiverHardwareSiriSource(modeInput==null?sessionControls:modeInput,sessionControls,provider);
     }
     public IOException hardwareSiriFailure(){return hardwareControls==null?null:hardwareControls.failure();}
+    /** Explicit opt-in only; a headless service can install this before receiver assembly. */
+    public synchronized void setHardwareConsumerSource(ReceiverHardwareConsumerSource.Provider provider){requireMain();
+        if(provider==null)throw new NullPointerException();
+        if(closing||closed||hardwareConsumer!=null||consumerConfigurationSealed)throw new IllegalStateException("Consumer source already configured or disposed");
+        hardwareConsumer=new ReceiverHardwareConsumerSource(new IapSetupHandler.SessionControlFactory(){
+            public ReceiverWorkers.Worker open(PairVerify.VerifiedSession session,ModeControl modes,EncryptedEvents events,ReceiverMetadata metadata)throws IOException{
+                return baseSessionControlFactory().open(session,modes,events,metadata);
+            }},scope,new ConsumerHid(),provider,new ReceiverHardwareConsumerSource.MediaGate(){
+                public boolean enabled(ModeControl owner){return !closing&&!closed&&modeOwner==owner&&mediaPresentationEnabled&&consumerMediaSelected;}
+            },new ReceiverHardwareConsumerSource.Failure(){
+                public void failed(PairVerify.VerifiedSession session,IOException error){events.failed(error);}
+            });
+    }
+    public synchronized ConsumerHid consumerDeclaration(){consumerConfigurationSealed=true;return hardwareConsumer==null?null:hardwareConsumer.declaration();}
+    public IOException hardwareConsumerFailure(){return hardwareConsumer==null?null:hardwareConsumer.failure();}
     public IOException modeRequestFailure(){return modeInput==null?null:modeInput.failure();}
     public AndroidReceiverSession(Context context,ReceiverScope scope,TouchHid touch,AndroidReceiverUi.Events events,AndroidApprovalUi.Labels labels){this(context,scope,touch,events,labels,null,false,null);}
     /** Store must already be loaded on its worker and is owned by the app, not this session. */
@@ -49,7 +69,8 @@ public final class AndroidReceiverSession implements Closeable {
     /** Output construction and optional OEM checks run later on audio workers. */
     public AndroidReceiverSession(Context context,ReceiverScope scope,TouchHid touch,AndroidReceiverUi.Events events,AndroidApprovalUi.Labels labels,VolumeStore volumes,LastUserModes modes,AudioSink.Factory outputs){
         this(context,scope,touch,events,labels,null,false,volumes,outputs);if(modes==null)throw new NullPointerException();lastUserModes=modes;
-        modes.claim(this);modeInput=new ReceiverModeInput(scope,modes,sessionControls);audio.setMediaEnabled(modes.snapshot().playMedia());
+        modes.claim(this);modeInput=new ReceiverModeInput(scope,modes,sessionControls);
+        mediaPresentationEnabled=modes.snapshot().playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);
     }
     AndroidReceiverSession(Context context,ReceiverScope scope,TouchHid touch,final AndroidReceiverUi.Events events,AndroidApprovalUi.Labels labels,PairVerify.Context pairingContext,boolean legacy){
         this(context,scope,touch,events,labels,pairingContext,legacy,null);
@@ -113,7 +134,8 @@ public final class AndroidReceiverSession implements Closeable {
         if(phoneScreenVisible&&events instanceof PresentationEvents)((PresentationEvents)events).screenAvailable();}
     public boolean chooseScreen(boolean carplay){requireMain();if(closing||closed||lastUserModes==null||!lastUserModes.choose(this,carplay?LastUserModes.CARPLAY:LastUserModes.NATIVE,null))return false;
         if(carplay){try{presentation.phoneUiRequested(modeOwner);if(input!=null)input.phoneUiRequested(modeOwner);}catch(IOException error){events.failed(error);return false;}}setScreenEnabled(carplay);return true;}
-    public boolean chooseMedia(boolean carplay){requireMain();if(closing||closed||lastUserModes==null||!lastUserModes.choose(this,null,carplay?LastUserModes.CARPLAY:LastUserModes.NATIVE))return false;audio.setMediaEnabled(carplay);return true;}
+    public boolean chooseMedia(boolean carplay){requireMain();if(closing||closed||lastUserModes==null||!lastUserModes.choose(this,null,carplay?LastUserModes.CARPLAY:LastUserModes.NATIVE))return false;
+        mediaPresentationEnabled=lastUserModes.snapshot().playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);return true;}
     /** Apply already-recorded app choices or trusted producer history without
      * manufacturing a new user action, timestamp or persistent checkpoint. */
     public boolean applyUserModes(boolean screen,boolean media){
@@ -121,12 +143,12 @@ public final class AndroidReceiverSession implements Closeable {
         LastUserModes.Snapshot choice=lastUserModes.snapshot();
         if(screen){if(choice.showScreen())try{presentation.phoneUiRequested(modeOwner);if(input!=null)input.phoneUiRequested(modeOwner);}
             catch(IOException error){events.failed(error);return false;}setScreenEnabled(choice.showScreen());}
-        if(media)audio.setMediaEnabled(choice.playMedia());return true;
+        if(media){mediaPresentationEnabled=choice.playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);}return true;
     }
     public void setScreenEnabled(boolean enabled){requireMain();if(closed)return;screenEnabled=enabled;if(renderer!=null)bind(renderer);render();}
     /** MEDIA source preference only: call/Siri/navigation/ringtone retain their
      * authenticated ownership and focus gates. Headless defaults to media on. */
-    public void setPresentationEnabled(boolean screen,boolean media){requireMain();if(closed)return;audio.setMediaEnabled(media);setScreenEnabled(screen);}
+    public void setPresentationEnabled(boolean screen,boolean media){requireMain();if(closed)return;consumerMediaSelected=media;mediaPresentationEnabled=media;audio.setMediaEnabled(media);setScreenEnabled(screen);}
     public PresentationPolicy.Status status(){return presentation.status();}
     boolean siriAvailable(AndroidReceiverUi expected){requireMain();return current(expected)&&expected.resumed&&sessionControls.available();}
     boolean siriPulse(AndroidReceiverUi expected){requireMain();return current(expected)&&expected.resumed&&sessionControls.pulse();}
@@ -137,7 +159,10 @@ public final class AndroidReceiverSession implements Closeable {
     public ReceiverSiriInput.HardwarePress hardwareSiriPress(){requireMain();return closing||closed?null:sessionControls.pressHardware();}
     public boolean hardwareSiriAvailable(){requireMain();return !closing&&!closed&&sessionControls.hardwareAvailable();}
     void requestStop(){events.stopRequested();}
-    public void close(){requireMain();if(closed)return;closing=true;modeOwner=null;approvals.current=null;if(lastUserModes!=null)lastUserModes.release(this);if(modeInput!=null)modeInput.close();RuntimeException failure=null;
+    public void close(){requireMain();if(closed)return;closing=true;modeOwner=null;approvals.current=null;if(lastUserModes!=null)lastUserModes.release(this);
+        RuntimeException failure=null;
+        try{if(hardwareConsumer!=null)hardwareConsumer.close();}catch(RuntimeException e){failure=e;}
+        try{if(modeInput!=null)modeInput.close();}catch(RuntimeException e){if(failure==null)failure=e;}
         try{if(renderer!=null)detach(renderer);if(retiring!=null)detach(retiring);}catch(RuntimeException e){failure=e;}
         try{if(input!=null)input.close();}catch(RuntimeException e){if(failure==null)failure=e;}
         try{sessionControls.close();}catch(RuntimeException e){if(failure==null)failure=e;}

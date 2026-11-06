@@ -6,6 +6,7 @@ import com.veloster.carplay.RfcommConnector;
 import com.veloster.carplay.pairing.PairingStore;
 import com.veloster.carplay.pairing.PairVerify;
 import com.veloster.carplay.input.TouchHid;
+import com.veloster.carplay.input.ConsumerHid;
 import java.io.*;
 import java.net.InetAddress;
 import java.util.*;
@@ -54,7 +55,7 @@ public final class ReceiverMetadata {
     private final PairingStore store;private final Configuration config;
     private final ModeChanges initialModes;
     private final AudioCapabilities audio;private final long features;
-    private final TouchHid touch;
+    private final TouchHid touch;private final ConsumerHid consumer;
     private final String pairingId,publicKeyHex,mainUuid,alternateUuid;
     private final byte[] publicKey;private final Map<String,String> txt;
     private volatile ControlListener listener;
@@ -68,9 +69,12 @@ public final class ReceiverMetadata {
         this(store,config,initialModes,audio,null);
     }
     public ReceiverMetadata(PairingStore store,Configuration config,ModeChanges initialModes,AudioCapabilities audio,TouchHid touch)throws IOException{
+        this(store,config,initialModes,audio,touch,null);
+    }
+    public ReceiverMetadata(PairingStore store,Configuration config,ModeChanges initialModes,AudioCapabilities audio,TouchHid touch,ConsumerHid consumer)throws IOException{
         if(store==null||config==null)throw new NullPointerException();this.store=store;this.config=config;this.initialModes=initialModes;
         if(touch!=null&&(touch.width!=config.main.width||touch.height!=config.main.height))throw new IOException("Touch/display geometry mismatch");
-        this.touch=touch;
+        this.touch=touch;this.consumer=consumer;
         this.audio=audio;features=FEATURES|(audio==null?0:audio.features());
         pairingId=store.identityIdentifier();publicKey=store.identityPublicKey();
         if(publicKey.length!=32)throw new IOException("Invalid receiver identity key");
@@ -99,9 +103,14 @@ public final class ReceiverMetadata {
     public boolean hasInitialModes(){return initialModes!=null;}
     public AudioCapabilities audioCapabilities(){return audio;}
     public TouchHid touchInput(){return touch;}
+    public ConsumerHid consumerInput(){return consumer;}
     TouchHid inputFor(PairVerify.VerifiedSession session)throws IOException{
         if(touch==null||session==null||!check().contains(session.context()))throw new IOException("Undeclared/foreign touch input");
         session.assertCurrent();return touch;
+    }
+    ConsumerHid consumerFor(PairVerify.VerifiedSession session)throws IOException{
+        if(consumer==null||session==null||!check().contains(session.context()))throw new IOException("Undeclared/foreign Consumer input");
+        session.assertCurrent();return consumer;
     }
     public String displayUuid(int type)throws IOException{
         if(!supports(type))throw new IOException("Unconfigured receiver display");return type==110?mainUuid:alternateUuid;
@@ -131,7 +140,9 @@ public final class ReceiverMetadata {
         info.put("rightHandDrive",config.rightHandDrive);info.put("keepAliveLowPower",false);info.put("keepAliveSendStatsAsBody",false);
         List<Object> displays=new ArrayList<Object>();displays.add(display(config.main,110,mainUuid));
         if(config.alternate!=null)displays.add(display(config.alternate,111,alternateUuid));info.put("displays",displays);
-        info.put("hidDevices",touch==null?Collections.emptyList():Collections.singletonList(touch.declaration(mainUuid)));info.put("extendedFeatures",Collections.emptyList());
+        List<Object> hid=new ArrayList<Object>();if(touch!=null)hid.add(touch.declaration(mainUuid));
+        if(consumer!=null)hid.add(ConsumerHid.declaration(mainUuid));
+        info.put("hidDevices",hid);info.put("extendedFeatures",Collections.emptyList());
         if(audio!=null)info.put("audioFormats",audio.wire());
         if(initialModes!=null)info.put("modes",initialModes.wire());
         return ControlMessage.Response.body("application/x-apple-binary-plist",BinaryPlist.encode(info));

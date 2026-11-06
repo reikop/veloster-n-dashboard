@@ -6,13 +6,16 @@ Documentation reviewed **2026-11-06**. Vehicle evidence through **2026-10-28**. 
 
 ## Current wireless development snapshot (2026-11-06)
 
-The latest source exports 225 Java / 248 pinned module files with conditional
-ELD16k input/output and ELD48k output support, owned cleanup and OEM audio adapters.
-81 Python tests, 14 Java programs and 35 audio-profile checks passed. A corrected
-composite JAR pin targets the actual Hub signer; older fixture-signer candidates
-are unsuitable for product integration. Full-factory compressed audio, the new
-complete installation/rollback bundle, OEM boot and actual iPhone/radio operation
-remain unfinished. See [the current wireless scope](WIRELESS_CARPLAY.md).
+The latest source exports 229 Java / 254 pinned module files with conditional
+ELD16k input/output, ELD48k output, owned cleanup and optional Consumer HID
+Next/Previous input. The Hub pins the `a4bb6bf5…` composite OEM JAR; its
+read-only availability check runs on a worker before Consumer HID is declared.
+The current unsigned Hub build passed 11 build-input, 11 selection/settings,
+14 host-program and 4 composition checks. A separate API17 Consumer gate
+fixture passed 9 checks. The reordered full-factory API17 fixture passed, but
+the first ordering's failure remains unexplained and neither fixture ran the
+current Hub APK. OEM boot, physical keys, iPhone/radio operation and complete
+installation/rollback remain unverified. See [the current wireless scope](WIRELESS_CARPLAY.md).
 Historical version-specific results below apply only to their named snapshots.
 
 ## Supported target
