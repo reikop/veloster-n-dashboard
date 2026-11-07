@@ -89,6 +89,14 @@ The local profile validates APK/JNI/AP upgrades and can include a private OEM
 auth APK with explicit original-code fallback. OEM hardware authentication and
 vehicle installation remain unverified.
 
+For a locally reviewed OEM service candidate, add
+`--oem-services-jar-sha256 <64 lowercase hex>` to a Hub build. The builder writes
+an isolated `HubApplication.java` under the new output directory, changing only
+the read-only JAR expectation; the default source keeps its current `03c4…` pin.
+`build-manifest.json` records the resolved pin and generated source hashes. Pair
+the APK with the matching framework candidate in its installation profile. This
+option packages no OEM code and grants no installation or native admission authority.
+
 `SOURCE_SHA256SUMS`, `SHA256SUMS` and `VALIDATION.json` remain earlier build/distribution snapshots. A new preview uses its own local build manifest and
 separate validation receipts; the distribution snapshots do not certify the current preview.
 

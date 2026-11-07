@@ -37,7 +37,13 @@ def main():
     parser.add_argument("--carplay-crypto-manifest", type=Path, help="Matching build_carplay_crypto.py manifest")
     parser.add_argument("--carplay-eld", type=Path, help="Optional locally built API17 AAC-ELD JNI shim (Hub only)")
     parser.add_argument("--carplay-eld-manifest", type=Path, help="Matching build_carplay_eld.py manifest")
+    parser.add_argument("--oem-services-jar-sha256", help="Read-only OEM JAR expectation for an isolated Hub build; does not authorize installation")
     args = parser.parse_args()
+    from oem_services_build import validate as validate_oem_pin
+    try:
+        validate_oem_pin(args.app, args.oem_services_jar_sha256)
+    except ValueError as error:
+        parser.error(str(error))
     if args.app != 'hub' and (args.carplay_crypto or args.carplay_crypto_manifest or args.carplay_eld or args.carplay_eld_manifest):
         parser.error('Wireless receiver JNI is only included in Hub builds')
     native_assets = {}
@@ -108,7 +114,22 @@ def main():
         sources += wireless_sources
         native_assets.update(wireless_assets)
         (out / 'wireless-build.json').write_text(json.dumps(wireless_metadata, indent=2) + '\n')
-    tracked = sources + [app / 'AndroidManifest.xml', Path(__file__).resolve()]
+    tracked = list(sources) + [app / 'AndroidManifest.xml', Path(__file__).resolve(),
+                               ROOT / 'scripts/oem_services_build.py']
+    generated_sources = {}
+    oem_pin = None
+    if args.app == 'hub':
+        from oem_services_build import source as oem_source
+        template = app / 'src/com/veloster/carplayhub/HubApplication.java'
+        generated, oem_pin = oem_source(template.read_bytes(), args.oem_services_jar_sha256)
+        if generated is not None:
+            if sources.count(template) != 1:
+                raise SystemExit('OEM service build source is not a unique Hub input')
+            replacement = out / 'generated-source/com/veloster/carplayhub/HubApplication.java'
+            replacement.parent.mkdir(parents=True)
+            replacement.write_bytes(generated)
+            sources[sources.index(template)] = replacement
+            generated_sources[str(replacement.relative_to(out))] = hashlib.sha256(generated).hexdigest()
     tracked += sorted((app / 'res').rglob('*')) if (app / 'res').is_dir() else []
     if args.app == 'hub':
         tracked += [ROOT / 'scripts/carplay_build_inputs.py', ROOT / 'third_party/wireless-carplay/source-manifest.json']
@@ -140,11 +161,19 @@ def main():
     for name, digest in source_hashes.items():
         if hashlib.sha256((ROOT / name).read_bytes()).hexdigest() != digest:
             raise SystemExit('Source changed during build: ' + name)
+    for name, digest in generated_sources.items():
+        if hashlib.sha256((out / name).read_bytes()).hexdigest() != digest:
+            raise SystemExit('Generated source changed during build: ' + name)
     report = {'passed': True, 'app': args.app, 'min_api': 17, 'source_hashes': source_hashes,
               'unsigned_apk_sha256': hashlib.sha256(target.read_bytes()).hexdigest(),
               'dex_sha256': hashlib.sha256(dex.read_bytes()).hexdigest(),
               'native_assets': {name: hashlib.sha256(data).hexdigest() for name, data in native_assets.items()},
               'runtime_verified_by_this_build': False, 'vehicle_accessed': False}
+    if args.app == 'hub':
+        report.update(oem_services_jar_sha256=oem_pin,
+                      oem_services_jar_overridden=args.oem_services_jar_sha256 is not None,
+                      generated_source_hashes=generated_sources,
+                      oem_selection_authorizes_installation=False)
     (out / 'build-manifest.json').write_text(json.dumps(report, indent=2) + '\n')
     print("Created unsigned APK: " + str(target))
     print("Not installable as-is. See docs/BUILD.md for API17 signing and vehicle compatibility limits.")
