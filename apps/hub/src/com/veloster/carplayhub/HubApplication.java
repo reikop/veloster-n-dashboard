@@ -54,6 +54,8 @@ public final class HubApplication extends Application implements WirelessCarPlay
     private volatile boolean nativeModesStopped;
     // Optional, locally reviewed OEM producer. Digest does not include or ship OEM code.
     private static final String OEM_SERVICES_JAR_SHA256="03c4a6112aac92b1cbb1c34f11684deca2f54849e352b1d563278a71457915c9";
+    // App-owned lane for the one optional read-only media-key probe per attempt (~1.5 s caller bound).
+    private final BoundedProbeLane consumerProbe=new BoundedProbeLane("vn-oem-media-probe",1500);
     interface HistoryReader {NativeModeHistory.Snapshot read()throws IOException;}
     private HistoryReader historyReader=new HistoryReader(){public NativeModeHistory.Snapshot read()throws IOException{return AndroidNativeModeHistory.read(OEM_SERVICES_JAR_SHA256);}};
     private final ExecutorService historyWork=Executors.newSingleThreadExecutor(new ThreadFactory(){public Thread newThread(Runnable task){Thread thread=new Thread(task,"vn-native-history");thread.setDaemon(true);return thread;}});
@@ -216,6 +218,8 @@ public final class HubApplication extends Application implements WirelessCarPlay
         UiRequest ui=activeUi;if(ui!=null&&!ui.retiring&&ui.session!=null)ui.session.applyUserModes(true,true);
     }
     public void onTerminate(){nativeModesStopped=true;AndroidNativeModeObserver observer=nativeModeObserver;
+        // Wakes any waiting attempt; a still-blocked probe worker remains reported by workerActive().
+        consumerProbe.close();
         main.removeCallbacks(historyPoll);main.removeCallbacks(historyTimeout);historyWork.shutdownNow();
         if(observer!=null){observer.close();main.removeCallbacks(nativeModeHealth);main.post(nativeModeHealth);}super.onTerminate();}
     private static void requireMain(){if(Looper.myLooper()!=Looper.getMainLooper())throw new IllegalStateException("Main thread required");}
@@ -417,10 +421,7 @@ public final class HubApplication extends Application implements WirelessCarPlay
                 new IndependentSessionBackend.UiHost(){public IndependentSessionBackend.UiLease open(ReceiverScope scope,TouchHid touch)throws IOException,InterruptedException{
                     Permit expected=permit;
                     if(!matches(expected,scope))throw new IOException("Receiver selection unavailable");
-                    ReceiverHardwareConsumerSource.Provider consumer=null;
-                    try{AndroidOemMediaKeyClient candidate=new AndroidOemMediaKeyClient(OEM_SERVICES_JAR_SHA256);
-                        if(candidate.available())consumer=candidate;
-                    }catch(IOException unavailable){}catch(RuntimeException unavailable){}catch(LinkageError unavailable){}
+                    ReceiverHardwareConsumerSource.Provider consumer=optionalConsumer(expected,scope);
                     if(permit!=expected)throw new IOException("Receiver selection changed during OEM probe");
                     return openUi(scope,touch,expected,consumer);
                 }},
@@ -496,6 +497,33 @@ public final class HubApplication extends Application implements WirelessCarPlay
         requireMain();PendingIntent open=PendingIntent.getActivity(this,45,new Intent(this,CarPlayReceiverActivity.class),PendingIntent.FLAG_UPDATE_CURRENT);
         return new Notification.Builder(this).setSmallIcon(android.R.drawable.stat_notify_sync).setContentTitle(UiText.t("무선 CarPlay")).setContentText(UiText.t(status)).setContentIntent(open).setOngoing(true).build();
     }
+    /** One classified read-only OEM probe per attempt, before the declaration is sealed. The
+     * probe runs on the app-owned bounded lane: a blocked Binder lookup cannot stall the
+     * backend, never queues behind another, and its late result is discarded. Only READY
+     * installs this exact candidate; every other outcome omits the optional consumer. */
+    private ReceiverHardwareConsumerSource.Provider optionalConsumer(final Permit expected,final ReceiverScope scope){
+        final AndroidOemMediaKeyClient candidate;
+        try{candidate=new AndroidOemMediaKeyClient(OEM_SERVICES_JAR_SHA256);}
+        catch(IOException error){consumerDiagnostic("pin_invalid");return null;}
+        catch(RuntimeException error){consumerDiagnostic("client_unavailable");return null;}
+        catch(LinkageError error){consumerDiagnostic("client_unavailable");return null;}
+        BoundedProbeLane.Result<AndroidOemMediaKeyClient.Probe> result=consumerProbe.run(new BoundedProbeLane.Work<AndroidOemMediaKeyClient.Probe>(){
+            public AndroidOemMediaKeyClient.Probe run(){return candidate.probe();}
+        },new BoundedProbeLane.Current(){public boolean current(){return permit==expected&&matches(expected,scope);}});
+        AndroidOemMediaKeyClient.Probe probe=result.value();
+        if(probe==null){
+            // Selection withdrawal and interrupts are ordinary cancellation, not OEM faults.
+            if(result.outcome!=BoundedProbeLane.Outcome.WITHDRAWN&&result.outcome!=BoundedProbeLane.Outcome.INTERRUPTED)
+                consumerDiagnostic("lane_"+result.outcome.name().toLowerCase(Locale.US));
+            return null;
+        }
+        if(probe.status==AndroidOemMediaKeyClient.Status.READY)return candidate;
+        if(probe.status==AndroidOemMediaKeyClient.Status.REJECTED)consumerDiagnostic(probe.reason);
+        return null;
+    }
+    private static final class OptionalConsumerUnavailable extends IOException {private static final long serialVersionUID=1L;}
+    /** Fixed code only: ErrorLog records the label and type, never OEM replies or messages. */
+    private static void consumerDiagnostic(String code){ErrorLog.record("oem_media_probe."+code,new OptionalConsumerUnavailable());}
     private static boolean matches(Permit permission,ReceiverScope scope){
         return permission!=null&&scope!=null&&permission.ap.equals(scope.apSession)
             &&permission.phone.equals(scope.selectedBluetooth)&&permission.generation==scope.generation;

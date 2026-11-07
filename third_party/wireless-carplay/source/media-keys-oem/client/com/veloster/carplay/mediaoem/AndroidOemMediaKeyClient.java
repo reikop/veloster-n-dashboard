@@ -14,45 +14,120 @@ import java.security.MessageDigest;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 
-/** Never opens a claim against an unpinned OEM JAR or a stale boot epoch. */
+/** Never opens a claim against an unpinned OEM JAR, a stale boot or a producer
+ * epoch that this exact instance did not observe before the capability was declared. */
 public final class AndroidOemMediaKeyClient implements ReceiverHardwareConsumerSource.Provider {
     private static final String SERVICE="com.veloster.carplay.oem_media_keys",ABI="com.veloster.carplay.OemMediaKeys.v1",CALLBACK=ABI+".callback";
+    private static final String OEM_JAR="/system/framework/automotive-service.jar",EPOCH_SHAPE="[0-9a-fA-F-]{36}";
+    /** READY: exact pin/boot and a trusted UID 1000 producer epoch observed. ABSENT: exact pin/boot
+     * succeeded and the service name is not registered. REJECTED: every other outcome. */
+    public enum Status { READY, ABSENT, REJECTED }
+    /** Fixed, non-sensitive reason codes. They never carry OEM reply text or exception messages. */
+    public static final String REASON_READY="ready",REASON_ABSENT="service_absent",REASON_MAIN_THREAD="main_thread",
+        REASON_BOOT_UNREADABLE="boot_unreadable",REASON_JAR_UNREADABLE="jar_unreadable",REASON_JAR_MISMATCH="jar_mismatch",
+        REASON_LOOKUP_FAILED="lookup_failed",REASON_DESCRIPTOR_MISMATCH="descriptor_mismatch",REASON_TRANSACT_REFUSED="transact_refused",
+        REASON_PERMISSION_DENIED="permission_denied",REASON_TRANSPORT_FAILED="transport_failed",REASON_REPLY_MALFORMED="reply_malformed",
+        REASON_SOURCE_BOOT_MISMATCH="source_boot_mismatch",REASON_EPOCH_MALFORMED="epoch_malformed",REASON_SOURCE_UID_MISMATCH="source_uid_mismatch",
+        REASON_API_UNAVAILABLE="api_unavailable",REASON_OBSERVATION_CHANGED="observation_changed",REASON_OBSERVATION_REVOKED="observation_revoked";
+    public static final class Probe {
+        public final Status status;public final String reason;
+        private Probe(Status status,String reason){this.status=status;this.reason=reason;}
+        public boolean ready(){return status==Status.READY;}
+    }
+    private static final class Identity {
+        final Status status;final String reason,boot,epoch;final IBinder remote;
+        Identity(Status status,String reason,String boot,String epoch,IBinder remote){this.status=status;this.reason=reason;this.boot=boot;this.epoch=epoch;this.remote=remote;}
+        static Identity rejected(String reason){return new Identity(Status.REJECTED,reason,null,null,null);}
+    }
     private final String pinnedJar;
+    /** Guarded by this. At most one positive observation per instance. Any completed worker probe
+     * that is not READY with the identical (boot,epoch), and any open() failure after argument
+     * validation, revokes it permanently; a later source needs a new instance and a new probe. */
+    private String observedBoot,observedEpoch;private boolean revoked;
     public AndroidOemMediaKeyClient(String pinnedAutomotiveJarSha256)throws IOException{
         if(pinnedAutomotiveJarSha256==null||!pinnedAutomotiveJarSha256.matches("[0-9a-f]{64}"))throw new IOException("OEM media JAR pin required");
         pinnedJar=pinnedAutomotiveJarSha256;
     }
-    /** Read-only pre-declaration probe. Call on a worker; never hash or transact on the UI thread. */
+    private static boolean onMain(){return Looper.myLooper()==Looper.getMainLooper();}
+    /** Legacy read-only pre-declaration probe. On the UI thread it returns false without
+     * inspecting anything and without touching an earlier worker observation. */
     public boolean available(){
-        if(Looper.myLooper()==Looper.getMainLooper())return false;
-        try{
-            String boot=readBoot();if(!pinnedJar.equals(sha256("/system/framework/automotive-service.jar")))return false;
-            IBinder remote=(IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,SERVICE);
-            if(remote==null||!ABI.equals(remote.getInterfaceDescriptor()))return false;
-            Parcel data=Parcel.obtain(),reply=Parcel.obtain();try{
-                data.writeInterfaceToken(ABI);
-                if(!remote.transact(4,data,reply,0))return false;reply.readException();
-                String sourceBoot=reply.readString(),sourceEpoch=reply.readString();int sourceUid=reply.readInt();
-                return boot.equals(sourceBoot)&&sourceEpoch!=null&&sourceEpoch.matches("[0-9a-fA-F-]{36}")&&sourceUid==1000;
-            }finally{reply.recycle();data.recycle();}
-        }catch(Exception unavailable){return false;}catch(LinkageError unavailable){return false;}
+        if(onMain())return false;
+        return probe().status==Status.READY;
     }
-    public ReceiverHardwareConsumerSource.Lease open(String nonce,ReceiverHardwareConsumerSource.Listener listener)throws IOException{
-        if(nonce==null||!nonce.matches("[0-9a-fA-F-]{36}")||listener==null)throw new IOException("OEM media claim shape");
-        String boot=readBoot();if(!pinnedJar.equals(sha256("/system/framework/automotive-service.jar")))throw new IOException("OEM media JAR mismatch");
+    /** Classified read-only pre-declaration probe. Call on a worker; it never claims ownership. */
+    public Probe probe(){
+        if(onMain())return new Probe(Status.REJECTED,REASON_MAIN_THREAD);
+        Identity seen=inspect();
+        synchronized(this){
+            if(revoked)return new Probe(Status.REJECTED,REASON_OBSERVATION_REVOKED);
+            if(seen.status!=Status.READY){revoked=true;return new Probe(seen.status,seen.reason);}
+            if(observedEpoch==null){observedBoot=seen.boot;observedEpoch=seen.epoch;return new Probe(Status.READY,REASON_READY);}
+            if(observedBoot.equals(seen.boot)&&observedEpoch.equals(seen.epoch))return new Probe(Status.READY,REASON_READY);
+            // Never silently rebind a declared positive observation to a different producer.
+            revoked=true;return new Probe(Status.REJECTED,REASON_OBSERVATION_CHANGED);
+        }
+    }
+    private synchronized void revoke(){revoked=true;}
+    /** Read-only identity inspection. Never throws for ordinary failures; never claims. */
+    private Identity inspect(){
+        String boot,digest;
+        try{boot=readBoot();}catch(IOException error){return Identity.rejected(REASON_BOOT_UNREADABLE);}
+         catch(RuntimeException error){return Identity.rejected(REASON_BOOT_UNREADABLE);}
+        try{digest=sha256(OEM_JAR);}catch(IOException error){return Identity.rejected(REASON_JAR_UNREADABLE);}
+         catch(RuntimeException error){return Identity.rejected(REASON_JAR_UNREADABLE);}
+        if(!pinnedJar.equals(digest))return Identity.rejected(REASON_JAR_MISMATCH);
+        IBinder remote;
+        try{remote=(IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,SERVICE);}
+        catch(Exception error){return Identity.rejected(REASON_LOOKUP_FAILED);}
+        catch(LinkageError error){return Identity.rejected(REASON_API_UNAVAILABLE);}
+        if(remote==null)return new Identity(Status.ABSENT,REASON_ABSENT,boot,null,null);
+        Parcel data=null,reply=null;
         try{
-            IBinder remote=(IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,SERVICE);
-            if(remote==null||!ABI.equals(remote.getInterfaceDescriptor()))throw new IOException("OEM media service absent");
-            Lease lease=new Lease(remote,boot,listener);remote.linkToDeath(lease,0);
-            Parcel data=Parcel.obtain(),reply=Parcel.obtain();try{
-                data.writeInterfaceToken(ABI);data.writeString(nonce);data.writeStrongBinder(lease.callback);
-                if(!remote.transact(1,data,reply,0))throw new IOException("OEM media claim rejected");reply.readException();
-                String sourceBoot=reply.readString(),epoch=reply.readString(),token=reply.readString();long ttl=reply.readLong();
-                if(!boot.equals(sourceBoot)||epoch==null||!epoch.matches("[0-9a-fA-F-]{36}")||token==null||!token.matches("[0-9a-f]{48}")||ttl!=750)
-                    throw new IOException("OEM media claim identity mismatch");
-                lease.epoch=epoch;lease.token=token;return lease;
-            }catch(Exception failure){lease.retire();remote.unlinkToDeath(lease,0);if(failure instanceof IOException)throw (IOException)failure;throw new IOException("OEM media claim failed",failure);}finally{reply.recycle();data.recycle();}
-        }catch(IOException error){throw error;}catch(Exception error){throw new IOException("OEM media binding failed",error);}catch(LinkageError error){throw new IOException("OEM media API unavailable",error);}
+            if(!ABI.equals(remote.getInterfaceDescriptor()))return Identity.rejected(REASON_DESCRIPTOR_MISMATCH);
+            data=Parcel.obtain();reply=Parcel.obtain();data.writeInterfaceToken(ABI);
+            if(!remote.transact(4,data,reply,0))return Identity.rejected(REASON_TRANSACT_REFUSED);
+            reply.readException();
+            String sourceBoot=reply.readString(),sourceEpoch=reply.readString();int sourceUid=reply.readInt();
+            if(!boot.equals(sourceBoot))return Identity.rejected(REASON_SOURCE_BOOT_MISMATCH);
+            if(sourceEpoch==null||!sourceEpoch.matches(EPOCH_SHAPE))return Identity.rejected(REASON_EPOCH_MALFORMED);
+            if(sourceUid!=1000)return Identity.rejected(REASON_SOURCE_UID_MISMATCH);
+            return new Identity(Status.READY,REASON_READY,boot,sourceEpoch,remote);
+        }catch(SecurityException error){return Identity.rejected(REASON_PERMISSION_DENIED);}
+         catch(RemoteException error){return Identity.rejected(REASON_TRANSPORT_FAILED);}
+         catch(RuntimeException error){return Identity.rejected(REASON_REPLY_MALFORMED);}
+         catch(LinkageError error){return Identity.rejected(REASON_API_UNAVAILABLE);}
+        finally{
+            try{if(reply!=null)reply.recycle();if(data!=null)data.recycle();}
+            catch(RuntimeException ignored){}catch(LinkageError ignored){}
+        }
+    }
+    /** One ownership claim against the producer epoch this instance observed. No retry. */
+    public ReceiverHardwareConsumerSource.Lease open(String nonce,ReceiverHardwareConsumerSource.Listener listener)throws IOException{
+        if(nonce==null||!nonce.matches(EPOCH_SHAPE)||listener==null)throw new IOException("OEM media claim shape");
+        if(onMain())throw new IOException("OEM media claim requires a worker");
+        String boot,epoch;
+        synchronized(this){if(revoked||observedEpoch==null)throw new IOException("OEM media source not observed");boot=observedBoot;epoch=observedEpoch;}
+        boolean claimed=false;
+        try{
+            // Fresh read-only identity inspection immediately before the claim is dispatched.
+            Identity fresh=inspect();
+            if(fresh.status!=Status.READY)throw new IOException("OEM media source not current: "+fresh.reason);
+            if(!boot.equals(fresh.boot)||!epoch.equals(fresh.epoch))throw new IOException("OEM media source not current: "+REASON_OBSERVATION_CHANGED);
+            IBinder remote=fresh.remote;
+            try{
+                Lease lease=new Lease(remote,boot,listener);remote.linkToDeath(lease,0);
+                Parcel data=Parcel.obtain(),reply=Parcel.obtain();try{
+                    data.writeInterfaceToken(ABI);data.writeString(nonce);data.writeStrongBinder(lease.callback);
+                    if(!remote.transact(1,data,reply,0))throw new IOException("OEM media claim rejected");reply.readException();
+                    String sourceBoot=reply.readString(),claimEpoch=reply.readString(),token=reply.readString();long ttl=reply.readLong();
+                    // A changed or uncertain post-dispatch reply is a failure, never a fabricated success.
+                    if(!boot.equals(sourceBoot)||!epoch.equals(claimEpoch)||token==null||!token.matches("[0-9a-f]{48}")||ttl!=750)
+                        throw new IOException("OEM media claim identity mismatch");
+                    lease.epoch=claimEpoch;lease.token=token;claimed=true;return lease;
+                }catch(Exception failure){lease.retire();remote.unlinkToDeath(lease,0);if(failure instanceof IOException)throw (IOException)failure;throw new IOException("OEM media claim failed",failure);}finally{reply.recycle();data.recycle();}
+            }catch(IOException error){throw error;}catch(Exception error){throw new IOException("OEM media binding failed",error);}catch(LinkageError error){throw new IOException("OEM media API unavailable",error);}
+        }finally{if(!claimed)revoke();}
     }
     private static String readBoot()throws IOException{FileInputStream in=new FileInputStream("/proc/sys/kernel/random/boot_id");try{byte[] b=new byte[128];int n=in.read(b);if(n<36||n>=b.length)throw new IOException("OEM media boot ID");String boot=new String(b,0,n,"US-ASCII").trim();if(!boot.matches("[0-9a-fA-F-]{36}"))throw new IOException("OEM media boot ID");return boot;}finally{in.close();}}
     private static String sha256(String path)throws IOException{try{MessageDigest h=MessageDigest.getInstance("SHA-256");FileInputStream in=new FileInputStream(path);try{byte[] b=new byte[32768];for(int n;(n=in.read(b))!=-1;)h.update(b,0,n);}finally{in.close();}StringBuilder out=new StringBuilder();for(byte b:h.digest())out.append(String.format(Locale.US,"%02x",b&255));return out.toString();}catch(IOException error){throw error;}catch(Exception error){throw new IOException("OEM media hash unavailable",error);}}
