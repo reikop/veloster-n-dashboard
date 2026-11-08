@@ -10,15 +10,25 @@ import java.util.concurrent.TimeUnit;
  * Context must come from actual coordinator/AP/phone observations; an IP is not identity proof.
  * A new owner/AP generation requires a new listener. Does not publish mDNS or open a radio. */
 public final class ControlListener implements Closeable {
+    public interface Connection {
+        /** Called after this exact object is retained by the listener. */
+        void start()throws IOException;
+        void close();boolean awaitStopped(long millis)throws InterruptedException;
+    }
+    public interface ConnectionFactory {
+        /** Construct an inert owner; allocate only in start so cancellation can retain it. */
+        Connection create(Socket socket,ReceiverAdmission.Peer peer)throws IOException;
+    }
     private final ServerSocket server;
     private final ReceiverScope scope;
     private final ReceiverAdmission admission;
     private final PairingStore store;
     private final ControlConnection.ApprovalUi ui;
     private final ControlConnection.Handler handler;
+    private final ConnectionFactory connections;
     private final CountDownLatch stopped=new CountDownLatch(1);
     private volatile boolean closed;
-    private volatile ControlConnection active;
+    private volatile Connection active;
     private long window=System.nanoTime(),lastAttempt;private int attempts;
     public ControlListener(PairingStore store,PairVerify.Context context,PairVerify.OwnerLease owner,
         ControlConnection.ApprovalUi ui,ControlConnection.Handler handler,int port)throws IOException{
@@ -26,10 +36,15 @@ public final class ControlListener implements Closeable {
     }
     public ControlListener(PairingStore store,ReceiverAdmission admission,
         ControlConnection.ApprovalUi ui,ControlConnection.Handler handler,int port)throws IOException{
+        this(store,admission,ui,handler,port,null);
+    }
+    public ControlListener(PairingStore store,ReceiverAdmission admission,
+        ControlConnection.ApprovalUi ui,ControlConnection.Handler handler,int port,ConnectionFactory connections)throws IOException{
         if(store==null||admission==null||ui==null||handler==null)throw new NullPointerException();
         scope=admission.scope();if(scope==null)throw new NullPointerException();
         if(port<0||port>65535)throw new IOException("Invalid control listener port");
         this.store=store;this.admission=admission;this.ui=ui;this.handler=handler;
+        this.connections=connections;
         checkAdmission();store.identityIdentifier();server=new ServerSocket();
         boolean ok=false;
         try{server.setReuseAddress(false);server.bind(new InetSocketAddress(scope.localAddress,port),1);server.setSoTimeout(250);ok=true;}
@@ -54,7 +69,7 @@ public final class ControlListener implements Closeable {
                 boolean owned=false;
                 try{
                     if(closed)continue;
-                    ControlConnection previous=active;
+                    Connection previous=active;
                     if(previous!=null&&!previous.awaitStopped(0))continue;
                     final ReceiverAdmission.Peer peer=admission.admit(socket.getInetAddress());
                     if(peer==null)continue;
@@ -76,10 +91,16 @@ public final class ControlListener implements Closeable {
                     long now=System.nanoTime();if(now-window>=60000000000L){window=now;attempts=0;}
                     if(attempts>=5||lastAttempt!=0&&now-lastAttempt<1000000000L)continue;
                     attempts++;lastAttempt=now;
-                    ControlConnection connection=new ControlConnection(socket,store,context,owner,ui,handler);
-                    synchronized(this){if(closed){connection.close();continue;}active=connection;}
-                    Thread worker=new Thread(connection,"vn-control-connection");worker.setDaemon(true);
-                    try{worker.start();owned=true;}catch(RuntimeException e){connection.close();active=null;throw e;}
+                    final ControlConnection legacy=connections==null?new ControlConnection(socket,store,context,owner,ui,handler):null;
+                    Connection connection=connections==null?new Connection(){
+                        public void start(){Thread worker=new Thread(legacy,"vn-control-connection");worker.setDaemon(true);worker.start();}
+                        public void close(){legacy.close();}
+                        public boolean awaitStopped(long millis)throws InterruptedException{return legacy.awaitStopped(millis);}
+                    }:connections.create(socket,new ReceiverAdmission.Peer(context,owner));
+                    if(connection==null)throw new IOException("Connection factory returned no owner");
+                    synchronized(this){active=connection;if(closed){connection.close();continue;}}
+                    try{connection.start();owned=true;}catch(IOException e){connection.close();throw e;}
+                    catch(RuntimeException e){connection.close();throw e;}
                 }catch(IOException denied){/* A stale/rejected peer cannot withdraw a healthy advertisement. */}
                 finally{if(!owned)socket.close();}
             }
@@ -88,11 +109,11 @@ public final class ControlListener implements Closeable {
         finally{close();stopped.countDown();}
     }
     public synchronized void close(){if(closed)return;closed=true;try{server.close();}catch(IOException ignored){}
-        ControlConnection connection=active;if(connection!=null)connection.close();}
+        Connection connection=active;if(connection!=null)connection.close();}
     /** Both accept loop and the last accepted connection must terminate. Store is caller-owned. */
     public boolean awaitStopped(long millis)throws InterruptedException{
         long deadline=System.nanoTime()+TimeUnit.MILLISECONDS.toNanos(millis);
         if(!stopped.await(millis,TimeUnit.MILLISECONDS))return false;
-        ControlConnection connection=active;return connection==null||connection.awaitStopped(Math.max(0,TimeUnit.NANOSECONDS.toMillis(deadline-System.nanoTime())));
+        Connection connection=active;return connection==null||connection.awaitStopped(Math.max(0,TimeUnit.NANOSECONDS.toMillis(deadline-System.nanoTime())));
     }
 }

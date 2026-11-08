@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Application composition for the optional receiver. Device work stays on workers;
  * main owns the Activity, notification and explicit private Service commands. */
 public final class HubApplication extends Application implements WirelessCarPlayService.Host,WirelessCarPlayService.StatusHost,WirelessCarPlayService.RecoveryHost,WirelessCarPlayService.AutomaticHost {
+    private final ReceiverEngineProvider receiverEngine=ReceiverEngines.packaged();
+    public String wirelessReceiverEngine(){return receiverEngine==null?"legacy":receiverEngine.getClass().getName();}
     private final Handler main=new Handler(Looper.getMainLooper());
     private final ExecutorService work=Executors.newSingleThreadExecutor();
     private final AtomicLong radioEpoch=new AtomicLong();
@@ -429,7 +431,7 @@ public final class HubApplication extends Application implements WirelessCarPlay
                 new IndependentSessionBackend.CompressedAudioProfiles(){
                     public AudioCapabilities create(long speech,long call)throws IOException{return ReceiverAudioProfiles.create(speech,call);}
                     public AudioCapabilities create(long speech,long call,long output)throws IOException{return ReceiverAudioProfiles.create(speech,call,output);}
-                });handed=true;return backend;
+                });if(receiverEngine!=null)backend.setEngineProvider(receiverEngine);handed=true;return backend;
             }finally{if(!handed)config.close();}
         }};
     }

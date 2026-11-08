@@ -93,6 +93,13 @@ public final class IndependentSessionBackend implements SessionServiceController
     private final RegisteredReceiverControl registry=new RegisteredReceiverControl();
     private SessionJournal journal,apJournal;private ProcessOwner process;private SessionCoordinator coordinator;private PairingStore pairings;private BootstrapIdentityStore bootstrapStore;
     private Prepared prepared;private Enrollment enrollment;private boolean closed;
+    private ReceiverEngineProvider engineProvider;
+    /** Packaged app composition only; choose before this backend allocates resources. */
+    public synchronized void setEngineProvider(ReceiverEngineProvider provider){
+        if(provider==null||engineProvider!=null||closed||pairings!=null||coordinator!=null||prepared!=null||enrollment!=null)
+            throw new IllegalStateException("Receiver engine already selected or backend started");
+        engineProvider=provider;
+    }
     public IndependentSessionBackend(Context context,File appPrivateDirectory,ApManagerClient manager,ApConfiguration apConfig,
         ReceiverProductConfiguration.Spec spec,Selection selection,UiHost uiHost,AudioCapabilities audio,Progress progress){
         this(context,appPrivateDirectory,manager,apConfig,spec,selection,uiHost,audio,progress,ANDROID);
@@ -370,7 +377,8 @@ public final class IndependentSessionBackend implements SessionServiceController
             current();stage(Stage.PRODUCT_IDENTITY);product=ReceiverProductConfiguration.capture(spec,pairings,scope,index,boundaries.productPlatform(context),
                 new ReceiverProductConfiguration.Generation(){public void checkCurrent(ReceiverScope value)throws IOException{exact(value);}});
             attemptAudio=audio;
-            if(audioProfiles!=null||audio.hasInput()){
+            if(engineProvider!=null)attemptAudio=engineProvider.audioCapabilities();
+            if(engineProvider==null&&(audioProfiles!=null||audio.hasInput())){
                 stage(Stage.AUDIO_CAPABILITIES);
                 // Retain the worker before start, including failed/late device allocation.
                 // The advertisement's current check also checks the audio proof.
@@ -433,7 +441,16 @@ public final class IndependentSessionBackend implements SessionServiceController
             try{ui=uiHost.open(scope,touch);}catch(SessionCoordinator.FactoryCleanupException partial){partialUi=partial.pendingResources;throw partial;}
             if(ui==null)throw new IOException("Receiver UI unavailable");current();
             metadata=new ReceiverMetadata(pairings,product.metadata,ui.session.initialModes(),attemptAudio,touch,ui.session.consumerDeclaration());
-            receiver=new IndependentReceiverControl(scope,new IndependentReceiverControl.Generation(){public void checkCurrent(ReceiverScope value)throws IOException{exact(value);}},
+            if(engineProvider!=null){
+                receiver=new IndependentReceiverControl(scope,new IndependentReceiverControl.Generation(){public void checkCurrent(ReceiverScope value)throws IOException{exact(value);}},
+                    new IndependentReceiverControl.Engines(){public IndependentReceiverControl.Engine open()throws IOException,InterruptedException{
+                        exact(scope);stage(Stage.RECEIVER);
+                        return engineProvider.open(new ReceiverEngineProvider.Attempt(context,scope,pairings,admission,metadata,product.metadata,ui.session){
+                            public void checkCurrent()throws IOException{Attempt.this.current();}
+                            public RuntimeControlHost.Resources openRuntime()throws IOException,InterruptedException{return runtimeResources(null);}
+                        });
+                    }},1000);
+            }else receiver=new IndependentReceiverControl(scope,new IndependentReceiverControl.Generation(){public void checkCurrent(ReceiverScope value)throws IOException{exact(value);}},
                 new IndependentReceiverControl.Factory(){public ReceiverRuntime open(ReceiverScope value,RuntimeSessionTracker tracker)throws IOException{
                     exact(value);if(eld!=null)eld.output.checkCurrent();if(eld48!=null)eld48.checkCurrent();stage(Stage.RECEIVER);runtime=new ReceiverRuntime(pairings,admission,ui.session.approval,metadata,ui.session.screens,ui.session.audio,tracker,null,0,ui.session.input,
                         attemptAudio.hasInput()?new com.veloster.carplay.media.MicrophoneStreamFactory(context,attemptAudio,captureResult,eld==null?null:eld.input):null,ui.session.sessionControlFactory());return runtime;
@@ -460,20 +477,23 @@ public final class IndependentSessionBackend implements SessionServiceController
         }
         RuntimeControlHost.Factory runtimeFactory(){return new RuntimeControlHost.Factory(){
             public RuntimeControlHost.Resources open(final PairVerify.VerifiedSession session)throws IOException,InterruptedException{
-                session.assertCurrent();if(!scope.contains(session.context()))throw new IOException("Foreign verified runtime");current();
+                return runtimeResources(session);
+            }
+        };}
+        RuntimeControlHost.Resources runtimeResources(final PairVerify.VerifiedSession session)throws IOException,InterruptedException{
+                if(session!=null){session.assertCurrent();if(!scope.contains(session.context()))throw new IOException("Foreign verified runtime");}current();
                 final OemAuthBinding binding=authentication.open();boolean handed=false;RuntimeControlHost.Resources acquired=null;
                 try{final Iap2RuntimeController.Listener listener=preparation.phone.runtimeListener();
                 final com.veloster.carplay.location.LocationSource location=com.veloster.carplay.location.Api17GpsLocationSource.create(context);
                 RuntimeControlHost.Resources result=new RuntimeControlHost.Resources(binding.authentication(),product.identity,new Iap2RuntimeController.Environment(){
-                    public void checkCurrent()throws IOException{session.assertCurrent();current();}
+                    public void checkCurrent()throws IOException{if(session!=null)session.assertCurrent();current();}
                     public Iap2WirelessController.ApSnapshot accessPoint()throws IOException{checkCurrent();return snapshot();}
                     public Iap2WirelessController.ReceiverIdentity receiver()throws IOException{checkCurrent();return metadata.receiverIdentity();}
                     public void transportIdentifiers(String observed,String usb)throws IOException{checkCurrent();/* RuntimeControlHost forwards actual fields to VerifiedSession. */}
                 },listener,location){
                     public void close()throws IOException{try{location.close();}finally{binding.close();}}
-                };acquired=result;session.assertCurrent();current();handed=true;return result;}finally{if(!handed){Closeable pendingResources=acquired==null?binding:acquired;try{pendingResources.close();}catch(IOException pending){throw new SessionCoordinator.FactoryCleanupException("Runtime resource cleanup pending",pendingResources,pending);}}}
-            }
-        };}
+                };acquired=result;if(session!=null)session.assertCurrent();current();handed=true;return result;}finally{if(!handed){Closeable pendingResources=acquired==null?binding:acquired;try{pendingResources.close();}catch(IOException pending){throw new SessionCoordinator.FactoryCleanupException("Runtime resource cleanup pending",pendingResources,pending);}}}
+        }
         public void close()throws IOException{
             if(lease!=null){lease.close();return;}if(released)return;
             if(receiver!=null){receiver.close();try{if(!receiver.awaitStopped(1000))throw new IOException("Receiver still draining");}catch(InterruptedException e){Thread.currentThread().interrupt();throw new IOException("Receiver cleanup interrupted",e);}}

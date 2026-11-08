@@ -20,6 +20,12 @@ public final class ReceiverTouchInput implements IapSetupHandler.InputSinkFactor
     private SurfaceView view;private final ReceiverScope scope;private final TouchHid hid;private final Failure failure;
     private final Handler main=new Handler(Looper.getMainLooper());private final Object lock=new Object();
     private Binding current,shown;private AndroidTouchInput adapter;private ModeControl accepted;
+    private View.OnTouchListener external;
+    public void external(View.OnTouchListener listener){requireMain();synchronized(lock){
+        if(closed)throw new IllegalStateException("Receiver touch disposed");
+        if(adapter!=null)adapter.detach();adapter=null;shown=null;
+        if(view!=null)view.setOnTouchListener(null);external=listener;
+    }updateUi();}
     private ModeState mode=ModeState.unknown();private boolean hostRequested,queued,closed,resumed,focused=true,surfaceReady;
     private boolean manualViewport;private float left,top,right,bottom;private int rotation;
     private final View.OnLayoutChangeListener layout=new View.OnLayoutChangeListener(){
@@ -94,6 +100,13 @@ public final class ReceiverTouchInput implements IapSetupHandler.InputSinkFactor
     private void updateUi(){
         requireMain();main.removeCallbacks(poll);
         try{synchronized(lock){
+            if(external!=null&&view!=null){
+                view.setOnTouchListener(new View.OnTouchListener(){public boolean onTouch(View target,android.view.MotionEvent event){
+                    View.OnTouchListener callback;boolean allowed;
+                    synchronized(lock){callback=external;allowed=!closed&&target==view&&resumed&&focused&&surfaceReady&&target.isShown()&&target.hasWindowFocus();}
+                    return allowed&&callback!=null&&callback.onTouch(target,event);
+                }});return;
+            }
             Binding target=!closed&&view!=null&&current!=null&&!current.closing&&current.modes==accepted?current:null;
             if(shown!=target){if(adapter!=null)adapter.detach();adapter=null;shown=target;
                 if(target!=null)adapter=new AndroidTouchInput(view,target.input);}
@@ -112,7 +125,8 @@ public final class ReceiverTouchInput implements IapSetupHandler.InputSinkFactor
     public void close(){
         requireMain();Binding retire;synchronized(lock){if(closed)return;closed=true;accepted=null;retire=current;current=null;}
         if(retire!=null)retire.close();main.removeCallbacks(drain);main.removeCallbacks(poll);if(view!=null)view.removeOnLayoutChangeListener(layout);
-        if(adapter!=null)adapter.detach();adapter=null;shown=null;view=null;
+        if(adapter!=null)adapter.detach();if(view!=null&&external!=null)view.setOnTouchListener(null);
+        external=null;adapter=null;shown=null;view=null;
     }
     private final class Binding implements ReceiverWorkers.Worker,Runnable {
         final PairVerify.VerifiedSession session;final ModeControl modes;final TouchInput input;

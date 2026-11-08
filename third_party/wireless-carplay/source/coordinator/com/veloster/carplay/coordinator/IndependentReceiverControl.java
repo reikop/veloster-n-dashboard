@@ -20,13 +20,13 @@ public final class IndependentReceiverControl implements ReceiverControl,Closeab
          * its runtimeFactory. On exception, close/drain all partial resources. */
         ReceiverRuntime open(ReceiverScope scope,RuntimeSessionTracker tracker)throws IOException,InterruptedException;
     }
-    interface Engine {
+    public interface Engine {
         ReceiverRuntime.State state();
         Iap2WirelessController.ReceiverIdentity identity()throws IOException;
         boolean sessionStarted()throws IOException;
         void close();boolean awaitStopped(long millis)throws InterruptedException;
     }
-    interface Engines {Engine open()throws IOException,InterruptedException;}
+    public interface Engines {Engine open()throws IOException,InterruptedException;}
     private final ReceiverScope scope;private final Generation generation;private final Engines factory;private final long stopWaitMillis;
     private final Object signal=new Object();private Engine engine;
     private boolean attempted,allocating,stopping,terminal;private IOException failure;
@@ -54,7 +54,7 @@ public final class IndependentReceiverControl implements ReceiverControl,Closeab
             }finally{if(!success)tracker.close();}
         }};
     }
-    IndependentReceiverControl(ReceiverScope scope,Generation generation,Engines factory,long stopWaitMillis){
+    public IndependentReceiverControl(ReceiverScope scope,Generation generation,Engines factory,long stopWaitMillis){
         if(scope==null||generation==null||factory==null)throw new NullPointerException();
         if(stopWaitMillis<0||stopWaitMillis>10000)throw new IllegalArgumentException("Receiver stop wait");
         this.scope=scope;this.generation=generation;this.factory=factory;this.stopWaitMillis=stopWaitMillis;

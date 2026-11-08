@@ -26,6 +26,13 @@ public final class AndroidReceiverSession implements Closeable {
     private final ModePresentation presentation;private final ApprovalRouter approvals=new ApprovalRouter();
     private AndroidReceiverUi renderer,retiring;private volatile boolean closing,closed,mediaPresentationEnabled=true,consumerMediaSelected;
     private boolean screenEnabled,phoneScreenVisible;
+    public interface ExternalPresentation extends View.OnTouchListener {void selected(boolean screen,boolean media);}
+    private ExternalPresentation external;
+    public void external(ExternalPresentation value){requireMain();if(closing||closed)throw new IllegalStateException("Receiver presentation disposed");
+        external=value;if(input!=null)input.external(value);if(value!=null)value.selected(screenEnabled,mediaPresentationEnabled);}
+    public void clearExternal(ExternalPresentation expected){requireMain();if(!closing&&!closed&&external==expected)external(null);}
+    public void externalScreen(ExternalPresentation expected,boolean visible){requireMain();if(!closing&&!closed&&external==expected){phoneScreenVisible=visible;render();}}
+    private void notifyExternal(){if(external!=null)external.selected(screenEnabled,mediaPresentationEnabled);}
     private LastUserModes lastUserModes;
     private ReceiverModeInput modeInput;private volatile ModeControl modeOwner;
     private volatile ReceiverHardwareSiriSource hardwareControls;
@@ -133,19 +140,19 @@ public final class AndroidReceiverSession implements Closeable {
     private void render(){if(closing||closed)return;AndroidReceiverUi target=renderer;if(target!=null){boolean show=screenEnabled&&target.resumed&&phoneScreenVisible;target.surface.setVisibility(show?View.VISIBLE:View.INVISIBLE);target.host.setVisibility(show?View.INVISIBLE:View.VISIBLE);}
         if(phoneScreenVisible&&events instanceof PresentationEvents)((PresentationEvents)events).screenAvailable();}
     public boolean chooseScreen(boolean carplay){requireMain();if(closing||closed||lastUserModes==null||!lastUserModes.choose(this,carplay?LastUserModes.CARPLAY:LastUserModes.NATIVE,null))return false;
-        if(carplay){try{presentation.phoneUiRequested(modeOwner);if(input!=null)input.phoneUiRequested(modeOwner);}catch(IOException error){events.failed(error);return false;}}setScreenEnabled(carplay);return true;}
+        if(carplay&&external==null){try{presentation.phoneUiRequested(modeOwner);if(input!=null)input.phoneUiRequested(modeOwner);}catch(IOException error){events.failed(error);return false;}}setScreenEnabled(carplay);return true;}
     public boolean chooseMedia(boolean carplay){requireMain();if(closing||closed||lastUserModes==null||!lastUserModes.choose(this,null,carplay?LastUserModes.CARPLAY:LastUserModes.NATIVE))return false;
-        mediaPresentationEnabled=lastUserModes.snapshot().playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);return true;}
+        mediaPresentationEnabled=lastUserModes.snapshot().playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);notifyExternal();return true;}
     /** Apply already-recorded app choices or trusted producer history without
      * manufacturing a new user action, timestamp or persistent checkpoint. */
     public boolean applyUserModes(boolean screen,boolean media){
         requireMain();if(closing||closed||lastUserModes==null||!lastUserModes.owns(this))return false;
         LastUserModes.Snapshot choice=lastUserModes.snapshot();
-        if(screen){if(choice.showScreen())try{presentation.phoneUiRequested(modeOwner);if(input!=null)input.phoneUiRequested(modeOwner);}
+        if(screen){if(choice.showScreen()&&external==null)try{presentation.phoneUiRequested(modeOwner);if(input!=null)input.phoneUiRequested(modeOwner);}
             catch(IOException error){events.failed(error);return false;}setScreenEnabled(choice.showScreen());}
-        if(media){mediaPresentationEnabled=choice.playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);}return true;
+        if(media){mediaPresentationEnabled=choice.playMedia();consumerMediaSelected=mediaPresentationEnabled;audio.setMediaEnabled(mediaPresentationEnabled);}notifyExternal();return true;
     }
-    public void setScreenEnabled(boolean enabled){requireMain();if(closed)return;screenEnabled=enabled;if(renderer!=null)bind(renderer);render();}
+    public void setScreenEnabled(boolean enabled){requireMain();if(closed)return;screenEnabled=enabled;if(renderer!=null)bind(renderer);render();notifyExternal();}
     /** MEDIA source preference only: call/Siri/navigation/ringtone retain their
      * authenticated ownership and focus gates. Headless defaults to media on. */
     public void setPresentationEnabled(boolean screen,boolean media){requireMain();if(closed)return;consumerMediaSelected=media;mediaPresentationEnabled=media;audio.setMediaEnabled(media);setScreenEnabled(screen);}
@@ -159,7 +166,7 @@ public final class AndroidReceiverSession implements Closeable {
     public ReceiverSiriInput.HardwarePress hardwareSiriPress(){requireMain();return closing||closed?null:sessionControls.pressHardware();}
     public boolean hardwareSiriAvailable(){requireMain();return !closing&&!closed&&sessionControls.hardwareAvailable();}
     void requestStop(){events.stopRequested();}
-    public void close(){requireMain();if(closed)return;closing=true;modeOwner=null;approvals.current=null;if(lastUserModes!=null)lastUserModes.release(this);
+    public void close(){requireMain();if(closed)return;closing=true;external=null;modeOwner=null;approvals.current=null;if(lastUserModes!=null)lastUserModes.release(this);
         RuntimeException failure=null;
         try{if(hardwareConsumer!=null)hardwareConsumer.close();}catch(RuntimeException e){failure=e;}
         try{if(modeInput!=null)modeInput.close();}catch(RuntimeException e){if(failure==null)failure=e;}

@@ -102,6 +102,7 @@ public final class ReceiverMetadata {
     public boolean supports(int type){return type==110||type==111&&config.alternate!=null;}
     public boolean hasInitialModes(){return initialModes!=null;}
     public AudioCapabilities audioCapabilities(){return audio;}
+    public long featureFlags(){return features;}
     public TouchHid touchInput(){return touch;}
     public ConsumerHid consumerInput(){return consumer;}
     TouchHid inputFor(PairVerify.VerifiedSession session)throws IOException{
