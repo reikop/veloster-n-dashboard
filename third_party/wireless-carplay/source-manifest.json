@@ -287,8 +287,8 @@
     "source/coordinator/com/veloster/carplay/coordinator/BluetoothRadioJournal.java": "c5f08f0c30cb570da9a2a0d090f92fcdebf389152822d2fc37e5e61027645c3b",
     "source/coordinator/com/veloster/carplay/coordinator/BootstrapAdapters.java": "7f069cc4bce910eaab15b521cea19f4f7ff4605a55f65a64521dd14f6b35b03c",
     "source/coordinator/com/veloster/carplay/coordinator/BootstrapIdentityEnvironment.java": "e5923a211a1107a95ab85422e0684c3e69f2983b87d58f04f740425733d45123",
-    "source/coordinator/com/veloster/carplay/coordinator/IndependentReceiverControl.java": "09637d7090939f701735291fc51353171f18aa616b5705b0d53f9ebf6d7b8539",
-    "source/coordinator/com/veloster/carplay/coordinator/IndependentSessionBackend.java": "4f7a6e2e79a6dd6d67e8b6161a1dcb058e8c8f89a3f67fb5622b2f3b4f4c5757",
+    "source/coordinator/com/veloster/carplay/coordinator/IndependentReceiverControl.java": "8d2576df383341dcd86e15c65f17d7f456009a3084dc4ddf11328467d7ef4bd7",
+    "source/coordinator/com/veloster/carplay/coordinator/IndependentSessionBackend.java": "1deebdbc5f90c1558e99a3de0415453f977d74d6dc772b6bc87e07cb3ff54d2a",
     "source/coordinator/com/veloster/carplay/coordinator/OemAuthBinding.java": "dd62dd461964904310d8bef5e9d0c23bd026ac43465edae3257301fe8f2dfd87",
     "source/coordinator/com/veloster/carplay/coordinator/ProcessOwner.java": "0a84492df02c816f742adf11a8640bbde52ebd6f14f4c259fef6ed0d53964bc7",
     "source/coordinator/com/veloster/carplay/coordinator/ProcessRecoveryControl.java": "bdc503aff4e1d81a9d36e52bc6451bbd757654126b36e441aa9b3c2819033e2a",
@@ -334,7 +334,7 @@
     "source/control/com/veloster/carplay/control/BinaryPlist.java": "8b7d4679027ee728c8ba45f256bbd752b7b5a859c025ea88bc1f8862372cfdef",
     "source/control/com/veloster/carplay/control/ClockReference.java": "da8a23880a1e42d9f38a0e830cbbf73bb97925f897d1a5ed0fb6f6c75c1a74ec",
     "source/control/com/veloster/carplay/control/ControlConnection.java": "cc2908dc194c6c0d7ecc92b3b4adddf1261eec5eb4d9f2ef4c12bed79ca6b6ad",
-    "source/control/com/veloster/carplay/control/ControlListener.java": "d1448aa4ee1700f4d7bf60d80563751ada4a72fec224e65664f6c51255f2882a",
+    "source/control/com/veloster/carplay/control/ControlListener.java": "776bd9104ecf9431f1c955cdcbdc712a6455a5d888f9318808ddfa9c62b89fed",
     "source/control/com/veloster/carplay/control/ControlMessage.java": "9e44060f6f01993a8f117556017f6cff2f19dc63f547c146d65b29f897463bf6",
     "source/control/com/veloster/carplay/control/EncryptedEvents.java": "8020c8462bef89a0f5f31bc609a008976876471d3c140f83a03d1532f0209006",
     "source/control/com/veloster/carplay/control/IapSetupHandler.java": "bfaac6189420bd93ba33e2e02157d71490360de724fd93a5e4d540df2b17cd3c",
@@ -344,7 +344,7 @@
     "source/control/com/veloster/carplay/control/ObservedPeerAdmission.java": "bbc7fb6dfe45be90e8b7434749fbf17f769c4884dd7d0a00525cdf536dc6b371",
     "source/control/com/veloster/carplay/control/ProvisionalPeerAdmission.java": "427a3a3a83c44e2c8f072b8486efbaafda781e533f9567d6d4ed5a90c9e5ecc8",
     "source/control/com/veloster/carplay/control/ReceiverAdmission.java": "2c4b97ff4042c300b6d9af64a4b7a629a237d25dde7b50b85d7142ed304190ee",
-    "source/control/com/veloster/carplay/control/ReceiverMetadata.java": "42d0e09b047460314deb651a4246b5e47ba77a1c90f84b383277e8d49f1f842b",
+    "source/control/com/veloster/carplay/control/ReceiverMetadata.java": "58839ada416fd55d6e0780abe8a67ac8753727d60fdbec83e50822bd6e7253f6",
     "source/control/com/veloster/carplay/control/ReceiverScope.java": "a820eed98631ae99808eab360e49e8f5363d04c09601432de05d799940da396b",
     "source/control/com/veloster/carplay/control/ReceiverWorkers.java": "45c362ff6e0d122cd5f3deaa13f7ab4348d0efe9e33aafe0d7e648dbcefb9dfd",
     "source/control/com/veloster/carplay/control/RuntimeControlHost.java": "cd2328d94c671e6d50f24c3439375a8592f5fbafca7c3f5288fb042c12d615e7",
@@ -398,7 +398,7 @@
     "source/input/com/veloster/carplay/input/ReceiverHardwareSiriSource.java": "2edfa9d9772fc3a03bd02a02bc6cefe70762d4eac975729e3e5811113ec3b38d",
     "source/input/com/veloster/carplay/input/ReceiverModeInput.java": "94ecd1f6dcb667fef8a72ac597256ab7ec89afa234745412a8ecaa7d412ce14b",
     "source/input/com/veloster/carplay/input/ReceiverSiriInput.java": "ba04dccbcdc1df0f7898a2f5f74d0079dbd8e51d9509685e07d9a291f113843b",
-    "source/input/com/veloster/carplay/input/ReceiverTouchInput.java": "b63812603ad2a6ac3bf10f696a62f51d3b2d08c8567789424abe0703a75f8dfc",
+    "source/input/com/veloster/carplay/input/ReceiverTouchInput.java": "5693303cef8e0c2f545281596dd4325e866831c57f68a3ecbffcb0644bd90a96",
     "source/input/com/veloster/carplay/input/TouchHid.java": "e58b57930e32f2e04faf9fa4424f952d66154c6060be338286a4089355867fe5",
     "source/input/com/veloster/carplay/input/TouchInput.java": "060a0f3423b3c6937849c1be95549cfff69a4edae42d091a9adbf0cc82dacac4",
     "source/location/com/veloster/carplay/location/Api17GpsLocationSource.java": "f1f9e467ceb28a0039faa26925c0e45ee329586b7f820d1ea4168602e0ae742d",
@@ -423,7 +423,7 @@
     "source/advertisement/java/com/veloster/carplay/advertisement/ReceiverAdvertisement.java": "8d6940a4b5391fdb0bdeeffa3bbcd41cb2d0b83ad502c00de7962ae10adbbdcc",
     "source/discovery/com/veloster/carplay/discovery/AndroidApprovalUi.java": "2c8896a5086086c7202f2e31e3633f60886082128bfe0010aaef849212ffbc8e",
     "source/discovery/com/veloster/carplay/discovery/AndroidMulticastLease.java": "270e937f5a7800d6c8832b807f1dc50588e58bb13a3e9d51b274bdc2e7dbc51e",
-    "source/discovery/com/veloster/carplay/discovery/AndroidReceiverSession.java": "da545023f7f717a30bed86c710846706b820dd6aecb1f11c85cf144d1ea34632",
+    "source/discovery/com/veloster/carplay/discovery/AndroidReceiverSession.java": "938e4e386d520d53327dca7c7c61ee69ed131b58175a58c9a2138fbb4c34731a",
     "source/discovery/com/veloster/carplay/discovery/AndroidReceiverUi.java": "444e819214516957704cbca4dc93da0d2371bb36c9caf377a37f2c14b291815a",
     "source/discovery/com/veloster/carplay/discovery/PublishedReceiver.java": "c61d80093817232e0998a2e054d9854a12e585da47afeee26626321d4f5c4c8d",
     "source/discovery/com/veloster/carplay/discovery/ReceiverDiscovery.java": "4bc2d22b6d4241bd1e118323823cffc9e29fd76945effe676cf59e23f3198785",
@@ -512,8 +512,22 @@
     "native/pairing/srp_jni.c": "904920c3a3701b6864d24ca1105c1fe40195c2773163a2073a9377b7e9d81a88",
     "native/audio-codec/native/eld16k_system_encoder.c": "bddcfa39dc56dd20e3979485ad556b16bf56861e91ec94283f086249c37f11ac",
     "native/audio-codec/native/eld16k_system_encoder.h": "a895fb74dc032a8774c13578e6ff6ebb11c0deae31c14d96212f5ecb85b301a1",
-    "native/audio-codec/native/eld16k_jni.c": "6affc454040c5e1de46d575d2aeab942d4ed0966c2175772b7144b29d9a22489"
+    "native/audio-codec/native/eld16k_jni.c": "6affc454040c5e1de46d575d2aeab942d4ed0966c2175772b7144b29d9a22489",
+    "source/coordinator/com/veloster/carplay/coordinator/ReceiverEngineProvider.java": "a0c187423bf2b887ab089d8912209733757ee398433ff96889c585de795d22eb"
   },
   "oem_code_or_binary_included": false,
-  "runtime_verified_by_export": false
+  "runtime_verified_by_export": false,
+  "public_engine_integration_overrides": {
+    "date": "2026-11-08",
+    "upstream_import_source_hashes_retained": true,
+    "files": {
+      "source/coordinator/com/veloster/carplay/coordinator/ReceiverEngineProvider.java": "a0c187423bf2b887ab089d8912209733757ee398433ff96889c585de795d22eb",
+      "source/coordinator/com/veloster/carplay/coordinator/IndependentReceiverControl.java": "8d2576df383341dcd86e15c65f17d7f456009a3084dc4ddf11328467d7ef4bd7",
+      "source/coordinator/com/veloster/carplay/coordinator/IndependentSessionBackend.java": "1deebdbc5f90c1558e99a3de0415453f977d74d6dc772b6bc87e07cb3ff54d2a",
+      "source/control/com/veloster/carplay/control/ControlListener.java": "776bd9104ecf9431f1c955cdcbdc712a6455a5d888f9318808ddfa9c62b89fed",
+      "source/control/com/veloster/carplay/control/ReceiverMetadata.java": "58839ada416fd55d6e0780abe8a67ac8753727d60fdbec83e50822bd6e7253f6",
+      "source/discovery/com/veloster/carplay/discovery/AndroidReceiverSession.java": "938e4e386d520d53327dca7c7c61ee69ed131b58175a58c9a2138fbb4c34731a",
+      "source/input/com/veloster/carplay/input/ReceiverTouchInput.java": "5693303cef8e0c2f545281596dd4325e866831c57f68a3ecbffcb0644bd90a96"
+    }
+  }
 }
