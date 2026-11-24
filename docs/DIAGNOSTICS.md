@@ -1,6 +1,6 @@
 # App-private error records / 앱 내부 오류 기록
 
-[Documentation](README.md) · [NEMESIS code review](NEMESIS_REVIEW.md)
+[Documentation](README.md)
 
 Unreleased source candidate, 2026-11-02. Both apps initialize [ErrorLog](../shared/src/com/veloster/diagnostics/ErrorLog.java) from their Application before Activities, Services and receivers start. Uncaught Java exceptions are passed to the previous Android exception handler after a best-effort write; logging failure does not suppress that handler. Vehicle subscription/cleanup failures and shortcut start/notification/overlay failures also write records.
 

@@ -1,16 +1,11 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.carplayhub" android:versionCode="24" android:versionName="1.23-wireless-preview">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.carplayhub" android:versionCode="11" android:versionName="1.10-star">
     <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="17" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.GET_TASKS" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="com.veloster.carplay.permission.CONTROL_EIR" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REBOOT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -18,24 +13,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
     <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
-    <uses-feature android:name="android.hardware.microphone" android:required="false" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
-    <application android:name="com.veloster.carplayhub.HubApplication" android:label="@string/app_name" android:allowBackup="false" android:debuggable="true" android:theme="@android:style/Theme.Holo.NoActionBar">
+    <application android:name="com.veloster.diagnostics.DiagnosticApplication" android:label="@string/app_name" android:allowBackup="false" android:debuggable="true" android:theme="@android:style/Theme.Holo.NoActionBar">
         <activity android:name="com.veloster.carplayhub.HubActivity" android:exported="true" android:screenOrientation="landscape" android:launchMode="singleTop">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name="com.veloster.carplayhub.CarPlayReceiverActivity" android:exported="false" android:screenOrientation="landscape" />
-        <service android:name="com.veloster.carplay.coordinator.WirelessCarPlayService" android:exported="false" />
-        <receiver android:name="com.veloster.carplayhub.CarPlayBootReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
-        <activity android:name="com.veloster.carplayhub.WirelessCarPlayActivity" android:exported="false" android:screenOrientation="landscape" />
-        <activity android:name="com.veloster.carplayhub.UsbWifiActivity" android:exported="false" android:screenOrientation="landscape" />
-        <activity android:name="com.veloster.carplayhub.InternetCheckActivity" android:exported="false" android:screenOrientation="landscape" />
-        <activity android:name="com.veloster.carplayhub.UpdateActivity" android:exported="false" android:screenOrientation="landscape" />
         <service android:name="com.veloster.carplayhub.QuickEntryService" android:exported="false" />
         <receiver android:name="com.veloster.carplayhub.QuickEntryReceiver" android:exported="false">
             <intent-filter>
@@ -43,6 +24,10 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
+        </receiver>
+        <!-- ☆ button broadcast from the OEM mode service (no permission on its side); only opens the dashboard. -->
+        <receiver android:name="com.veloster.carplayhub.StarKey" android:exported="true">
+            <intent-filter><action android:name="com.veloster.carplayhub.STAR_KEY" /></intent-filter>
         </receiver>
     </application>
 </manifest>

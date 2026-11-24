@@ -2,6 +2,7 @@ import sys,os,shutil
 # Fake adb for the PC installers (see run.sh). State next to this file: inst/<pkg>.apk (installed), tmp/ (pushed).
 # FAKE_ABSENT=n: the first n 'devices' calls see no car. FAKE_BUILD: the head unit's build (default the verified one).
 # FAKE_GONE=1: the cable comes out before the uninstall (uninstall and pm path answer with adb's error).
+# FAKE_CLASH=1: the first dashboard 'pm install' fails with a signature clash (state: clash.done).
 d=os.path.dirname(os.path.abspath(__file__));a=sys.argv[1:]
 inst=os.path.join(d,'inst');tmp=os.path.join(d,'tmp');os.makedirs(inst,exist_ok=True);os.makedirs(tmp,exist_ok=True)
 open(os.path.join(d,'calls.log'),'a',encoding='utf-8').write(' '.join(a)+'\n')
@@ -28,6 +29,8 @@ elif a[0]=='shell':
         print({'ro.product.name':'jsn_kr','ro.product.device':'jsn_kr','ro.build.version.sdk':'17','ro.build.version.incremental':os.environ.get('FAKE_BUILD','eng.vmadmin.20250902.081552'),'sys.usb.state':'adb'}.get(k,''))
     elif c[:2]==['pm','path']:
         if os.path.exists(os.path.join(inst,c[2]+'.apk')):print('package:/data/app/%s-1.apk\r'%c[2])
+    elif c[:3]==['pm','install','-r'] and os.environ.get('FAKE_CLASH')=='1' and 'Dashboard' in c[3] and not os.path.exists(os.path.join(d,'clash.done')):
+        open(os.path.join(d,'clash.done'),'w').close();print('Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE]\r')
     elif c[:3]==['pm','install','-r']:shutil.copy(os.path.join(tmp,os.path.basename(c[3])),os.path.join(inst,PKG(c[3])+'.apk'));print('\tpkg: %s\r\nSuccess\r'%c[3])
     elif c[:2]==['rm','-f']:pass
     elif c[:2]==['am','start']:print('Starting: Intent { cmp=com.veloster.carplayhub/.HubActivity }')

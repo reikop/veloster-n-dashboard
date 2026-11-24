@@ -11,56 +11,72 @@
 
 ## 준비물
 
-- Windows 노트북, 맥, 또는 리눅스(라즈베리파이 포함)
-- 차 USB 포트와 노트북을 잇는 데이터 케이블. 케이블을 바꿔서 연결된 사례가 있습니다.
-- [Releases](https://github.com/reikop/veloster-n-dashboard/releases)의 설치기 ZIP 하나, 또는 직접 설치할 때는 APK 2개
-  - `vn-installer-windows.zip` (Windows), `vn-installer-mac.zip` (맥), `vn-installer-linux.zip` (리눅스)
-  - `N-Dashboard-API17.apk`: N 계기판
-  - `My-Apps-API17.apk`: '내 앱'. 홈 화면 가장자리 버튼·알림으로 계기판을 여는 보조 앱
-  - 릴리스에 적힌 SHA-256과 받은 파일이 같은지 확인하세요: Windows `certutil -hashfile 파일.apk SHA256`, 맥·리눅스 `shasum -a 256 파일.apk`
+- Windows 노트북, 맥, 리눅스(라즈베리파이 포함), 또는 안드로이드 폰(8.0 이상)
+- 차 USB 포트와 노트북을 잇는 데이터 케이블. 케이블을 바꿔서 연결된 사례가 있습니다. 폰은 OTG 어댑터(USB-C 수 → USB-A 암) + USB A–A 케이블.
+- [Releases](https://github.com/reikop/veloster-n-dashboard/releases/latest)에서 **내 기기에 맞는 설치기 하나만** 받습니다. 두 앱(N 계기판 · '내 앱')은 설치기 안에 들어 있어 따로 받을 것이 없고, 차 옆에서 인터넷이 없어도 됩니다.
+  - `vn-installer-windows.zip` (Windows), `vn-installer-mac.zip` (맥), `vn-installer-linux.zip` (리눅스), `vn-installer-android.apk` (안드로이드 폰)
+  - 릴리스의 `SHA256SUMS.txt`와 받은 파일이 같은지 확인할 수 있습니다: Windows `certutil -hashfile 파일 SHA256`, 맥·리눅스 `shasum -a 256 파일`
+  - 설치기는 안에 든 두 APK가 함께 든 `bundle.txt`의 SHA-256과 다르면 설치하지 않습니다.
+  - 테스트 버전(실차 검증 전)은 `test` 사전 배포에 있는 다른 설치기입니다. 설치기는 안에 든 버전만 설치합니다.
 
 ## 설치 프로그램으로 하기 (쉬운 방법)
 
+Windows와 맥은 **창 설치기**가 기본입니다. 창 하나에서 [설치] / [삭제] / [진단 기록]을 누르면 되고, 터미널이나 Enter 입력이 없습니다. 차 화면의 **1단계**(엔지니어링 모드)·**2단계**(Factory Test)는 여전히 직접 합니다. 예전의 콘솔 설치기(`설치.cmd` / `설치.command`)도 같은 ZIP에 남아 있어, 창 설치기가 안 될 때 대신 씁니다.
+
 ### Windows
 
-1. `vn-installer-windows.zip`을 받아 압축을 풉니다. 안에 `설치.cmd`, `삭제.cmd`, `진단기록.cmd`, `install.ps1`이 있습니다.
-2. 아래 **1단계**(엔지니어링 모드)와 **2단계**(Factory Test)를 차 화면에서 합니다.
-3. USB 케이블로 차와 노트북을 연결합니다.
-4. `설치.cmd`를 더블클릭합니다. 노란 "보안 경고" 창이 뜨면 [실행]을 누릅니다.
-   - 처음에 버전을 묻습니다. `1) 안정화`(Enter)는 최신 정식 릴리스, `2) 테스트`는 `test` 사전 배포입니다.
-   - APK는 설치기 옆에 있으면 그것을 쓰고, 없으면 고른 버전의 릴리스에서 받습니다. ADB가 없으면 Google 공식 platform-tools를 받을지 묻습니다.
-   - 차(`jsn_kr`)만 골라 빌드를 확인한 뒤 두 앱을 설치하고 차 화면에 '내 앱'을 엽니다. 휴대폰 등 다른 기기는 건드리지 않습니다.
-   - 차에 이미 같은 버전이 있으면 그 앱은 건너뜁니다.
-5. 차 화면에서 **5단계**를 합니다.
+1. `vn-installer-windows.zip`을 받아 **압축을 풉니다**(ZIP 안에서 바로 실행하지 마세요).
+2. `N계기판설치.cmd`를 더블클릭합니다. 노란 "보안 경고" 창이 뜨면 [실행]을 누릅니다. 창 설치기가 열립니다.
+   - 위쪽에 `이 설치기에 든 버전: N 계기판 … · '내 앱' …`이 나옵니다.
+   - 창에 나온 대로 **1단계**·**2단계**를 차 화면에서 합니다. Factory Test 세 줄(`0A 01` / `65 01` / `0A 02`)은 [복사]로 옮길 수 있습니다.
+3. USB 케이블로 차와 노트북을 연결하고 [설치]를 누릅니다(먼저 눌러 두어도 됩니다. 차를 5분까지 기다리며 경과 초를 보여 줍니다).
+   - 차(`jsn_kr`)만 골라 빌드를 확인한 뒤 두 앱을 설치하고 차 화면에 '내 앱'을 엽니다. 휴대폰 등 다른 기기, 다른 빌드에는 아무것도 하지 않습니다.
+   - 차에 이미 같은 버전이 있으면 그 앱은 건너뜁니다. 서명이 다른 예전 앱이 있으면 지우고 다시 설치할지 창으로 묻습니다.
+   - ADB가 없으면 Google 공식 platform-tools를 받을지 창으로 묻습니다(이때만 인터넷이 필요합니다).
+4. 끝나면 초록(완료) 또는 빨강(중단) 띠에 결과와 USB 디버깅 끄는 법이 나옵니다. 차 화면에서 **5단계**를 합니다.
 
-설치가 안 되면 `%LOCALAPPDATA%\vn-installer\`의 기록 파일을 함께 보내 주세요. "알 수 없는 장치"로 뜨면 설치기가 Google USB 드라이버 지정 순서를 안내합니다.
+창 설치기가 안 되면 `설치.cmd`(콘솔)를 쓰세요. 기록 파일은 `%LOCALAPPDATA%\vn-installer\`에 있습니다. "알 수 없는 장치"로 뜨면 설치기가 Google USB 드라이버 지정 순서를 안내합니다.
 
 ### 맥
 
-1. `vn-installer-mac.zip`을 받아 풀면 `설치.command`, `삭제.command`, `진단기록.command`가 나옵니다.
-2. 1~2단계를 한 뒤 USB를 연결하고 `설치.command`를 더블클릭합니다. 이후는 Windows와 같습니다.
-   - "Apple에서 확인할 수 없습니다" 창이 뜨면 [완료]를 누르고 **시스템 설정 → 개인정보 보호 및 보안** 맨 아래 **[그래도 열기]**를 누릅니다(macOS 14 이하는 파일 우클릭 → [열기]).
-   - 번거로우면 터미널에 `bash ` (뒤에 띄어쓰기 한 칸)를 치고 `설치.command`를 끌어다 놓은 뒤 Enter.
+1. `vn-installer-mac.zip`을 받아 풀면 `N 계기판 설치.app`과 콘솔용 `설치.command` · `삭제.command` · `진단기록.command`가 나옵니다.
+2. `N 계기판 설치.app`을 엽니다. 이후는 Windows 창 설치기와 같습니다.
+   - 처음 한 번 "Apple에서 확인할 수 없습니다" 창이 뜹니다(서명은 임시 서명). [완료]를 누르고 **시스템 설정 → 개인정보 보호 및 보안** 맨 아래 **[그래도 열기]**를 누릅니다(macOS 14 이하는 앱 우클릭 → [열기]).
    - USB-C만 있는 맥은 USB-A 어댑터가 필요합니다.
-   - 기록 파일: `~/Library/Logs/vn-installer/`
+   - 작업 폴더 `~/Library/Application Support/vn-installer/`, 기록 파일 `~/Library/Logs/vn-installer/`
+3. 창 설치기가 안 되면 `설치.command`를 더블클릭하거나, 터미널에 `bash ` (뒤에 띄어쓰기 한 칸)를 치고 `설치.command`를 끌어다 놓은 뒤 Enter.
 
-### 리눅스·라즈베리파이
+### 리눅스·라즈베리파이 (콘솔)
 
 ```
 unzip vn-installer-linux.zip -d vn && cd vn && bash install.sh
 ```
 
-- `curl`이 필요합니다(`sudo apt install curl`).
-- adb가 없으면 x86_64는 Google platform-tools를 받고, ARM(라즈베리파이 등)은 `sudo apt-get install adb`로 설치할지 묻습니다.
+- 두 앱은 ZIP에 들어 있습니다. adb가 없을 때만 인터넷이 필요합니다: x86_64는 Google platform-tools를 받고(`curl` 필요, `sudo apt install curl`), ARM(라즈베리파이 등)은 `sudo apt-get install adb`로 설치할지 묻습니다.
 - 차가 `no permissions`로 보이면 차 장치(VID `18d1`, PID `d00d`)에만 규칙 한 줄(`/etc/udev/rules.d/51-vndashboard.rules`)을 넣을지 묻습니다. 넣은 뒤 케이블을 뺐다 다시 꽂습니다.
 - 삭제 `bash uninstall.sh`, 진단 기록 `bash diag.sh`. 기록 파일: `~/.local/state/vn-installer/`
+
+### 휴대폰으로 하기 (안드로이드)
+
+노트북 없이 안드로이드 폰(8.0 이상)으로 설치·삭제합니다. 노트북 설치기와 같은 순서·같은 조건(`jsn_kr` · API 17 · `eng.vmadmin.20250902.081552`)으로 하고, 다른 기기나 다른 빌드에는 설치하지 않습니다. 삭제는 빌드와 상관없이 됩니다.
+
+- 준비물: OTG 어댑터(USB-C 수 → USB-A 암) + USB A–A 케이블. 폰 설정에 OTG 켜기가 있으면 켜 둡니다.
+- [Releases](https://github.com/reikop/veloster-n-dashboard/releases/latest)에서 `vn-installer-android.apk`를 받아 폰에 설치합니다("출처를 알 수 없는 앱" 허용이 필요합니다). 앱 이름은 **N 계기판 설치**입니다. 두 앱은 이 APK 안에 들어 있습니다.
+- 앱 위쪽에 `이 설치기에 든 버전`이 나옵니다. [설치] 또는 [삭제]를 누르고, 화면 안내대로 **1단계**·**2단계**를 한 다음 케이블을 연결합니다.
+- 폰에 USB 접근 허용 창이 뜨면 [확인], 차에 "USB 디버깅 허용" 창이 뜨면 [항상 허용]을 누릅니다.
+- [삭제]는 한 번 묻고 두 앱만 지웁니다. '내 앱'에서 ☆ 버튼을 계기판으로 써 왔다면 지우기 전에 '내 앱'에서 ☆를 끄세요. 이미 지웠다면 ☆를 길게 눌러 나오는 순정 설정에서 원래 기능을 고르면 됩니다.
+- [진단 기록]은 차를 연결해 상태와 앱 기록만 읽고(MAC·전화번호·메일·기기 번호는 가림) `vn_진단기록_<시각>.txt`로 공유 화면을 띄웁니다. 보낼 앱은 직접 고릅니다.
+- 위쪽에 주황 띠(`새 설치 앱 …`)와 **[업데이트]**가 보이면 이 휴대폰 설치 앱의 새 버전이 나온 것입니다. 누르면 최신 릴리스의 `vn-installer-android.apk`를 받아 폰의 설치 화면을 띄웁니다. 거기서 [업데이트]를 누르고 앱을 다시 여세요. 인터넷이 없으면 띠만 안 나오고 설치는 그대로 됩니다.
+- 이미 같은 버전이 깔려 있으면 건너뜁니다.
+- 실제 폰·차에서는 아직 이 앱으로 설치해 보지 않았습니다. 안 되면 [공유]로 화면 기록을 보내 주세요. 소스는 [`installer/android/`](installer/android/)에 있습니다.
 
 설치기 설명은 [`installer/README.md`](installer/README.md)에 있습니다.
 
 ### 지우기 (원래대로 되돌리기)
 
 1. 설치할 때처럼 1~2단계를 하고 USB를 연결합니다.
-2. `삭제.cmd`(맥 `삭제.command`, 리눅스 `bash uninstall.sh`)를 실행합니다. N 계기판과 '내 앱' 두 앱이 지워집니다.
+2. 창 설치기(`N계기판설치.cmd` / `N 계기판 설치.app`)에서 [삭제], 또는 콘솔 `삭제.cmd`(맥 `삭제.command`, 리눅스 `bash uninstall.sh`)를 실행합니다. N 계기판과 '내 앱' 두 앱만 지워집니다.
+3. '내 앱'에서 ☆ 버튼을 계기판으로 써 왔다면 지우기 전에 '내 앱'에서 ☆를 끄세요. 이미 지웠다면 ☆를 길게 눌러 나오는 순정 설정에서 원래 기능을 고르면 됩니다.
 
 이 앱들은 순정 시스템 파일을 바꾸지 않으므로 두 앱만 지우면 설치 전 상태입니다. N 계기판의 설정 백업 파일(`/sdcard/vndashboard/settings.txt`)은 남아 있어, 다시 설치하면 되돌릴지 한 번 묻습니다.
 
@@ -68,7 +84,7 @@ ADB로 직접: `adb uninstall com.veloster.dashboard` · `adb uninstall com.velo
 
 ### 문제 알리기 (진단 기록)
 
-`진단기록.cmd`(맥 `진단기록.command`, 리눅스 `bash diag.sh`)를 실행하면 차에는 아무것도 바꾸지 않고, 정해 둔 내비 속성·두 앱의 버전·두 앱의 로그만 읽어 바탕화면에 `vn_진단기록_<시각>.txt`로 저장합니다. MAC 주소·전화번호·메일·기기 번호는 가립니다. 증상(언제, 어떤 화면에서, 무엇이)과 함께 [Issues](https://github.com/reikop/veloster-n-dashboard/issues)에 올려 주세요.
+창 설치기에서 [진단 기록]을 누르거나 콘솔 `진단기록.cmd`(맥 `진단기록.command`, 리눅스 `bash diag.sh`)를 실행하면 차에는 아무것도 바꾸지 않고, 정해 둔 내비 속성·두 앱의 버전·두 앱의 로그만 읽어 바탕화면에 `vn_진단기록_<시각>.txt`로 저장합니다. MAC 주소·전화번호·메일·기기 번호는 가립니다. 증상(언제, 어떤 화면에서, 무엇이)과 함께 [Issues](https://github.com/reikop/veloster-n-dashboard/issues)에 올려 주세요.
 
 아래 1~2단계는 차 화면에서, 3~5단계는 설치기 없이 ADB 명령으로 직접 하는 방법입니다.
 
@@ -119,6 +135,8 @@ adb shell getprop ro.build.version.incremental
 목록에 `device`, `product:jsn_kr`이 보이고, 속성이 차례로 `jsn_kr`, `17`, `eng.vmadmin.20250902.081552`이면 됩니다. `unauthorized`면 차 화면의 "USB 디버깅 허용"에서 [항상 허용]을 누릅니다.
 
 ## 4단계 — 설치
+
+APK 두 개는 받은 설치기 ZIP 안에 있습니다(`N-Dashboard-API17.apk` · `My-Apps-API17.apk`, 함께 든 `bundle.txt`에 SHA-256이 적혀 있음). 압축을 푼 폴더에서:
 
 ```
 adb install -r N-Dashboard-API17.apk

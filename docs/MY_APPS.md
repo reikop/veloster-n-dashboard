@@ -6,7 +6,7 @@ See [Language settings](LANGUAGES.md) for Korean/English selection. Button label
 
 **English** | [한국어](MY_APPS_ko.md) | [Project](../README.md)
 
-**My Apps (내 앱)** is a separate companion app for opening N Dashboard, other installed apps, and selected head-unit settings. It is not required for telemetry decoding, and it does not replace the factory home screen. The current prerelease is **v10 / `1.9-i18n`**, package `com.veloster.carplayhub`. The historical package name does not mean that wireless CarPlay is implemented.
+**My Apps (내 앱)** is a separate companion app for opening N Dashboard, other installed apps, and selected head-unit settings. It is not required for telemetry decoding, and it does not replace the factory home screen. The current release is **v11 / `1.10-star`**, package `com.veloster.carplayhub`. The historical package name does not mean that wireless CarPlay is implemented.
 
 [Download My Apps v10](../apks/My-Apps-v10-API17.apk) · [Installation guide](INSTALL_EN.md) · [Quick-entry setup](QUICK_ENTRY.md) · [Reopening after reboot](INSTALL_EN.md#after-reboot)
 
@@ -24,6 +24,7 @@ See [Language settings](LANGUAGES.md) for Korean/English selection. Button label
 | --- | --- |
 | **실행 바로가기 — Quick entry** | Choose floating button + notification, notification only, or OFF. OFF is the default; only an explicitly enabled shortcut is restored at boot. |
 | **내 앱 — My Apps** | Returns to the shortcut and app-list page. |
+| **☆ 버튼 → 계기판 — ☆ button → dashboard** | When on, a short press of the ☆ (user) button opens N Dashboard; turning it off restores the previous function. Opening the stock button settings with a long press unlinks it. Turn it off before removing My Apps. Not yet verified in the vehicle. |
 | **N 계기판 — N Dashboard** | Opens the separately installed `com.veloster.dashboard` app. It does not depend on the old button inside the factory N Mode app. |
 | **USB 디버깅 — USB debugging** | Displays the requested OEM USB mode and offers ON/OFF. ON requests debug mode; OFF requests normal USB mode and can disconnect ADB. This differs from the generic Android developer-setting toggle. |
 | **엔지니어링 모드 — Engineering mode** | Opens the existing OEM engineering screen if it is installed and accessible. It does not add missing OEM menus. |

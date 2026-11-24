@@ -7,11 +7,14 @@
   무서명 .exe 가 SmartScreen/백신에 막히던 문제를 없애려고 배치 + PowerShell 로 바꿨다. powershell.exe 는
   Microsoft 서명본이라 SmartScreen 평판 차단이 없고, .cmd 는 파란 차단창 없이 노란 경고 한 번만 뜬다.
 
-  버전: 시작할 때 안정화(최신 정식 릴리스, 실차 확인) / 테스트('test' 사전 배포, 실차 검증 전) / 진단 기록 모으기 중 고른다.
-  테스트 인자: -AdbPath <adb 경로>  -Channel stable|test  -Yes(확인 모두 예, 대기/프롬프트 생략, 안정화)  -Uninstall(두 앱 삭제)
+  앱 파일: 설치기 ZIP에 든 N-Dashboard-API17.apk · My-Apps-API17.apk 만 설치한다. 옆의 bundle.txt(scripts/apk_info.py가 만듦)에
+  적힌 패키지·SHA-256과 다르면 설치하지 않는다. 앱을 인터넷에서 받지 않는다(adb가 없을 때만 받음). 테스트 버전은 'test' 사전 배포의 다른 ZIP.
+  테스트 인자: -AdbPath <adb 경로>  -Yes(확인 모두 예, 대기/프롬프트 생략)  -Uninstall(두 앱 삭제)
               -Diag(설치하지 않고 진단 기록 파일만 만든다)
+  창 설치기(gui.ps1)용: -Gui  묻지 않고(Enter 대기 없음) 차를 스스로 기다리며, 줄 단위로 찍고 아래 상태 줄을 낸다.
+                 @@STEP <제목>  @@WAIT <초> <안내>  @@ASK <질문>(표준 입력에서 y/n 한 줄을 읽음)  @@FILE <경로>  @@DONE ok|fail <내용>
 #>
-param([string]$AdbPath, [string]$ApkBase, [string]$Channel, [switch]$Yes, [switch]$Uninstall, [switch]$Diag)
+param([string]$AdbPath, [switch]$Yes, [switch]$Uninstall, [switch]$Diag, [switch]$Gui)
 
 # 'Continue' (not 'Stop'): adb writes its progress to stderr, and under 'Stop' a native
 # command's stderr turns into a terminating error (NativeCommandError) that aborts the
@@ -35,6 +38,7 @@ function CellWidth([char]$ch){
   return 1
 }
 function Fit([string]$m, [int]$max = 0){
+  if($Gui){ return ,@($m) }   # 창 설치기가 줄을 직접 나눈다
   if($max -le 0){ $max = 78; try { $w = [Console]::WindowWidth; if($w -ge 40){ $max = $w - 2 } } catch {} }
   $out = New-Object System.Collections.Generic.List[string]
   $indent = ''; if($m -match '^( +)'){ $indent = $Matches[1] + '  ' }   # 이어지는 줄은 원래 들여쓰기 + 2칸
@@ -86,14 +90,16 @@ $Log = Join-Path $LogDir ("install_{0}.log" -f (Get-Date -Format yyyyMMdd_HHmmss
 
 function Log($m){ Add-Content -LiteralPath $Log -Value $m }   # 기록 파일에만 (문제 제보용)
 function Note($m,[string]$c='Gray'){ Write-Host $m -ForegroundColor $c; Log $m }
-function Head($m){ $t = Get-Date -Format HH:mm:ss; Write-Host ''; Write-Host "$m   [$t]" -ForegroundColor Cyan; Log "== $m == $t" }
+function Head($m){ $t = Get-Date -Format HH:mm:ss; Write-Host ''; if($Gui){ Write-Host "@@STEP $m" }; Write-Host "$m   [$t]" -ForegroundColor Cyan; Log "== $m == $t" }
 function Die($m,$code){
   Write-Host ''; Write-Host $m -ForegroundColor Red; Log "ERROR: $m"
   Write-Host "기록 파일: $Log" -ForegroundColor Yellow
   Write-Host '문제를 알릴 때 이 기록 파일을 함께 보내 주세요.' -ForegroundColor Yellow
-  if(-not $Yes){ try { Start-Process explorer.exe "/select,`"$Log`"" } catch {} }
+  if($Gui){ Write-Host "@@FILE $Log"; Write-Host ('@@DONE fail ' + ([string]$m -split "`r?`n")[0]) }
+  elseif(-not $Yes){ try { Start-Process explorer.exe "/select,`"$Log`"" } catch {} }
   exit $code
 }
+function Done(){ if($Gui){ Write-Host '@@DONE ok' }; exit 0 }
 function UsbOffNote(){
   Note 'USB 디버깅 끄기: 시동을 껐다 켜면 저절로 꺼집니다. 바로 끄려면 Factory Test에서  0A 01 → 65 00 → 0A 02' Gray
   Note "  (또는 '내 앱' → USB 디버깅 → OFF). 끄면 노트북 연결이 끊깁니다." Gray
@@ -107,7 +113,10 @@ function Mask([string]$t){
   if($env:USERPROFILE){ $t = $t.Replace($env:USERPROFILE,'%USERPROFILE%') }
   return $t
 }
-function Ask($m){ if($Yes){ return $true }; $r = Read-Host "$m [Y/n]"; return ($r -eq '' -or $r -match '^[Yy]') }
+# -Gui: 창 설치기가 예/아니오 창을 띄우고 답 한 줄(y/n)을 표준 입력으로 보낸다. 답이 없으면(창이 닫힘) 아니오.
+function Ask($m){
+  if($Gui){ Write-Host "@@ASK $m"; $r = [Console]::In.ReadLine(); Log "$m → $r"; return ("$r" -match '^[Yy]') }
+  if($Yes){ return $true }; $r = Read-Host "$m [Y/n]"; return ($r -eq '' -or $r -match '^[Yy]') }
 function Adb([Parameter(ValueFromRemainingArguments=$true)]$a){
   $o = & $script:adbExe @a 2>&1 | Out-String
   Add-Content -LiteralPath $Log -Value ("> adb " + ($a -join ' ') + "`n" + $o)
@@ -120,6 +129,7 @@ function AdbWait([int]$sec,[string]$what,[string[]]$a){
   $line = ($a | ForEach-Object { if($_ -match '\s'){ '"' + $_ + '"' } else { $_ } }) -join ' '
   Log "> adb $line  (최대 ${sec}초)"
   $p = Start-Process -FilePath $script:adbExe -ArgumentList $line -NoNewWindow -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+  if($Gui){ Write-Host "@@WAIT 0 $what" }
   Write-Host "  $what " -NoNewline
   $t0 = Get-Date; $shown = 0
   while(-not $p.WaitForExit(1000)){
@@ -178,99 +188,36 @@ if(-not $script:adbExe){
 Note "adb: $script:adbExe" DarkGray
 Log ("환경: Windows $([Environment]::OSVersion.Version) / PowerShell $($PSVersionTable.PSVersion) / " + ((& $script:adbExe version 2>&1 | Select-Object -First 1) -join ''))
 
-# --- 릴리스 정보: 고를 버전의 번호·날짜와 노트 요약 (휴대폰 앱 Flow.describe/summary, 설치.command와 같은 규칙) ---
-$Api = 'https://api.github.com/repos/reikop/veloster-n-dashboard/releases'
-function CleanMd([string]$t){ $t = [regex]::Replace($t, '\[([^\]]+)\]\([^)]+\)', '$1'); return $t.Replace('**','').Replace('`','') }
-function ShortLine([string]$t){
-  $i = $t.IndexOf('다. '); if($i -lt 0){ $i = $t.IndexOf('. ') }
-  if($i -ge 0){ $t = $t.Substring(0, $i + 2).TrimEnd() }
-  if($t.Length -gt 90){ $t = $t.Substring(0, 89) + '…' }
-  return $t
-}
-# 노트를 몇 줄로: 소제목(### 또는 **굵은 줄**)마다 첫 항목의 첫 문장, 설치·서명 절이나 테스트 노트의 지난 기록('> ')에서 멈춘다.
-function NotesSummary([string]$body,[int]$heads=6){
-  $out = New-Object System.Collections.Generic.List[string]; $n = 0; $want = $false
-  foreach($raw in ($body -split "`r?`n")){
-    $l = $raw.Trim()
-    if($n -gt 0 -and ($l.StartsWith('> ') -or $l.StartsWith('### 설치') -or $l.StartsWith('### 서명'))){ break }
-    $h = $null
-    if($l.StartsWith('### ')){ $h = $l.Substring(4) } elseif($l.Length -gt 4 -and $l.StartsWith('**') -and $l.EndsWith('**')){ $h = $l.Substring(2, $l.Length - 4) }
-    if($h){ if($n -eq $heads){ break }; $n++; $out.Add('■ ' + (CleanMd $h)); $want = $true; continue }
-    if($want -and $l.StartsWith('- ')){ $out.Add('   ' + (ShortLine (CleanMd $l.Substring(2)))); $want = $false }
+# --- 새 설치기 확인 (막지는 않는다, 인터넷이 없으면 조용히 넘어간다) -----------------
+# 레포 main에 올라간 install.ps1의 $InstallerVersion과 비교해 더 새것이면 릴리스 주소만 알린다.
+try {
+  $c = (Invoke-WebRequest -Uri "$Raw/main/installer/install.ps1" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content
+  if($c -is [byte[]]){ $c = [Text.Encoding]::UTF8.GetString($c) }
+  if($c -match "InstallerVersion = '([^']+)'" -and [string]::CompareOrdinal($Matches[1], $InstallerVersion) -gt 0){
+    Note "새 설치기가 있습니다($($Matches[1]) — $Releases/latest). 이번에는 그대로 계속합니다." Yellow
   }
-  return ,$out
-}
-function ReleaseInfo([string]$which,[bool]$test){
-  try {
-    $r = Invoke-WebRequest -Uri "$Api/$which" -UseBasicParsing -TimeoutSec 8 -Headers @{ 'User-Agent' = 'vn-installer' } -ErrorAction Stop
-    $j = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
-    $d = $j.published_at
-    if($test){ foreach($a in $j.assets){ if($a.name -eq 'N-Dashboard-API17.apk'){ $d = $a.updated_at } } }   # 테스트: APK를 마지막으로 바꾼 날
-    $d = $(if($d -is [datetime]){ $d.ToString('yyyy-MM-dd') } else { ([string]$d).Substring(0, 10) })
-    $t = $(if($test){ ([string]$j.name -replace '^테스트\s*[—-]\s*', '') + " · 갱신 $d" } else { "$($j.tag_name) · $d" })
-    return [pscustomobject]@{ title = $t; lines = (NotesSummary ([string]$j.body)) }
-  } catch { Log "릴리스 정보 실패($which): $($_.Exception.Message)"; return $null }
-}
-function ShowNotes($rel,[string]$url){
-  if(-not $rel){ Note "버전 정보를 받지 못했습니다(인터넷 확인). 설치는 그대로 계속합니다. 전체 설명: $url" DarkGray; return }
-  Head "이번 버전에 들어 있는 것 ($($rel.title))"
-  foreach($l in $rel.lines){ Note $l Gray }
-  Note "전체 설명: $url" DarkGray
-}
+} catch { Log "설치기 버전 확인 실패: $($_.Exception.Message)" }
 
-# --- 버전 고르기 (-ApkBase 를 주면 그 주소를 그대로 쓴다) ---------------------
-if(-not $Uninstall -and -not $Diag -and -not $ApkBase){
-  $Rel = @{ stable = (ReleaseInfo 'latest' $false); test = (ReleaseInfo 'tags/test' $true) }
-  if($Channel -ne 'stable' -and $Channel -ne 'test'){
-    if($Yes){ $Channel = 'stable' } else {
-      Head '받을 버전'
-      Note ('  1) 안정화 (권장)' + $(if($Rel.stable){ " $($Rel.stable.title)" }) + ' — 실차에서 확인된 버전') Gray
-      Note ('  2) 테스트' + $(if($Rel.test){ " $($Rel.test.title)" }) + ' — 새 기능, 아직 실차 검증 전. 문제가 있으면 안정화로 다시 설치하면 됩니다') Gray
-      Note '  3) 진단 기록 모으기 — 설치하지 않고, 문제를 알릴 때 보낼 파일만 만듭니다' Gray
-      $r = (Read-Host '번호를 입력하고 Enter [1]').Trim()
-      if($r -eq '3'){ $Diag = $true } else { $Channel = $(if($r -eq '2'){ 'test' } else { 'stable' }) }
-    }
+# --- 동봉 APK 확인: bundle.txt에 적힌 패키지·SHA-256과 같은 파일만 설치한다 ------------
+$Bundle = Join-Path $ROOT 'bundle.txt'   # 파일 패키지 versionCode versionName sha256 (탭 구분)
+$bundled = $null
+if(-not $Uninstall -and -not $Diag){
+  Head '0) 앱 파일 확인'
+  if(-not (Test-Path -LiteralPath $Bundle)){ Die '이 설치기에 든 앱 목록(bundle.txt)이 없습니다. 릴리스에서 설치기 ZIP을 다시 받아 압축을 푼 뒤 실행하세요.' 2 }
+  $rows = @{}
+  foreach($l in (Get-Content -LiteralPath $Bundle -Encoding UTF8)){ if($l -and -not $l.StartsWith('#')){ $f = $l -split "`t"; if($f.Count -ge 5){ $rows[$f[0]] = $f } } }
+  foreach($app in $Apps){
+    $r = $rows[$app.apk]
+    if(-not $r -or $r[1] -ne $app.pkg){ Die "bundle.txt에 $($app.apk) 이(가) 없거나 패키지가 다릅니다. 설치기 ZIP을 다시 받으세요." 2 }
+    $path = Join-Path $ROOT $app.apk
+    if(-not (Test-Path -LiteralPath $path)){ Die "$($app.apk) 이(가) 설치기 폴더에 없습니다. 설치기 ZIP을 다시 받아 압축을 푼 뒤 실행하세요." 2 }
+    $h = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLower(); Log "$($app.apk) sha256 $h"
+    if($h -ne $r[4].Trim().ToLower()){ Die "$($app.apk) 이(가) 이 설치기에 든 파일과 다릅니다(SHA-256 불일치). 설치하지 않습니다.`n설치기 ZIP을 다시 받아 압축을 푼 뒤 실행하세요." 2 }
+    $app | Add-Member -NotePropertyName path -NotePropertyValue $path -Force
+    $app | Add-Member -NotePropertyName ver -NotePropertyValue $r[3] -Force
   }
-  if(-not $Diag){
-    $ApkBase = $(if($Channel -eq 'test'){ "$Releases/download/test" } else { "$Releases/latest/download" })
-    if($Channel -eq 'test'){ Note '버전: 테스트 (실차 검증 전)' Yellow } else { Note '버전: 안정화' Green }
-    ShowNotes $Rel[$Channel] $(if($Channel -eq 'test'){ "$Releases/tag/test" } else { "$Releases/latest" })
-  }
-}
-
-# --- 새 설치기 확인 (막지는 않는다) ---------------------------------------------
-# 레포에 올라간 install.ps1의 $InstallerVersion과 비교한다. 테스트를 고른 사람에게만 beta(테스트) 설치기도 알린다.
-foreach($b in $(if($Channel -eq 'test'){ @('main','beta') } else { @('main') })){
-  try {
-    $c = (Invoke-WebRequest -Uri "$Raw/$b/installer/install.ps1" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content
-    if($c -is [byte[]]){ $c = [Text.Encoding]::UTF8.GetString($c) }
-    if($c -match "InstallerVersion = '([^']+)'" -and [string]::CompareOrdinal($Matches[1], $InstallerVersion) -gt 0){
-      $where = $(if($b -eq 'main'){ "안정화 $($Matches[1]) — $Releases/latest" } else { "테스트 $($Matches[1]) — $Releases/tag/test" })
-      Note "새 설치기가 있습니다($where). 그 ZIP을 다시 받아 쓰세요. 이번에는 그대로 계속합니다." Yellow
-    }
-  } catch { Log "설치기 버전 확인 실패($b): $($_.Exception.Message)" }
-}
-
-# --- APK 준비 (폴더에 있으면 쓰고, 없으면 공개 레포에서 받기) -----------------
-if(-not $Uninstall -and -not $Diag){ Head '0) 앱 파일 준비' }
-foreach($app in $(if($Uninstall -or $Diag){ @() } else { $Apps })){
-  $local = Join-Path $ROOT $app.apk
-  # 브라우저로 받은 GitHub 페이지(HTML)가 .apk 이름으로 저장된 경우가 있어, 'PK'로 시작할 때만 폴더 것을 쓴다.
-  $ok=$false; if(Test-Path $local){ $fs=[IO.File]::OpenRead($local); $mg=New-Object byte[] 2; [void]$fs.Read($mg,0,2); $fs.Close(); $ok=($mg[0] -eq 0x50 -and $mg[1] -eq 0x4B) }
-  if((Test-Path $local) -and -not $ok){ Note "$($app.apk): 폴더 파일이 APK가 아니라 무시하고 내려받습니다." Yellow }
-  if($ok){ $app | Add-Member -NotePropertyName path -NotePropertyValue $local -Force; Note "$($app.apk): 설치기 폴더에 있는 파일을 씁니다 (위에서 고른 버전과 상관없이 이 파일이 설치됩니다)" Yellow; continue }
-  $url = "$ApkBase/$($app.apk)"; $dst = Join-Path $LogDir $app.apk
-  Note "$($app.apk): 폴더에 없어 내려받습니다..." Gray
-  try { Invoke-WebRequest -Uri $url -OutFile $dst -UseBasicParsing -ErrorAction Stop } catch {
-    Die ("APK 다운로드 실패: $($app.apk)`n" +
-         "인터넷 연결을 확인한 뒤 다시 실행하세요. 인터넷이 안 되는 곳이라면, APK 두 개(N-Dashboard-API17.apk · My-Apps-API17.apk)를 설치.cmd 옆에 두고 실행하면 됩니다.`n" +
-         "$url`n$($_.Exception.Message)") 2
-  }
-  # APK(=ZIP)는 'PK'(0x50 0x4B)로 시작. 404 안내문 등이 저장된 경우를 거른다.
-  $fs=[IO.File]::OpenRead($dst); $magic=New-Object byte[] 2; [void]$fs.Read($magic,0,2); $fs.Close()
-  if($magic[0] -ne 0x50 -or $magic[1] -ne 0x4B){ Die "받은 파일이 APK가 아닙니다($($app.apk)). 공개 여부/URL 확인: $url" 2 }
-  $app | Add-Member -NotePropertyName path -NotePropertyValue $dst -Force
-  Note ("$($app.apk): 받음 ({0} KB)" -f [math]::Round((Get-Item $dst).Length/1KB)) DarkGray
+  $bundled = ($Apps | ForEach-Object { "$($_.name) $($_.ver)" }) -join ' · '
+  Note "이 설치기에 든 버전: $bundled" Green
 }
 
 # --- 차 화면 안내 + 연결 대기 -------------------------------------------------
@@ -280,7 +227,7 @@ Note '  (2) 아래 업데이트 버튼 줄의 왼쪽 숨은 영역 5회 → 오�
 Note '  (3) 암호(2026년 0567) → Diagnosis → Factory Test 에서  0A 01 → 65 01 → 0A 02  를 한 줄씩 SEND' Gray
 Note "      ('내 앱'이 이미 깔려 있으면 '내 앱' → USB 디버깅 → ON 으로 대신할 수 있습니다)" Gray
 Note '  (4) USB 케이블 연결' Gray
-if(-not $Yes){ Read-Host '위 단계가 끝나고 USB를 연결했으면 Enter' | Out-Null }
+if(-not $Yes -and -not $Gui){ Read-Host '위 단계가 끝나고 USB를 연결했으면 Enter' | Out-Null }
 
 Head '3) 차 연결 확인'
 & $script:adbExe start-server *> $null
@@ -328,10 +275,11 @@ $hinted = $null
 # 기다리는 동안 같은 안내를 5초마다 다시 찍지 않는다: 바뀔 때만 새 줄, 같으면 그 줄 끝의 경과 초만 고친다.
 $script:waitMsg = $null; $waitT0 = Get-Date
 function Wait($m,[string]$c='Gray'){
+  if($Gui){ if($m -ne $script:waitMsg){ Log $m; $script:waitMsg = $m }; Write-Host ("@@WAIT {0} {1}" -f [int]((Get-Date) - $waitT0).TotalSeconds, $m); return }
   if($m -ne $script:waitMsg){ if($script:waitMsg){ Write-Host '' }; Log $m; $script:waitMsg = $m }
   Write-Host ("`r{0}  {1}초 " -f $m, [int]((Get-Date) - $waitT0).TotalSeconds) -NoNewline -ForegroundColor $c
 }
-function WaitEnd(){ if($script:waitMsg){ Write-Host ''; $script:waitMsg = $null } }
+function WaitEnd(){ if($script:waitMsg){ if(-not $Gui){ Write-Host '' }; $script:waitMsg = $null } }
 while(-not $serial){
   $dl = & $script:adbExe devices -l 2>&1 | Out-String
   Add-Content -LiteralPath $Log -Value $dl
@@ -376,6 +324,7 @@ while(-not $serial){
   $tries++
   # 5초 간격으로 1분. 사람이 할 일이 남았으면(드라이버 지정, 차 화면 허용) 3분까지 기다린다.
   $limit = if($hinted -eq 'driver' -or $dl -match 'unauthorized'){ 36 } else { 12 }
+  if($Gui){ $limit = 60 }   # 창 설치기: Enter로 준비를 알리지 않으므로 차 화면 단계를 할 시간까지 5분 기다린다
   if($tries -ge $limit){
     WaitEnd
     # 못 찾음: 마지막 상태를 한눈에 요약한다(자세한 시간순 기록은 기록 파일에).
@@ -406,13 +355,7 @@ $sdk = $pv['ro.build.version.sdk']
 Note "내비: $Product ($device) / API $sdk / 빌드 $build / USB $($pv['sys.usb.state'])" DarkGray
 $cur = Versions
 Note "차에 깔린 버전: $cur" DarkGray
-# 받을 버전을 바로 아래에: 안정화는 차의 대시보드와 이름이 같으면 그 사실을 알린다(테스트 빌드 이름은 릴리스 정보에 없다).
-if(-not $Uninstall -and -not $Diag -and $Rel -and $Rel[$Channel]){
-  $tag = ($Rel[$Channel].title -split ' ')[0]
-  if($Channel -eq 'test'){ Note "받을 버전: 테스트 ($($Rel.test.title))" DarkGray }
-  elseif((" $cur ").Contains(" $tag ")){ Note "받을 버전: $tag — 차에 이미 같은 버전이 있습니다. 그대로 다시 설치합니다." DarkGray }
-  else { Note "받을 버전: $tag" DarkGray }
-}
+if($bundled){ Note "설치할 버전: $bundled" DarkGray }
 
 # --- 진단 기록 모드: 읽기만 한다 -------------------------------------------------
 # 정해 둔 속성, 두 앱의 버전, 우리 앱 태그·충돌·설치 기록만. 차 기록 전체에는 블루투스로 붙은 폰 이름·번호·연락처가 섞인다.
@@ -437,8 +380,8 @@ if($Diag){
   [IO.File]::WriteAllText($out, (Mask $sb.ToString()), (New-Object Text.UTF8Encoding $true))
   Note "만든 파일: $out" Green
   Note '문제를 알릴 때 이 파일을 보내 주세요. 증상(언제, 어떤 화면에서, 무엇이)도 함께 알려 주세요.' White
-  if(-not $Yes){ Start-Process explorer.exe "/select,`"$out`"" }
-  UsbOffNote; exit 0
+  if($Gui){ Write-Host "@@FILE $out" } elseif(-not $Yes){ Start-Process explorer.exe "/select,`"$out`"" }
+  UsbOffNote; Done
 }
 # 이 저장소의 설치 도구와 같은 원칙: 확인한 대상(jsn_kr · API 17 · 검증 빌드)이 아니면 설치하지 않는다. 삭제는 막지 않는다.
 if(-not $Uninstall -and ($build -ne $VerifiedBuild -or $sdk -ne '17')){
@@ -460,7 +403,7 @@ if($Uninstall){
     if($null -eq $p -or $p.Trim() -ne ''){ Die "차와 연결이 끊긴 것 같습니다. $($app.name) 삭제를 확인하지 못했습니다.`n케이블을 확인하고 다시 실행하세요.`n$("$p".Trim())" 1 }
     Note "$($app.name): 설치돼 있지 않음" Gray
   }
-  Note '삭제 완료. 순정 상태로 돌아갔습니다(순정 시스템은 원래 건드리지 않습니다).' Green; UsbOffNote; exit 0
+  Note '삭제 완료. 순정 상태로 돌아갔습니다(순정 시스템은 원래 건드리지 않습니다).' Green; UsbOffNote; Done
 }
 
 # --- 설치 -------------------------------------------------------------------
@@ -507,4 +450,4 @@ Write-Host ''
 Note "완료! 차 화면 '내 앱'에서 실행 바로가기를 켜면(docs/QUICK_ENTRY_ko.md)" Green
 Note "노트북 없이 HOME 가장자리 버튼으로 다시 열 수 있습니다." Green
 UsbOffNote
-exit 0
+Done

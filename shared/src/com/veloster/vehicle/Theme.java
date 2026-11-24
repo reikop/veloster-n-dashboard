@@ -78,14 +78,15 @@ public final class Theme {
         new Theme("sage","SG",SHAPE_CUT,1,false,false,0xffff3b30,0xff000000,new int[]{0x000000,0x040605,0x0a0d0b,0x2a332d,0x18201b,0xf0f5f1,0x8b978f,0x9dbfa6,0x18281e,0xd9b36a}),
     };
     private static volatile Theme current=ALL[0];
-    /** Drive-mode accent (option): ECO green, SPORT red-orange over any theme's accent; 0 = the theme's own. */
-    private static final int ECO_ACCENT=0x6fe39a,ECO_DIM=0x103a22,SPORT_ACCENT=0xff5a36,SPORT_DIM=0x3a160c;
+    /** Drive-mode accent (option): ECO green, SPORT / N red-orange, N CUSTOM purple over any theme's accent; 0 = the theme's own. */
+    private static final int ECO_ACCENT=0x6fe39a,ECO_DIM=0x103a22,SPORT_ACCENT=0xff5a36,SPORT_DIM=0x3a160c,CUSTOM_ACCENT=0xb072ff,CUSTOM_DIM=0x26143f;
     private static volatile int modeAccent,modeDim;
     /** CLU13 drive mode code (0 NORMAL, 1 SPORT, 3 ECO), or -1 to drop the mode accent. */
-    /** The drive mode's accent (0xRRGGBB, SPORT red / ECO green) while 모드 색 is on, else 0. */
+    /** The drive mode's accent (0xRRGGBB, SPORT / N red, ECO green, N CUSTOM purple) while 모드 색 is on, else 0. */
     public static int modeAccent(){return modeAccent;}
-    public static void mode(int code){boolean sport=code==1||code==DriveModes.N||code==DriveModes.N_CUSTOM;   // Veloster N: N and N CUSTOM take the SPORT accent
-        modeAccent=code==3?ECO_ACCENT:sport?SPORT_ACCENT:0;modeDim=code==3?ECO_DIM:sport?SPORT_DIM:0;}
+    public static void mode(int code){boolean sport=code==1||code==DriveModes.N;   // Veloster N: N takes the SPORT accent; N CUSTOM is purple like the car's own N CUSTOM colour
+        boolean custom=code==DriveModes.N_CUSTOM;
+        modeAccent=code==3?ECO_ACCENT:sport?SPORT_ACCENT:custom?CUSTOM_ACCENT:0;modeDim=code==3?ECO_DIM:sport?SPORT_DIM:custom?CUSTOM_DIM:0;}
 
     public static Theme current(){return current;}
     /** Unknown or null ids fall back to N (a corrupt saved preference must still open). */
