@@ -37,7 +37,9 @@ $form.Controls.Add($layout)
 function Row($control, [string]$sizeType = 'AutoSize', [float]$h = 0){
   $control.Dock = 'Fill'; $control.Margin = New-Object System.Windows.Forms.Padding(0, 4, 0, 4)
   $style = New-Object System.Windows.Forms.RowStyle([System.Windows.Forms.SizeType]::$sizeType, $h)
-  [void]$layout.RowStyles.Add($style); $layout.Controls.Add($control)
+  # 줄 번호를 정해 넣는다. 자동 배치에 맡기면 처음에 숨긴 완료 칸($banner)이 자리를 못 받고, 나중에 보일 때
+  # 기록 칸 뒤의 '남은 공간 전부' 줄로 밀려 기록 칸이 한 줄로 찌그러진다(2026-11-24 Windows 실기 화면).
+  $layout.RowCount = $layout.RowStyles.Add($style) + 1; $layout.Controls.Add($control, 0, $layout.RowCount - 1)
 }
 function Label([string]$t, $f = $font, $color = [System.Drawing.Color]::Black){
   $l = New-Object System.Windows.Forms.Label; $l.Text = $t; $l.Font = $f; $l.ForeColor = $color; $l.AutoSize = $true
@@ -139,13 +141,20 @@ function Start-Run([string]$mode){
 
 # 화면 스레드에서 0.2초마다: 다 읽힌 줄을 처리하고 다음 줄을 기다린다(창이 멈추지 않게). 기다리는 줄에는 경과 초를 붙인다.
 $timer = New-Object System.Windows.Forms.Timer; $timer.Interval = 200
+# @@ASK의 예/아니오 창이 떠 있는 동안에도 타이머는 돈다. 다시 들어오지 않게 막고, 줄을 처리하기 전에 다음 줄 읽기를 건다.
+# (막지 않으면 같은 @@ASK 줄로 질문 창이 계속 겹쳐 뜨다 '호출 수준 오버플로'로 죽었다 — 2026-11-24 Windows 실기 화면)
+$script:inTick = $false
 $timer.Add_Tick({
+  if($script:inTick){ return }; $script:inTick = $true
+  try {
   if($script:proc){
     for($i = 0; $i -lt 200 -and $script:outTask -and $script:outTask.IsCompleted; $i++){
       $l = $script:outTask.Result
       if($null -eq $l){ $script:outTask = $null; break }
-      Line $l; $script:outTask = $script:proc.StandardOutput.ReadLineAsync()
+      $script:outTask = $script:proc.StandardOutput.ReadLineAsync(); Line $l
+      if(-not $script:proc){ break }
     }
+    if(-not $script:proc){ return }
     for($i = 0; $i -lt 200 -and $script:errTask -and $script:errTask.IsCompleted; $i++){
       $l = $script:errTask.Result
       if($null -eq $l){ $script:errTask = $null; break }
@@ -158,6 +167,7 @@ $timer.Add_Tick({
     }
   }
   if($script:waitMsg){ $status.Text = "⏳ $($script:waitMsg)  $($script:waitBase + [int]$script:waitAt.Elapsed.TotalSeconds)초" }
+  } finally { $script:inTick = $false }
 })
 
 $installBtn.Add_Click({ Start-Run 'install' })
