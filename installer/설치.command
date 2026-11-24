@@ -1,14 +1,18 @@
 #!/bin/bash
 # 벨로스터 N 계기판 설치 — macOS·리눅스(라즈베리파이 포함). 맥은 Finder에서 더블클릭, 리눅스는 터미널에서  bash install.sh
 # (리눅스 ZIP의 install.sh는 이 파일과 같다). 맥은  bash 설치.command 로도 된다.
-# install.ps1(Windows)과 같은 일을 한다: adb 준비 → APK 준비 → 차 화면 안내 → 차(product:jsn_kr) 연결 대기 →
+# install.ps1(Windows)과 같은 일을 한다: adb 준비 → 동봉 APK 확인(bundle.txt의 SHA-256) → 차 화면 안내 → 차(product:jsn_kr) 연결 대기 →
 # 빌드 확인(검증 빌드가 아니면 멈춤) → 두 앱 설치(서명 충돌 시 묻고 재설치) → '내 앱' 실행. 차가 아닌 기기에는 아무것도 하지 않는다.
 # i30 PD 포팅(sung9155/i30-pd-dashboard, MIT)의 설치기를 벨로스터 N JSN에 맞게 고친 것이다.
 # 기본 macOS bash 3.2 에서 돌아가야 하므로 bash 4 기능(연관 배열 등)은 쓰지 않는다.
 #
-# 버전: 시작할 때 안정화(최신 정식 릴리스, 실차 확인) / 테스트('test' 사전 배포, 실차 검증 전) / 진단 기록 모으기 중 고른다.
-# 테스트 인자: --adb <adb 경로>  --apk-base <URL>  --channel stable|test  --yes(확인 모두 예, 대기/프롬프트 생략, 안정화)  --uninstall(두 앱 삭제)
+# 앱 파일: 설치기 ZIP에 든 N-Dashboard-API17.apk · My-Apps-API17.apk 만 설치한다. 옆의 bundle.txt(scripts/apk_info.py가 만듦)에
+# 적힌 패키지·SHA-256과 다르면 설치하지 않는다. 인터넷에서 앱을 받지 않으므로 인터넷이 없어도 된다(adb가 없을 때만 받음).
+# 테스트 버전은 'test' 사전 배포의 다른 설치기 ZIP이다.
+# 테스트 인자: --adb <adb 경로>  --yes(확인 모두 예, 대기/프롬프트 생략)  --uninstall(두 앱 삭제)
 #              --diag(설치하지 않고 진단 기록 파일만 만든다)
+# 창 설치기(N 계기판 설치.app)용: --gui  묻지 않고(Enter 대기 없음) 차를 스스로 기다리며, 줄 단위로 찍고 아래 상태 줄을 낸다.
+#              @@STEP <제목>  @@WAIT <초> <안내>  @@ASK <질문>(표준 입력에서 y/n 한 줄을 읽음)  @@FILE <경로>  @@DONE ok|fail <내용>
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"; ME="$(basename "$0")"
 # OS: Darwin(맥) / Linux. VN_OS로 바꿀 수 있다(시험 도구가 Windows Git Bash에서 리눅스 경로를 돌릴 때).
@@ -20,20 +24,18 @@ VERIFIED_BUILD='eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 �
 PT_URL=''
 if [ "$OS" = Darwin ]; then PT_URL='https://dl.google.com/android/repository/platform-tools-latest-darwin.zip'
 else case "$(uname -m)" in x86_64|amd64) PT_URL='https://dl.google.com/android/repository/platform-tools-latest-linux.zip' ;; esac; fi
-# 안정화 = 최신 정식 릴리스, 테스트 = 'test' 사전 배포(덮어쓰며 갱신). --apk-base 를 주면 그 주소를 그대로 쓴다.
 RELEASES='https://github.com/reikop/veloster-n-dashboard/releases'
-RAW='https://raw.githubusercontent.com/reikop/veloster-n-dashboard'   # 새 설치기 확인용(main = 안정화, beta = 테스트)
-APK_BASE=''
-APKS='N-Dashboard-API17.apk My-Apps-API17.apk'   # 릴리스 에셋 이름(installer/README.md)
-ADB=''; YES=''; UNINSTALL=''; CHANNEL=''; DIAG=''
+RAW='https://raw.githubusercontent.com/reikop/veloster-n-dashboard'   # 새 설치기 확인용(main)
+APKS='N-Dashboard-API17.apk My-Apps-API17.apk'   # 동봉 APK 이름(installer/README.md)
+BUNDLE="$ROOT/bundle.txt"
+ADB=''; YES=''; UNINSTALL=''; DIAG=''; GUI=''
 while [ $# -gt 0 ]; do
   case "$1" in
     --adb) ADB="$2"; shift ;;
-    --apk-base) APK_BASE="$2"; shift ;;
-    --channel) CHANNEL="$2"; shift ;;
     --yes) YES=1 ;;
     --uninstall) UNINSTALL=1 ;;
     --diag) DIAG=1 ;;
+    --gui) GUI=1 ;;
   esac
   shift
 done
@@ -52,16 +54,20 @@ reveal() { if [ "$OS" = Darwin ]; then open -R "$1" 2>/dev/null
 os_name() { if [ "$OS" = Darwin ]; then echo "macOS $(sw_vers -productVersion 2>/dev/null)"
             else (. /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-Linux}"); fi; }
 note() { printf '%s\n' "$1"; log "$1"; }
-head_() { local t; t="$(date +%H:%M:%S)"; printf '\n\033[36m%s   [%s]\033[0m\n' "$1" "$t"; log "== $1 == $t"; }
+head_() { local t; t="$(date +%H:%M:%S)"; [ -n "$GUI" ] && printf '@@STEP %s\n' "$1"; printf '\n\033[36m%s   [%s]\033[0m\n' "$1" "$t"; log "== $1 == $t"; }
 ok()   { printf '\033[32m%s\033[0m\n' "$1"; printf '%s\n' "$1" >> "$LOG"; }
 warn() { printf '\033[33m%s\033[0m\n' "$1"; printf '%s\n' "$1" >> "$LOG"; }
-finish() { [ -z "$YES" ] && { echo; read -r -p '창을 닫으려면 Enter' _; }; exit "$1"; }
+finish() { if [ -n "$GUI" ]; then [ "$1" = 0 ] && echo '@@DONE ok'; exit "$1"; fi
+           [ -z "$YES" ] && { echo; read -r -p '창을 닫으려면 Enter' _; }; exit "$1"; }
 die()  { printf '\n\033[31m%s\033[0m\n' "$1"; log "ERROR: $1"
          warn "기록 파일: $LOG"
          warn '문제를 알릴 때 이 기록 파일을 함께 보내 주세요.'
+         if [ -n "$GUI" ]; then printf '@@FILE %s\n@@DONE fail %s\n' "$LOG" "$(printf '%s\n' "$1" | head -1)"; exit "$2"; fi
          [ -z "$YES" ] && reveal "$LOG"
          finish "$2"; }
-ask()  { [ -n "$YES" ] && return 0; read -r -p "$1 [Y/n] " r; case "$r" in ''|[Yy]*) return 0 ;; *) return 1 ;; esac; }
+# --gui: 창 설치기가 예/아니오 창을 띄우고 답 한 줄(y/n)을 표준 입력으로 보낸다. 답이 없으면(창이 닫힘) 아니오.
+ask()  { if [ -n "$GUI" ]; then printf '@@ASK %s\n' "$1"; r=''; read -r r; log "$1 → $r"; case "$r" in [Yy]*) return 0 ;; *) return 1 ;; esac; fi
+         [ -n "$YES" ] && return 0; read -r -p "$1 [Y/n] " r; case "$r" in ''|[Yy]*) return 0 ;; *) return 1 ;; esac; }
 usb_off() { note 'USB 디버깅 끄기: 시동을 껐다 켜면 저절로 꺼집니다. 바로 끄려면 Factory Test에서  0A 01 → 65 00 → 0A 02'
             note "  (또는 '내 앱' → USB 디버깅 → OFF). 끄면 노트북 연결이 끊깁니다."; }
 # 진단 기록에서 사람을 가릴 수 있는 것: MAC 주소, 휴대폰 번호, 메일 주소, adb 기기 번호, 경로 속 사용자 이름($HOME). perl은 macOS·데비안 계열 기본, 바이트 단위(ASCII 패턴만이라 충분).
@@ -73,6 +79,7 @@ adb_() { local o; o="$("$ADB" "$@" 2>&1)"; printf '> adb %s\n%s\n' "$*" "$o" >> 
 adb_wait() {
   local sec="$1" what="$2" f="$LOGDIR/adb_out.txt" t=0 pid; shift 2
   log "> adb $*  (최대 ${sec}초)"
+  [ -n "$GUI" ] && printf '@@WAIT 0 %s\n' "$what"
   "$ADB" "$@" > "$f" 2>&1 & pid=$!
   printf '  %s ' "$what"
   while kill -0 $pid 2>/dev/null; do
@@ -108,7 +115,8 @@ if [ -z "$ADB" ]; then
   for c in "$ROOT/platform-tools/adb" "$ROOT/adb"; do [ -x "$c" ] && { ADB="$c"; break; }; done
 fi
 [ -z "$ADB" ] && ADB="$(command -v adb)"
-command -v curl >/dev/null || die 'curl이 없습니다. 리눅스는  sudo apt install curl  로 설치한 뒤 다시 실행하세요.' 2
+# curl은 adb(platform-tools)를 받을 때만 필요하다(앱 APK는 설치기에 들어 있다).
+[ -z "$ADB" ] && [ -n "$PT_URL" ] && ! command -v curl >/dev/null && die 'curl이 없습니다. 리눅스는  sudo apt install curl  로 설치한 뒤 다시 실행하세요.' 2
 SLOW='--connect-timeout 15 --speed-limit 1000 --speed-time 30'   # 내려받기: 연결 15초, 30초 동안 1 KB/s도 안 오면 그만둔다(끊긴 인터넷에서 멈춘 듯 보이지 않게)
 if [ -z "$ADB" ] && [ -n "$PT_URL" ]; then
   note 'adb(platform-tools)가 없습니다.'
@@ -133,116 +141,29 @@ fi
 note "adb: $ADB"
 log "환경: $(os_name) / $(uname -m) / $("$ADB" version 2>&1 | head -1)"
 
-# --- 릴리스 정보: 고를 버전의 번호·날짜와 노트 요약 (install.ps1 NotesSummary, 휴대폰 앱 Flow.summary와 같은 규칙) ---
-API='https://api.github.com/repos/reikop/veloster-n-dashboard/releases'
-# 첫 줄 = 화면용 제목, 나머지 = 노트 요약. 받지 못하면 아무것도 내지 않는다. JSON은 macOS 기본 JavaScript(osascript)로 읽는다.
-rel_info() {   # $1 = latest | tags/test, $2 = 1 이면 테스트
-  local f="$LOGDIR/release_$2.json"
-  curl -fsS --max-time 8 -H 'User-Agent: vn-installer' -o "$f" "$API/$1" 2>>"$LOG" || { log "릴리스 정보 실패($1)"; return 0; }
-  [ "$OS" = Linux ] && { rel_info_py "$f" "$2"; return 0; }
-  osascript -l JavaScript - "$f" "$2" 2>>"$LOG" <<'JXA'
-// RELEASE-JS-BEGIN (규칙은 휴대폰 앱 Flow.summary와 같다; 2026-11-04 실제 릴리스 응답 두 개에서 node로 돌려 Java 결과와 글자까지 같음을 확인)
-function clean(t){return t.replace(/\[([^\]]+)\]\([^)]+\)/g,'$1').split('**').join('').split('`').join('');}
-function shorten(t){var i=t.indexOf('다. ');if(i<0)i=t.indexOf('. ');if(i>=0)t=t.substring(0,i+2).trim();return t.length>90?t.substring(0,89)+'…':t;}
-// 소제목(### 또는 **굵은 줄**)마다 첫 항목의 첫 문장, 설치·서명 절이나 테스트 노트의 지난 기록('> ')에서 멈춘다.
-function summary(body,heads){var out=[],n=0,want=false,ls=body.split(/\r?\n/);
-  for(var k=0;k<ls.length;k++){var l=ls[k].trim();
-    if(n>0&&(l.indexOf('> ')===0||l.indexOf('### 설치')===0||l.indexOf('### 서명')===0))break;
-    var h=null;if(l.indexOf('### ')===0)h=l.substring(4);else if(l.length>4&&l.indexOf('**')===0&&l.slice(-2)==='**')h=l.substring(2,l.length-2);
-    if(h!==null){if(n===heads)break;n++;out.push('■ '+clean(h));want=true;continue;}
-    if(want&&l.indexOf('- ')===0){out.push('   '+shorten(clean(l.substring(2))));want=false;}}
-  return out;}
-function info(r,test){var d=r.published_at||'';
-  if(test)(r.assets||[]).forEach(function(a){if(a.name==='N-Dashboard-API17.apk')d=a.updated_at;});   // 테스트: APK를 마지막으로 바꾼 날
-  d=d.substring(0,10);
-  var title=test?(r.name||'test').replace(/^테스트\s*[—-]\s*/,'')+' · 갱신 '+d:r.tag_name+' · '+d;
-  return [title].concat(summary(r.body||'',6)).join('\n');}
-// RELEASE-JS-END
-function run(argv){ObjC.import('Foundation');var s=$.NSString.stringWithContentsOfFileEncodingError(argv[0],$.NSUTF8StringEncoding,null).js;return info(JSON.parse(s),argv[1]==='1');}
-JXA
-}
-# 리눅스: 위 JavaScript와 같은 규칙을 python3로(라즈베리파이 OS·우분투 기본). python3가 없으면 노트 안내만 빠진다.
-rel_info_py() {
-  command -v python3 >/dev/null || { log 'python3 없음: 노트 요약 생략'; return 0; }
-  python3 -I - "$1" "$2" 2>>"$LOG" <<'PY'
-# RELEASE-PY-BEGIN (RELEASE-JS와 같은 규칙; 2026-11-05 실제 릴리스 응답 두 개에서 node로 돈 JS 결과와 글자까지 같음을 확인)
-import json, re, sys
-def clean(t): return re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', t).replace('**', '').replace('`', '')
-def shorten(t):
-    i = t.find('다. ')
-    if i < 0: i = t.find('. ')
-    if i >= 0: t = t[:i + 2].strip()
-    return t[:89] + '…' if len(t) > 90 else t
-def summary(body, heads):
-    out, n, want = [], 0, False
-    for l in re.split(r'\r?\n', body):
-        l = l.strip()
-        if n > 0 and (l.startswith('> ') or l.startswith('### 설치') or l.startswith('### 서명')): break
-        h = l[4:] if l.startswith('### ') else l[2:-2] if len(l) > 4 and l.startswith('**') and l.endswith('**') else None
-        if h is not None:
-            if n == heads: break
-            n += 1; out.append('■ ' + clean(h)); want = True; continue
-        if want and l.startswith('- '): out.append('   ' + shorten(clean(l[2:]))); want = False
-    return out
-r = json.load(open(sys.argv[1], encoding='utf-8')); test = sys.argv[2] == '1'; d = r.get('published_at') or ''
-if test:
-    for a in r.get('assets') or []:
-        if a.get('name') == 'N-Dashboard-API17.apk': d = a.get('updated_at') or d   # 테스트: APK를 마지막으로 바꾼 날
-d = d[:10]
-title = re.sub(r'^테스트\s*[—-]\s*', '', r.get('name') or 'test') + ' · 갱신 ' + d if test else r['tag_name'] + ' · ' + d
-sys.stdout.buffer.write(('\n'.join([title] + summary(r.get('body') or '', 6)) + '\n').encode('utf-8'))   # UTF-8 whatever the locale
-# RELEASE-PY-END
-PY
-}
-show_notes() {   # $1 = rel_info 결과, $2 = 전체 노트 주소
-  if [ -z "$1" ]; then note "버전 정보를 받지 못했습니다(인터넷 확인). 설치는 그대로 계속합니다. 전체 설명: $2"; return; fi
-  head_ "이번 버전에 들어 있는 것 ($(printf '%s\n' "$1" | head -1))"
-  printf '%s\n' "$1" | tail -n +2 | while IFS= read -r l; do note "$l"; done
-  note "전체 설명: $2"
-}
-
-# --- 버전 고르기 --------------------------------------------------------------
-if [ -z "$UNINSTALL" ] && [ -z "$DIAG" ] && [ -z "$APK_BASE" ]; then
-  REL_S="$(rel_info latest 0)"; REL_T="$(rel_info tags/test 1)"
-  if [ "$CHANNEL" != stable ] && [ "$CHANNEL" != test ]; then
-    if [ -n "$YES" ]; then CHANNEL=stable; else
-      head_ '받을 버전'
-      note "  1) 안정화 (권장)${REL_S:+ $(printf '%s\n' "$REL_S" | head -1)} — 실차에서 확인된 버전"
-      note "  2) 테스트${REL_T:+ $(printf '%s\n' "$REL_T" | head -1)} — 새 기능, 아직 실차 검증 전. 문제가 있으면 안정화로 다시 설치하면 됩니다"
-      note '  3) 진단 기록 모으기 — 설치하지 않고, 문제를 알릴 때 보낼 파일만 만듭니다'
-      read -r -p '번호를 입력하고 Enter [1] ' r
-      case "$(printf '%s' "$r" | tr -d ' ')" in 2) CHANNEL=test ;; 3) DIAG=1 ;; *) CHANNEL=stable ;; esac
-    fi
-  fi
-  if [ -z "$DIAG" ]; then
-    if [ "$CHANNEL" = test ]; then APK_BASE="$RELEASES/download/test"; note '버전: 테스트 (실차 검증 전)'; show_notes "$REL_T" "$RELEASES/tag/test"
-    else APK_BASE="$RELEASES/latest/download"; note '버전: 안정화'; show_notes "$REL_S" "$RELEASES/latest"; fi
-  fi
+# --- 새 설치기 확인 (막지는 않는다, 인터넷이 없으면 조용히 넘어간다) -----------------
+# 레포 main에 올라간 설치.command의 INSTALLER_VERSION과 비교해 더 새것이면 릴리스 주소만 알린다.
+v=""; command -v curl >/dev/null && v="$(curl -fsS --max-time 5 "$RAW/main/installer/%EC%84%A4%EC%B9%98.command" 2>>"$LOG" | sed -n "s/^INSTALLER_VERSION='\([^']*\)'.*/\1/p" | head -1)"
+if [ -n "$v" ] && [ "$(printf '%s\n%s\n' "$v" "$INSTALLER_VERSION" | LC_ALL=C sort | tail -1)" != "$INSTALLER_VERSION" ]; then
+  warn "새 설치기가 있습니다($v — $RELEASES/latest). 이번에는 그대로 계속합니다."
 fi
 
-# --- 새 설치기 확인 (막지는 않는다) ---------------------------------------------
-# 레포에 올라간 설치.command의 INSTALLER_VERSION과 비교한다. 테스트를 고른 사람에게만 beta(테스트) 설치기도 알린다.
-for b in main $([ "$CHANNEL" = test ] && echo beta); do
-  v="$(curl -fsS --max-time 5 "$RAW/$b/installer/%EC%84%A4%EC%B9%98.command" 2>>"$LOG" | sed -n "s/^INSTALLER_VERSION='\([^']*\)'.*/\1/p" | head -1)"
-  if [ -n "$v" ] && [ "$(printf '%s\n%s\n' "$v" "$INSTALLER_VERSION" | LC_ALL=C sort | tail -1)" != "$INSTALLER_VERSION" ]; then
-    [ $b = main ] && where="안정화 $v — $RELEASES/latest" || where="테스트 $v — $RELEASES/tag/test"
-    warn "새 설치기가 있습니다($where). 그 ZIP을 다시 받아 쓰세요. 이번에는 그대로 계속합니다."
-  fi
-done
-
-# --- APK 준비 (폴더에 있으면 쓰고, 없으면 공개 레포에서 받기) -----------------
-[ -z "$UNINSTALL$DIAG" ] && head_ '0) 앱 파일 준비'
-for apk in $([ -z "$UNINSTALL$DIAG" ] && echo $APKS); do
-  # 브라우저로 받은 GitHub 페이지(HTML)가 .apk 이름으로 저장된 경우가 있어, 'PK'로 시작할 때만 폴더 것을 쓴다.
-  if [ -f "$ROOT/$apk" ] && [ "$(head -c 2 "$ROOT/$apk")" = 'PK' ]; then warn "$apk: 설치기 폴더에 있는 파일을 씁니다 (위에서 고른 버전과 상관없이 이 파일이 설치됩니다)"; continue; fi
-  [ -f "$ROOT/$apk" ] && warn "$apk: 폴더 파일이 APK가 아니라 무시하고 내려받습니다."
-  note "$apk: 폴더에 없어 내려받습니다..."
-  curl -fsSL $SLOW -o "$LOGDIR/$apk" "$APK_BASE/$apk" || die "APK 다운로드 실패: $APK_BASE/$apk
-인터넷 연결을 확인한 뒤 다시 실행하세요. 인터넷이 안 되는 곳이라면, APK 두 개(N-Dashboard-API17.apk · My-Apps-API17.apk)를 $ME 옆에 두고 실행하면 됩니다." 2
-  # APK(=ZIP)는 'PK'로 시작. 404 안내문 등이 저장된 경우를 거른다.
-  [ "$(head -c 2 "$LOGDIR/$apk")" = 'PK' ] || die "받은 파일이 APK가 아닙니다($apk): $APK_BASE/$apk" 2
-  note "$apk: 받음 ($(( $(wc -c < "$LOGDIR/$apk") / 1024 )) KB)"
-done
+# --- 동봉 APK 확인: bundle.txt에 적힌 패키지·SHA-256과 같은 파일만 설치한다 ------------
+sha256_() { if command -v shasum >/dev/null; then shasum -a 256 "$1" | cut -d' ' -f1; else sha256sum "$1" | cut -d' ' -f1; fi; }
+field_() { awk -F'\t' -v f="$1" -v n="$2" '$1==f {print $n; exit}' "$BUNDLE" 2>/dev/null; }   # bundle.txt: 파일 패키지 versionCode versionName sha256
+if [ -z "$UNINSTALL$DIAG" ]; then
+  head_ '0) 앱 파일 확인'
+  [ -f "$BUNDLE" ] || die "이 설치기에 든 앱 목록(bundle.txt)이 없습니다. 릴리스에서 설치기 ZIP을 다시 받아 압축을 푼 뒤 실행하세요." 2
+  for apk in $APKS; do
+    [ "$(field_ $apk 2)" = "$(pkg_of $apk)" ] || die "bundle.txt에 $apk 이(가) 없거나 패키지가 다릅니다. 설치기 ZIP을 다시 받으세요." 2
+    [ -f "$ROOT/$apk" ] || die "$apk 이(가) 설치기 폴더에 없습니다. 설치기 ZIP을 다시 받아 압축을 푼 뒤 실행하세요." 2
+    got="$(sha256_ "$ROOT/$apk")"; log "$apk sha256 $got"
+    [ "$got" = "$(field_ $apk 5)" ] || die "$apk 이(가) 이 설치기에 든 파일과 다릅니다(SHA-256 불일치). 설치하지 않습니다.
+설치기 ZIP을 다시 받아 압축을 푼 뒤 실행하세요." 2
+  done
+  BUNDLED="N 계기판 $(field_ N-Dashboard-API17.apk 4) · '내 앱' $(field_ My-Apps-API17.apk 4)"
+  ok "이 설치기에 든 버전: $BUNDLED"
+fi
 
 # --- 차 화면 안내 + 연결 대기 -------------------------------------------------
 head_ '2) 차 화면에서 먼저 (사람이 직접)'
@@ -252,16 +173,17 @@ note '  (3) 암호(2026년 0567) → Diagnosis → Factory Test 에서  0A 01 �
 note "      ('내 앱'이 이미 깔려 있으면 '내 앱' → USB 디버깅 → ON 으로 대신할 수 있습니다)"
 if [ "$OS" = Darwin ]; then note '  (4) USB 케이블 연결 (USB-C 맥이면 USB-A 어댑터 필요)'
 else note '  (4) USB 케이블 연결 (데이터가 되는 케이블. 라즈베리파이는 USB-A 포트에)'; fi
-[ -z "$YES" ] && read -r -p '위 단계가 끝나고 USB를 연결했으면 Enter ' _
+[ -z "$YES$GUI" ] && read -r -p '위 단계가 끝나고 USB를 연결했으면 Enter ' _
 
 head_ '3) 차 연결 확인'
 "$ADB" start-server >/dev/null 2>&1
 SERIAL=''; tries=0
 # 기다리는 동안 같은 안내를 5초마다 다시 찍지 않는다: 바뀔 때만 새 줄, 같으면 그 줄 끝의 경과 초만 고친다.
 WAIT_MSG=''; WAIT_T0=$(date +%s)
-wait_() { if [ "$1" != "$WAIT_MSG" ]; then [ -n "$WAIT_MSG" ] && echo; log "$1"; WAIT_MSG="$1"; fi
+wait_() { if [ -n "$GUI" ]; then [ "$1" != "$WAIT_MSG" ] && { log "$1"; WAIT_MSG="$1"; }; printf '@@WAIT %s %s\n' $(( $(date +%s) - WAIT_T0 )) "$1"; return; fi
+          if [ "$1" != "$WAIT_MSG" ]; then [ -n "$WAIT_MSG" ] && echo; log "$1"; WAIT_MSG="$1"; fi
           printf '\r\033[%sm%s  %s초 \033[0m' "${2:-0}" "$1" $(( $(date +%s) - WAIT_T0 )); }
-wait_end() { [ -n "$WAIT_MSG" ] && echo; WAIT_MSG=''; }
+wait_end() { [ -n "$WAIT_MSG" ] && [ -z "$GUI" ] && echo; WAIT_MSG=''; }
 udev_fix() {
   warn '이 PC가 USB 장치(차)를 읽을 권한이 없습니다(리눅스 udev 규칙 없음).'
   note '  /etc/udev/rules.d/51-vndashboard.rules 에 차(VID 18d1, PID d00d) 한 줄만 넣으면 됩니다. 다른 기기는 건드리지 않습니다.'
@@ -287,6 +209,7 @@ while [ -z "$SERIAL" ]; do
   tries=$((tries + 1))
   # 5초 간격으로 1분. 차 화면에서 허용을 눌러야 하는 상태면 3분까지 기다린다.
   limit=12; printf '%s' "$dl" | grep -q unauthorized && limit=36
+  [ -n "$GUI" ] && limit=60   # 창 설치기: Enter로 준비를 알리지 않으므로 차 화면 단계를 할 시간까지 5분 기다린다
   if [ $tries -ge $limit ]; then
     wait_end
     # 못 찾음: 이 PC가 본 USB 장치 목록을 기록에 남긴다(차가 USB에 아예 안 나타났는지 가르는 근거).
@@ -322,14 +245,7 @@ versions() {
 }
 cur="$(versions)"
 note "차에 깔린 버전: $cur"
-# 받을 버전을 바로 아래에: 안정화는 차의 대시보드와 이름이 같으면 그 사실을 알린다(테스트 빌드 이름은 릴리스 정보에 없다).
-if [ -z "$UNINSTALL" ] && [ -z "$DIAG" ]; then
-  if [ "$CHANNEL" = test ] && [ -n "${REL_T:-}" ]; then note "받을 버전: 테스트 ($(printf '%s\n' "$REL_T" | head -1))"
-  elif [ "$CHANNEL" = stable ] && [ -n "${REL_S:-}" ]; then
-    tag="$(printf '%s\n' "$REL_S" | head -1 | cut -d' ' -f1)"
-    case " $cur " in *" $tag "*) note "받을 버전: $tag — 차에 이미 같은 버전이 있습니다. 그대로 다시 설치합니다." ;; *) note "받을 버전: $tag" ;; esac
-  fi
-fi
+[ -n "${BUNDLED:-}" ] && note "설치할 버전: $BUNDLED"
 
 # --- 진단 기록 모드: 읽기만 한다 -------------------------------------------------
 # 정해 둔 속성, 두 앱의 버전, 우리 앱 태그·충돌·설치 기록만. 차 기록 전체에는 블루투스로 붙은 폰 이름·번호·연락처가 섞인다.
@@ -357,7 +273,7 @@ if [ -n "$DIAG" ]; then
   } | mask > "$out"
   ok "만든 파일: $out"
   note '문제를 알릴 때 이 파일을 보내 주세요. 증상(언제, 어떤 화면에서, 무엇이)도 함께 알려 주세요.'
-  [ -z "$YES" ] && reveal "$out"
+  if [ -n "$GUI" ]; then printf '@@FILE %s\n' "$out"; elif [ -z "$YES" ]; then reveal "$out"; fi
   usb_off; finish 0
 fi
 # 이 저장소의 설치 도구와 같은 원칙: 확인한 대상(jsn_kr · API 17 · 검증 빌드)이 아니면 설치하지 않는다. 삭제는 막지 않는다.
@@ -394,7 +310,7 @@ head_ '4) 앱 설치'
 # adb install 대신 ① 전송(push) ② 설치(pm install) 두 단계로 나눠, 멈추면 USB 쪽인지 내비 쪽인지 바로 갈린다.
 PUSH_HINT='USB로 파일을 보내다 멈췄습니다. 케이블·포트를 바꾸고 Factory Test부터 다시 한 뒤 실행하세요.'
 for apk in $APKS; do
-  p="$ROOT/$apk"; [ "$(head -c 2 "$p" 2>/dev/null)" = 'PK' ] || p="$LOGDIR/$apk"; name="$(name_of $apk)"; remote="/data/local/tmp/$apk"
+  p="$ROOT/$apk"; name="$(name_of $apk)"; remote="/data/local/tmp/$apk"
   # 내비는 설치한 APK를 바이트 그대로 보관한다: 받아 와서 같으면 같은 버전이니 건너뛴다.
   have="$LOGDIR/installed_$apk"; rm -f "$have"
   pp="$(adb_ -s "$SERIAL" shell pm path "$(pkg_of $apk)" | tr -d '\r\n ')"; pp="${pp#package:}"

@@ -76,6 +76,6 @@
 
 [`apps/`](apps/)는 두 앱, [`shared/`](shared/)는 계기판 UI·데이터 처리 소스입니다. [`compile-stubs/`](compile-stubs/)는 빌드 전용 OEM 선언이고, [`scripts/`](scripts/)·[`tests/`](tests/)는 빌드·무결성·호스트 검사 도구입니다. [`installer/`](installer/README.md)는 차주용 설치기(Windows·macOS·리눅스)입니다.
 
-[빌드·테스트](docs/BUILD.md) · [개발 과정](docs/RESEARCH_ko.md) · [NEMESIS 검토](docs/NEMESIS_REVIEW.md)
+[빌드·테스트](docs/BUILD.md) · [개발 과정](docs/RESEARCH_ko.md)
 
 자체 코드·문서는 [MIT](LICENSE)입니다. [의존성·서명 안내](NOTICE.md)를 참고하세요. 공개 AOSP 시험 인증서는 독점 배포자 신원이나 OTA 키가 아닙니다. 소스 빌드 결과는 서명 전 APK입니다. 제조사 펌웨어·APK, 개인 로그·식별자·개인키는 배포하지 않습니다. 제조사와 무관한 비공식 프로젝트입니다.

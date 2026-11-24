@@ -16,20 +16,11 @@ Hyundai, Veloster N, Android, CarPlay 등 명칭은 기기·호환 대상 설명
 
 N 계기판의 플로팅 창(`FloatPanel`·`FloatSkin`·`FloatLayouts`·`FloatMusic`·`FloatService`), 설정 백업(`SettingsBackup`), 기록실(`Records`·`RecordsDialog`·`DriveStats`), 레이스·람다·타코 화면(`RaceRenderer`·`LambdaCluster`·`TachoCluster`·`ClusterKit`·`RevMatch`·`ShiftCoach`·`GearRatios`·`MilLamp`), 환영 화면, 주행 모드 화면 전환(`DriveModes`), 소리(`EngineSound`·`EngineSynth`·`ShiftBeep`·`SpeedChime`), 테마(`Theme`·`ThemeShapes`), 화면 목록 개념, 주야간 판단(`DayNight`·`DayPhase`), 신호 목록(`Tiles`·`TilePicker`), 소유자용 설치기(`installer/`)는 [sung9155/i30-pd-dashboard](https://github.com/sung9155/i30-pd-dashboard)(이 저장소의 i30 PD 포크, MIT)에서 가져와 벨로스터 N JSN에 맞게 고쳤습니다. `LICENSE`의 두 저작권 표시는 MIT 조건이므로 지우지 마세요.
 
+안드로이드 휴대폰 설치 앱(`installer/android/`: `Adb`·`Flow`·`MainActivity`·`DiagProvider`, 가짜 adbd 시험)도 같은 포크의 `i30pd_port/installer/android/`(MIT)에서 가져와 벨로스터 N(`jsn_kr`·검증 빌드·이 저장소 릴리스)에 맞게 고쳤습니다. 주행 기록과 ☆ 버튼 변경은 넣지 않았습니다.
+
 택시 미터기의 시·도별 중형 요금(`TaxiTariff`)은 i30 PD 포팅에서 가져왔고, 그 숫자는 전국개인택시운송사업조합연합회 [시, 도별 개인택시 요금현황](https://gntx.kr/information/information_02_1.php)(2026-11-04에 읽음)에서 옮긴 것입니다. 사업구역 경계(`TaxiZoneData`, `scripts/taxi_zones.py`로 생성)는 통계청 통계지리정보서비스(SGIS, https://sgis.kostat.go.kr)가 공공누리 제1유형으로 개방한 행정구역 경계를 [vuski/admdongkor](https://github.com/vuski/admdongkor)가 가공한 것(CC BY 4.0, `sgg_20261001`)을 시·군 단위로 합치고 200 m로 단순화한 것입니다. GPS 위치는 요금 지역 판정에만 쓰고 앱 밖으로 보내거나 기록하지 않습니다(로그에는 1분마다 수신 개수·정확도·요금표 이름만 남김). 참고용 표시이며 검정받은 미터기가 아닙니다.
 
 플로팅 창 글자는 Chakra Petch(Medium·Bold)로 그립니다. Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch), SIL Open Font License 1.1. 글꼴 파일은 고치지 않고 `apps/dashboard/res/raw/`에 넣었고, 라이선스 전문은 [`third_party/chakra-petch/OFL.txt`](third_party/chakra-petch/OFL.txt)에 있습니다.
 
 ## Optional native HTTPS build
 
-New My Apps preview builds may include separately built curl, OpenSSL, optional c-ares and a Mozilla CA bundle. These components retain their upstream licenses; the project MIT license covers project-authored code. [Source pins, full notices and reproduction](third_party/network/README.md) describe this optional build. Existing published v6/v10 APKs are unchanged. No private key or OEM component is distributed with these TLS inputs.
-
-## Wireless receiver preview
-
-The [wireless receiver module](third_party/wireless-carplay/README.md) is GPL-3.0-only,
-with attributed Apache-2.0 JmDNS/compatibility components and optional Apache-2.0
-OpenSSL JNI. Its complete corresponding Java/C sources and notices are retained
-separately. The root MIT license does not relicense that module; combined Hub
-preview builds contain GPLv3 code. Existing published APKs remain unchanged.
-No Apple SDK implementation, OEM code or private key is bundled. This integration
-does not imply Apple certification or verified wireless CarPlay operation.

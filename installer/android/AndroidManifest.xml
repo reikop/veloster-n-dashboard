@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phone installer for N 계기판 + '내 앱'. Adapted from sung9155/i30-pd-dashboard (i30pd_port/installer/android, MIT). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.installer">
+    <uses-feature android:name="android.hardware.usb.host" android:required="true" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- [업데이트]: hands the downloaded new version of this app to the system installer -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <application android:label="N 계기판 설치" android:icon="@mipmap/ic_launcher" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false">
+        <activity android:name=".MainActivity" android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <provider android:name=".DiagProvider" android:authorities="com.veloster.installer.diag"
+            android:exported="false" android:grantUriPermissions="true" />
+    </application>
+</manifest>

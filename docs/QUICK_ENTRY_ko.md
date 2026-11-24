@@ -1,7 +1,5 @@
 # 내 앱 v10: 순정 홈 수정 없이 다시 열기
 
-미배포 소스에는 Mobis 화면 OFF/ON 처리와 선택형 QuickBoot 복원을 추가했습니다. 이 문서의 배포 v10 APK는 그대로입니다. [구현·검증 범위](NEMESIS_REVIEW.md#implemented-in-our-code-unreleased)를 참고하세요.
-
 [Documentation / 문서 안내](README.md) · [Status / 확인 범위](STATUS.md)
 
 한국어·영어 선택과 업데이트 변경점은 [언어 안내](LANGUAGES.md)를 참고하세요. 버튼 문구는 선택한 언어에 따라 표시됩니다.

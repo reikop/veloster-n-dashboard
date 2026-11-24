@@ -199,7 +199,7 @@ public final class SettingsPanel {
         text(c,UiText.t("지금 모드"),PREVIEW_L+12,PREVIEW_T+22,12,MUTED,true,Paint.Align.LEFT);
         text(c,now,PREVIEW_L+(PANE_R-PREVIEW_L)/2,PREVIEW_T+86,s.modeNow<0?18:38,s.modeNow<0?MUTED:WHITE,true,Paint.Align.CENTER);
         fitted(c,UiText.t("순정 N 모드 서비스의 주행 모드 알림을 읽기만 합니다"),PREVIEW_L+4,PREVIEW_T+150,11,PANE_R-PREVIEW_L-8,MUTED);
-        fitted(c,UiText.t("모드 색: SPORT·N 빨강, ECO 초록"),PREVIEW_L+4,PREVIEW_T+172,11,PANE_R-PREVIEW_L-8,MUTED);
+        fitted(c,UiText.t("모드 색: SPORT·N 빨강, N CUSTOM 보라, ECO 초록"),PREVIEW_L+4,PREVIEW_T+172,11,PANE_R-PREVIEW_L-8,MUTED);
     }
     private void themes(Canvas c){
         for(int i=0;i<Theme.IDS.length;i++){

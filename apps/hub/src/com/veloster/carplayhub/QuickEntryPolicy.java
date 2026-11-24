@@ -18,4 +18,10 @@ public final class QuickEntryPolicy {
     }
     public static boolean right(int x,int width,int size){return x+size/2>=width/2;}
     public static int edge(boolean right,int width,int size){return right?Math.max(0,width-size):0;}
+    /** ☆ button action that opens the dashboard; the OEM sends unlisted actions as a broadcast (StarKey). */
+    public static final String STAR_ACTION="com.veloster.carplayhub.STAR_KEY";
+    /** What ☆ goes back to when switched off: the remembered action, or the stock "none". */
+    public static String starRestore(String saved){
+        return saved==null||saved.length()==0||STAR_ACTION.equals(saved)?"com.mobis.intent.action.CUSTOM_SHORTCUT":saved;
+    }
 }

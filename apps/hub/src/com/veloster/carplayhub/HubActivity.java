@@ -126,13 +126,12 @@ public final class HubActivity extends Activity {
         return unique;
     }
     private void appsPage() {
-        add(content,UiText.t("무선 CarPlay"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,WirelessCarPlayActivity.class));}});
-        add(content,UiText.t("USB Wi-Fi"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,UsbWifiActivity.class));}});
-        add(content,UiText.t("앱 업데이트"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,UpdateActivity.class));}});
         add(content,UiText.t("실행 바로가기 / Quick entry"),new Runnable(){public void run(){quickEntry();}});
         text(UiText.t("바로가기: ")+QuickEntryService.status(this));
         if(QuickEntryService.mode(this)==QuickEntryPolicy.OFF)
             text(UiText.t("처음 설치했다면 실행 바로가기를 설정하세요. 순정 홈에는 앱이 자동으로 추가되지 않습니다."));
+        add(content,UiText.t("☆ 버튼 → 계기판"),new Runnable(){public void run(){starKey();}});
+        text(UiText.t("☆ 버튼: ")+StarKey.status(this));
         LinearLayout first=new LinearLayout(this),second=new LinearLayout(this);
         add(first,UiText.t("N 계기판"),new Runnable(){public void run(){openDashboard();}});
         add(first,UiText.t("USB 디버깅"),new Runnable(){public void run(){usbDebug();}});
@@ -174,6 +173,21 @@ public final class HubActivity extends Activity {
                 new AlertDialog.Builder(HubActivity.this).setMessage(UiText.t("켜면 재부팅 뒤에도 작은 바로가기만 복원합니다. 앱 화면은 자동으로 열지 않습니다. 가장자리 버튼은 끌어서 옮길 수 있습니다.\n\n시스템이 다른 앱 위 표시를 허용하지 않으면 알림만 유지합니다. 순정 화면에서 알림을 열 수 없는 경우에는 별도 메뉴 진입점이 필요합니다. 강제 종료하면 직접 앱을 다시 열 때까지 자동 복원이 중지될 수 있습니다.\n\nWhen enabled, reboot restores only the shortcut. Drag the edge button to move it. If overlays are denied, a notification remains. If the factory UI hides notifications too, use a separate menu entry. Force-stop may block restoration until My Apps is opened again."))
                     .setPositiveButton(UiText.t("설정으로 / Back"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int n){quickEntry();}}).show();
             }}).show();
+    }
+    private void starKey(){
+        new AlertDialog.Builder(this).setTitle(UiText.t("☆ 버튼 → 계기판"))
+            .setMessage(UiText.t("현재: ")+StarKey.status(this)+UiText.t("\n\n켜면 ☆(사용자 버튼)을 짧게 눌러 계기판을 엽니다. 끄면 원래 기능으로 되돌립니다.\n☆를 길게 눌러 순정 설정 화면을 열면 연결이 풀립니다. 그때는 여기서 다시 켜세요.\n'내 앱'을 지우기 전에는 여기서 끄세요."))
+            .setPositiveButton(UiText.t("켜기"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int n){requestStar(true);}})
+            .setNegativeButton(UiText.t("끄기"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int n){requestStar(false);}})
+            .setNeutralButton(UiText.t("취소"),null).show();
+    }
+    private void requestStar(boolean on){
+        String result;
+        try{result=StarKey.set(this,on)?(on?UiText.t("이제 ☆ 버튼을 짧게 누르면 계기판이 열립니다."):UiText.t("☆ 버튼을 원래 기능으로 되돌렸습니다."))
+            :UiText.t("☆ 버튼 설정이 적용되지 않았습니다. 이 내비는 지원하지 않을 수 있습니다.");}
+        catch(Exception e){result=UiText.t("☆ 버튼 설정 실패: ")+e.getClass().getSimpleName();}
+        render();
+        new AlertDialog.Builder(this).setMessage(result).setPositiveButton(UiText.t("확인"),null).show();
     }
     private void editApps(final List<ResolveInfo> all) {
         final boolean[] chosen = new boolean[all.size()]; String[] titles = new String[all.size()];

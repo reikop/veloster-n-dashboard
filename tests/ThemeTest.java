@@ -55,6 +55,8 @@ public final class ThemeTest {
             Theme.mode(3);check(t.map(0x80a4d9ef)==0x806fe39a&&t.map(0xff233b46)==0xff103a22,id+": ECO accent keeps alpha");
             Theme.mode(1);check(t.map(0xff8fd0f0)==0xffff5a36&&(0xff5a36)!=(t.danger&0xffffff),id+": SPORT accent, not the danger red");
             check(t.map(0xff040506)==bg&&t.map(t.danger)==t.danger,id+": mode leaves the rest alone");
+            Theme.mode(6);check(t.map(0xff8fd0f0)==0xffff5a36,id+": N takes the SPORT accent");
+            Theme.mode(4);check(t.map(0xff8fd0f0)==0xffb072ff&&t.map(0xff233b46)==0xff26143f&&Theme.modeAccent()==0xb072ff,id+": N CUSTOM accent is purple");
             Theme.mode(0);check(t.map(0xffa4d9ef)==own&&t.map(0xff233b46)==ownDim,id+": NORMAL keeps the theme accent");
             Theme.mode(-1);check(t.map(0xffa4d9ef)==own,id+": off keeps the theme accent");}
         System.out.println("PASS "+checks+" theme checks");

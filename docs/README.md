@@ -23,13 +23,8 @@ Start with compatibility, connect ADB, install, then verify a visible shortcut. 
 | --- | --- |
 | [Build and test](BUILD.md) | Build unsigned release apps and run host tests / 공개 앱 빌드·테스트 |
 | [Research walkthrough](RESEARCH.md) · [한국어](RESEARCH_ko.md) | Firmware research and the standalone-app approach / 분석 과정 |
-| [App updates](APP_UPDATES.md) | Unreleased HTTPS/USB updater and signed bundle preparation / 앱 업데이트 준비 |
-| [API17 HTTPS module](../third_party/network/README.md) | Pinned native transport sources, licenses and offline rebuild / 통신 모듈 재현 |
-| [USB networking](USB_NETWORK.md) | Kernel evidence and hardware selection conditions / 동글·브리지 지원 조건 |
-| [Wireless CarPlay preview](WIRELESS_CARPLAY.md) | Receiver onboarding, screen/music choices, frozen candidates and verification / 최초 등록·화면/음악 선택·후보·검증 범위 |
 | [Performance dashboard](PERFORMANCE.md) | Unreleased optional page and actual-code previews / 새 선택형 화면·미리보기 |
 | [Private error records](DIAGNOSTICS.md) | Bounded app diagnostics and read-only retrieval / 오류 기록·읽기 |
-| [NEMESIS review](NEMESIS_REVIEW.md) | Platform differences and reusable ideas / 적용 가능성·참고 코드 |
 | [Installer](../installer/README.md) | Owner installers for Windows, macOS and Linux / 차주용 설치기 |
 | [Installation audit, 2026-10-26](INSTALL_AUDIT.md) | Historical v9 entry-point findings / 당시 진입점 개선 기록 |
 | [Release metadata](../release.json) · [Validation history](../VALIDATION.json) | Artifact identities and recorded check scope / 산출물·검사 이력 |
@@ -38,4 +33,3 @@ Current verification is maintained in [STATUS.md](STATUS.md). Dated release/audi
 
 현재 확인 범위는 [STATUS.md](STATUS.md#한국어)를 기준으로 합니다. 날짜가 붙은 배포·감사 기록은 당시 버전의 이력입니다. 준비·호스트 검사·실차 설치·재부팅 검증을 구분합니다.
 
-- [HTTPS compatibility and future-market transport / HTTPS 호환성·마켓 통신 기반](HTTPS_COMPATIBILITY.md)

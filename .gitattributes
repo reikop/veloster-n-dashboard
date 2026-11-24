@@ -4,3 +4,4 @@ installer/linux/*.sh text eol=lf
 installer/test/* text eol=lf
 installer/*.cmd text eol=crlf
 installer/install.ps1 -text
+installer/gui.ps1 -text

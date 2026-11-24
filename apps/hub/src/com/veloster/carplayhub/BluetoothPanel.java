@@ -20,8 +20,6 @@ import java.util.Set;
 
 /** Separate Classic Bluetooth device chooser using the installed Android Bluetooth stack. */
 public final class BluetoothPanel {
-    public interface PairingListener {void bonded(BluetoothDevice device);}
-    private final PairingListener pairingListener;
     private final Activity activity;
     private final BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
     private final Map<String,BluetoothDevice> found=new LinkedHashMap<String,BluetoothDevice>();
@@ -43,17 +41,10 @@ public final class BluetoothPanel {
         String action=intent.getAction();
         if(BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action))session.finished();
         Object device=intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-        if(device instanceof BluetoothDevice){BluetoothDevice d=(BluetoothDevice)device;found.put(d.getAddress(),d);
-            if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action))try{
-                String bonded=session.observedBond(d.getAddress(),intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE,-1));
-                if(bonded!=null&&pairingListener!=null)pairingListener.bonded(d);
-            }catch(Exception unavailable){message=UiText.t("페어링 완료 상태를 확인하지 못했습니다.");}
-        }
-        if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)&&intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,-1)!=BluetoothAdapter.STATE_ON)session.retirePairing();
+        if(device instanceof BluetoothDevice){BluetoothDevice d=(BluetoothDevice)device;found.put(d.getAddress(),d);}
         draw();
     }};
-    public BluetoothPanel(Activity activity){this(activity,null);}
-    public BluetoothPanel(Activity activity,PairingListener listener){this.activity=activity;pairingListener=listener;}
+    public BluetoothPanel(Activity activity){this.activity=activity;}
     public void show(LinearLayout parent){
         root=parent;
         if(!registered){
@@ -66,7 +57,6 @@ public final class BluetoothPanel {
         draw();
     }
     public void stop(){
-        session.retirePairing();
         if(confirmation!=null){confirmation.dismiss();confirmation=null;}
         if(registered){activity.unregisterReceiver(receiver);registered=false;}
         try{session.stop();}catch(Exception e){message=UiText.t("검색 종료 상태를 확인하지 못했습니다.");}

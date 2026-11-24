@@ -22,7 +22,7 @@ Owner-provided in-car photo. Missing readings display a dash. Location/camera me
 
 Floating window, settings backup, records room, themes, screen list, race/Λ/tacho screens, sounds, regional taxi fares and the owner installers are adapted from the i30 PD port [sung9155/i30-pd-dashboard](https://github.com/sung9155/i30-pd-dashboard) (MIT). Owner install guide: [INSTALL.md](INSTALL.md).
 
-Vehicle telemetry uses existing receive paths without adding ECU diagnostic requests. Missing or expired readings stay unknown. Bluetooth album-art reception, exhaust temperature and e-LSD remain unresolved. Released APKs do not provide wireless CarPlay or automatic updates. An unreleased [wireless receiver preview](docs/WIRELESS_CARPLAY.md) connects the app, Service, AP preparation and JNI; real-phone/vehicle operation and installation integration remain unverified. [Full limitations](docs/LIMITATIONS.md)
+Vehicle telemetry uses existing receive paths without adding ECU diagnostic requests. Missing or expired readings stay unknown. Bluetooth album-art reception, exhaust temperature and e-LSD remain unresolved. Wireless CarPlay and automatic updates are not provided. [Full limitations](docs/LIMITATIONS.md)
 
 ## Compatibility
 
@@ -78,6 +78,6 @@ Once installed, normal use does not require a PC. If neither the edge button nor
 
 [`apps/`](apps/) contains the two apps; [`shared/`](shared/) contains dashboard/UI/data code. [`compile-stubs/`](compile-stubs/) supplies build-only OEM declarations. [`scripts/`](scripts/) and [`tests/`](tests/) provide build, integrity and host checks. [`installer/`](installer/README.md) holds the owner installers (Windows, macOS, Linux).
 
-[Build and test](docs/BUILD.md) · [Wireless CarPlay preview](docs/WIRELESS_CARPLAY.md) · [Research walkthrough](docs/RESEARCH.md) · [NEMESIS review](docs/NEMESIS_REVIEW.md)
+[Build and test](docs/BUILD.md) · [Research walkthrough](docs/RESEARCH.md)
 
-Project-authored code and documentation: [MIT](LICENSE), except the separately licensed [GPLv3 wireless receiver module](third_party/wireless-carplay/README.md). [Dependency and signing notices](NOTICE.md). The public AOSP test certificate is not a private publisher identity or an OTA key. Source builds are unsigned. OEM firmware/APKs, private logs, identifiers and signing keys are not distributed. Unofficial project; no manufacturer affiliation.
+Project-authored code and documentation: [MIT](LICENSE). [Dependency and signing notices](NOTICE.md). The public AOSP test certificate is not a private publisher identity or an OTA key. Source builds are unsigned. OEM firmware/APKs, private logs, identifiers and signing keys are not distributed. Unofficial project; no manufacturer affiliation.

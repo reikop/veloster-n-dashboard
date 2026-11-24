@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher foreground (108 dp adaptive canvas): a hatchback side view, "N" under it, and a USB plug hanging from the
+     car's tail. Window and hubs are cut out (evenOdd), so the same drawing serves as the themed (monochrome) icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="22" android:translateY="22">
+        <path android:fillColor="#FFA4D9EF" android:fillType="evenOdd"
+            android:pathData="M0,22 L0,16 Q1,13 6,12 L20,9 L30,1 Q32,0 36,0 L52,1 L62,8 L64,16 L64,22 L58,22 A6,6 0 0,0 46,22 L18,22 A6,6 0 0,0 6,22 Z M22,9.5 L30.5,2.8 L36,2.4 L50,3 L56,8.8 Z"/>
+        <path android:strokeColor="#FFA4D9EF" android:strokeWidth="1.6" android:pathData="M38,2.4 V9.6"/>
+        <path android:fillColor="#FFA4D9EF" android:fillType="evenOdd"
+            android:pathData="M7.4,22 A4.6,4.6 0 1,0 16.6,22 A4.6,4.6 0 1,0 7.4,22 Z M10.2,22 A1.8,1.8 0 1,0 13.8,22 A1.8,1.8 0 1,0 10.2,22 Z M47.4,22 A4.6,4.6 0 1,0 56.6,22 A4.6,4.6 0 1,0 47.4,22 Z M50.2,22 A1.8,1.8 0 1,0 53.8,22 A1.8,1.8 0 1,0 50.2,22 Z"/>
+    </group>
+    <!-- N -->
+    <path android:strokeColor="#FFE8EEF0" android:strokeWidth="3.6" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M45,80 V63 L61,80 V63"/>
+    <!-- cable from the tail, plug -->
+    <path android:strokeColor="#FF3DDC84" android:strokeWidth="3" android:strokeLineCap="round" android:pathData="M78,47 Q82,56 78,64"/>
+    <path android:fillColor="#FF3DDC84" android:pathData="M76,63 H80 A2,2 0 0,1 82,65 V70 A2,2 0 0,1 80,72 H76 A2,2 0 0,1 74,70 V65 A2,2 0 0,1 76,63 Z"/>
+    <path android:strokeColor="#FF3DDC84" android:strokeWidth="1.8" android:pathData="M76.2,72 H79.8 A1,1 0 0,1 80.8,73 V77 A1,1 0 0,1 79.8,78 H76.2 A1,1 0 0,1 75.2,77 V73 A1,1 0 0,1 76.2,72 Z"/>
+</vector>
