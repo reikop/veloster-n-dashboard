@@ -41,7 +41,7 @@ public final class GaugeEditor {
             }}).setNegativeButton(UiText.t("닫기"),null));
     }
     private void source(final int slot){
-        show(new AlertDialog.Builder(activity).setTitle(UiText.t("표시 항목")).setSingleChoiceItems(UiText.list(Telemetry.LABELS),layout.signal(slot),new DialogInterface.OnClickListener(){public void onClick(DialogInterface d,int n){layout.set(slot,n,layout.style(slot));save();d.dismiss();}}).setNegativeButton(UiText.t("취소"),null));
+        show(new AlertDialog.Builder(activity).setTitle(UiText.t("표시 항목")).setSingleChoiceItems(UiText.list(Telemetry.CORE_LABELS),layout.signal(slot),new DialogInterface.OnClickListener(){public void onClick(DialogInterface d,int n){layout.set(slot,n,layout.style(slot));save();d.dismiss();}}).setNegativeButton(UiText.t("취소"),null));
     }
     private void style(final int slot){
         show(new AlertDialog.Builder(activity).setTitle(UiText.t("게이지 모양")).setSingleChoiceItems(new String[]{UiText.t("원형"), UiText.t("막대"), UiText.t("숫자")},layout.style(slot),new DialogInterface.OnClickListener(){public void onClick(DialogInterface d,int n){layout.set(slot,layout.signal(slot),n);save();d.dismiss();}}).setNegativeButton(UiText.t("취소"),null));

@@ -1,0 +1,29 @@
+{
+  "model": "xai/grok-imagine-image-2.0",
+  "body": {
+    "prompt": "Redraw this exact image as authentic 16-bit era pixel art sprites. Keep the same seven cars (Hyundai Veloster N), the same angles, the same positions, sizes and spacing, and the same flat magenta background. Every art pixel must be a clean square block of exactly 4x4 image pixels on one strict grid. Limited palette of about 24 colours with hue-shifted shading ramps (light blue body highlights leaning cyan, shadows leaning purple), crisp 1-pixel dark selective outline, flat colour areas, no anti-aliasing, no gradients, no blur, no noise. Tail lamps unlit dark red. No text.",
+    "image_urls": [
+      "https://d3u0tzju9qaucj.cloudfront.net/8fdd1bb7-5494-4dc0-9f03-c7e32b32d53d/01a20853-4530-71bb-96a8-b4b9de5f3e5e/2a991bf1-cdd9-4113-8059-41ff20ea8da0.png"
+    ],
+    "aspect_ratio": "auto",
+    "resolution": "2k",
+    "quality": "medium"
+  },
+  "estimate": {
+    "type": "estimate",
+    "credits": "1.440",
+    "usd": "0.090",
+    "discount": null
+  },
+  "request_id": "01a2085e-e085-7fde-a0f4-ae469a7b54bd",
+  "idempotency_key": "d7bafd53-51e1-48ba-9798-589d8bfd53ea",
+  "submitted_at": "2026-11-23T21:26:05+0900",
+  "final_status": "completed",
+  "images": [
+    {
+      "file": "image-0.png",
+      "sha256": "9c59614ebe92b1bba1836fa1b7d6324ec4347b308bc52cc020e1b192e7ab54aa",
+      "bytes": 2365575
+    }
+  ]
+}

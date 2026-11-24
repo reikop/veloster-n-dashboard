@@ -126,6 +126,9 @@ public final class HubActivity extends Activity {
         return unique;
     }
     private void appsPage() {
+        add(content,UiText.t("무선 CarPlay"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,WirelessCarPlayActivity.class));}});
+        add(content,UiText.t("USB Wi-Fi"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,UsbWifiActivity.class));}});
+        add(content,UiText.t("앱 업데이트"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,UpdateActivity.class));}});
         add(content,UiText.t("실행 바로가기 / Quick entry"),new Runnable(){public void run(){quickEntry();}});
         text(UiText.t("바로가기: ")+QuickEntryService.status(this));
         if(QuickEntryService.mode(this)==QuickEntryPolicy.OFF)

@@ -10,7 +10,7 @@ import java.util.Locale;
 
 /** Actual receipt history; missing and invalid intervals are never filled with held values. */
 public final class GraphRenderer {
-    private final Paint p=new Paint(3);
+    private final ThemedPaint p=new ThemedPaint(3);
     private final Path path=new Path();
     private static final int BLUE=0xffa4d9ef,WHITE=0xffe1edf2,MUTED=0xff8299a4,LINE=0xff293943;
     private void text(Canvas c,String s,float x,float y,float size,int color){p.setStyle(Paint.Style.FILL);p.setTypeface(Typeface.DEFAULT);p.setTextAlign(Paint.Align.LEFT);p.setTextSize(size);p.setColor(color);c.drawText(s,x,y,p);}

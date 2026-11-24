@@ -1,0 +1,67 @@
+{
+  "date": "2026-11-05",
+  "kind": "unreleased-local-preview",
+  "version_code": 18,
+  "version_name": "1.17-wireless-preview",
+  "revision": "r3",
+  "source_and_component_audit_passed": true,
+  "signed_apk_sha256": "502d02cc2d415cdd0de9106cfeed2a11ce67d3e09991e80d05df804a8c1675f5",
+  "public_build_inputs": 214,
+  "module_inputs_including_notices": 179,
+  "production_java_inputs": 172,
+  "production_classes_matched": 598,
+  "exported_files": 188,
+  "verification": {
+    "core_host_suites": 47,
+    "core_generic_api17_suites": 49,
+    "audio_resend_host_suites": 49,
+    "audio_resend_generic_api17_suites": 49,
+    "audio_cold_start_packet_repair_verified": true,
+    "audio_playback_deadline_verified": false,
+    "actual_hub_instrumentation_suites": 7,
+    "instrumentation_reused_from_r2_with_identical_app_and_policy_classes": true,
+    "actual_final_apk_install_readback_and_ui": true,
+    "ui_screens": 5,
+    "resolution": [
+      800,
+      480
+    ],
+    "installer_tests": 22,
+    "one_shot_tests": 22,
+    "offline_signed_install_plan_verified": true
+  },
+  "boundary_fixtures": [
+    "Bluetooth/OEM/AP/root operations in protocol and backend tests",
+    "audio output sink in resend tests",
+    "memory settings/bonds in Hub instrumentation, removed before normal UI smoke"
+  ],
+  "vehicle_accessed": false,
+  "actual_phone_interoperability_verified": false,
+  "full_product_factory_verified": false,
+  "published": false,
+  "goal_complete": false,
+  "remaining": [
+    "full factory and OEM authentication installation",
+    "AP information elements and initial USB wireless enrollment",
+    "microphone/Siri/calls",
+    "peer-clock A/V phase synchronization and full renegotiation",
+    "boot connection policy"
+  ],
+  "lab_evidence": {
+    "v18-final-audit.json": "5fb67d90aa253ac98b30d85d17c1cbe5b3e8d8050ee338ab3b6c383a9f901178",
+    "app-public-build-v18-r3/build-manifest.json": "2364129785c68d679e19d782aed0fc99ef21dcfd0f55480439ad39649445dfa1",
+    "reconnect-core-release/validation.json": "8484c802acae5b92c5075b64414457038b6c3bef647c7d35a55f533d6bd0088b",
+    "reconnect-backend-release/validation.json": "7269c75ed9efdba9ab75663e595fbf8e9552d39366f2febc06929567b9dd619d",
+    "audio-resend-receipt-final/validation.json": "2fb6aa1217ee9f6b7b73113460330b674d891cf682ee2aba1e750d339e22ea7c",
+    "app-retry-instrumentation/release-r3-smoke/validation.json": "6f880a75ff5a745d718b9ad48fdba532f8a5606a28bac34ddb0675af7f9e0343",
+    "one-shot-v18-r3-offline-authentication/receipt.json": "ad3a64292ebf02963ae7b33003549937adfa4a9c191e7940fbc5dbe9526a00b1",
+    "v18-vm-cleanup.json": "918c31149351763b046889e41e65801efdc7e3ed71b43f65ed7e037daf5a3a85"
+  },
+  "public_sources": {
+    "apps/hub/src/com/veloster/carplayhub/HubApplication.java": "7ccaf531cc8a748ea29ab6d10e8999d43297506f8fb4ab472aa3e9e8add47fa3",
+    "apps/hub/src/com/veloster/carplayhub/WirelessCarPlayActivity.java": "632b4d688e88d851a8b50776923a464f8fbc2b08c5f825d15e483021eec9cadc",
+    "apps/hub/src/com/veloster/carplayhub/WirelessCarPlaySettings.java": "6440bda1f311c6b5726a05daf7cd1e9470ab4f16439a6fd45dc702a476bcd093",
+    "apps/hub/src/com/veloster/carplayhub/CarPlayReceiverActivity.java": "03b9d5afd470342541ae0c6317d9c099e0035b69441f04e8239639718080bb89",
+    "third_party/wireless-carplay/source-manifest.json": "e656252de7d3fbc3efa85893b562bb2ad27d831d04d1475184695a5b4e2b8f96"
+  }
+}

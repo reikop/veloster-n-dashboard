@@ -10,8 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 
-/** One background decoder with a replaceable pending job; never fetches artwork from a network. */
-final class ArtworkLoader {
+/** One background decoder with a replaceable pending job; never fetches artwork from a network. Shared with Neon Drive. */
+public final class ArtworkLoader {
     private final Context context;
     private final View view;
     private long revision=-1;
@@ -19,9 +19,9 @@ final class ArtworkLoader {
     private MediaState.Snapshot pending;
     private boolean running,closed;
     private volatile Bitmap bitmap;
-    ArtworkLoader(Context c,View v){context=c;view=v;}
-    Bitmap bitmap(){return bitmap;}
-    synchronized void request(MediaState.Snapshot track){
+    public ArtworkLoader(Context c,View v){context=c;view=v;}
+    public Bitmap bitmap(){return bitmap;}
+    public synchronized void request(MediaState.Snapshot track){
         if(closed||track.artworkRevision==revision)return;
         revision=track.artworkRevision;
         String nextKey=track.source+"\n"+track.title;
@@ -31,8 +31,8 @@ final class ArtworkLoader {
         running=true;
         new Thread(new Runnable(){public void run(){decodePending();}},"NMode-artwork").start();
     }
-    synchronized void open(){closed=false;revision=-1;}
-    synchronized void close(){closed=true;pending=null;bitmap=null;revision=-1;}
+    public synchronized void open(){closed=false;revision=-1;}
+    public synchronized void close(){closed=true;pending=null;bitmap=null;revision=-1;}
     private void decodePending(){
         while(true){
             final MediaState.Snapshot track;
@@ -49,7 +49,7 @@ final class ArtworkLoader {
             }catch(Exception e){android.util.Log.i("VehicleDash","Album artwork unavailable");}
             catch(OutOfMemoryError e){android.util.Log.i("VehicleDash","Album artwork exceeds decoder memory");}
             synchronized(this){if(!closed && track.artworkRevision==revision)bitmap=decoded;}
-            view.post(new Runnable(){public void run(){view.invalidate();}});
+            if(view!=null)view.post(new Runnable(){public void run(){view.invalidate();}});
         }
     }
     private Bitmap decode(byte[] bytes){

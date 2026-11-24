@@ -23,9 +23,18 @@ def main():
     sources = [ROOT / "shared/src/com/veloster/vehicle/Telemetry.java",
                ROOT / "shared/src/com/veloster/i18n/UiText.java",
                ROOT / "apps/dashboard/src/com/veloster/dashboard/HscanFrameDecoder.java"]
-    sources += [hub / (name + ".java") for name in ("RadioTrial", "BluetoothSession", "RebootRequest", "QuickEntryPolicy")]
-    tests = sorted((ROOT / "tests").glob("*Test.java"))
-    sources += [ROOT / "shared/src/com/veloster/diagnostics/ErrorLog.java", ROOT / "shared/src/com/veloster/vehicle/DashboardPage.java"]
+    neon = ROOT / "apps/neondrive/src/com/veloster/neondrive"
+    sources += [neon / (name + ".java") for name in ("DriveSignals", "DriveModel", "HscanFrames", "CarPaint", "Theme", "SolarClock", "PixelFont")]
+    sources += [hub / (name + ".java") for name in ("RadioTrial", "BluetoothSession", "RebootRequest", "QuickEntryPolicy", "BoundedProbeLane")]
+    # Android-facing selection settings have their own fixture SDK/thread harness
+    # in tests/test_wireless_carplay_settings.py; keep this runner host-only.
+    tests = sorted(p for p in (ROOT / "tests").glob("*Test.java")
+                   if p.name != "WirelessCarPlaySettingsTest.java")
+    sources += [ROOT / "shared/src/com/veloster/diagnostics/ErrorLog.java", ROOT / "shared/src/com/veloster/vehicle/DashboardPage.java",
+                ROOT / "shared/src/com/veloster/vehicle/TaxiMeter.java"]
+    # Pure-Java parts ported from the i30 PD build (sung9155/i30-pd-dashboard, MIT) and their tests.
+    sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in
+                ("VehicleProfile", "ShiftGuide", "Theme", "Records", "SettingsBackup", "DriveStats", "GearRatios", "ShiftCoach", "RevMatch", "DayNight", "DayPhase", "Tiles", "TaxiTariff", "TaxiZones", "TaxiZoneData", "DriveModes", "SpeedChime")]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,

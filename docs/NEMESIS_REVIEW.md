@@ -2,7 +2,55 @@
 
 [Documentation](README.md) · [Compatibility](STATUS.md)
 
-Reviewed **2026-11-02**, upstream commit [`b0178ed`](https://github.com/xwtk/hmg_nemesis/tree/b0178ed95a217879e779750d7a28d9f6b677d06f), Manager **1.16.2**. The code adaptations below are implemented and host-tested. No vehicle installation or independent exploit reproduction was performed.
+Initial review **2026-11-02**, upstream commit [`b0178ed`](https://github.com/xwtk/hmg_nemesis/tree/b0178ed95a217879e779750d7a28d9f6b677d06f), Manager **1.16.2**. The code adaptations below are implemented and host-tested. No vehicle installation or independent exploit reproduction was performed.
+
+## Follow-up: 1.16.3–1.16.5 (2026-11-03)
+
+Compared all48 changed-file entries across3 new commits from the original pin to
+[`65c05f0` /1.16.5](https://github.com/xwtk/hmg_nemesis/compare/b0178ed95a217879e779750d7a28d9f6b677d06f...65c05f08def6c65b1f70c523a3a9fa68a423ad85).
+Two further ideas are implemented independently in our **My Apps v14 local preview**:
+
+- **Keep verified updates for later/offline installation.** AndroidUpdate retains
+  one signed candidate per app with its original release metadata/signature.
+  Cancelling an offer keeps it; **Find saved updates** works offline. Every reuse
+  checks the signature, hash, APK signer, current installed version and exact
+  target again. Replacement is published only after the new file is verified;
+  failed downloads/writes preserve the old candidate. Changed/obsolete files and
+  abandoned partials are cleaned up. Separate Activity offers use separate files.
+  An online check can reuse the same candidate or explicitly report an offline
+  fallback. There is no automatic installation or background polling.
+- **Check the real default route despite a stale Wi-Fi label.** UpdateNetwork now
+  checks the route before accepting ConnectivityManager's local-network label.
+  A preferred cellular/unknown route or a mixed equal-metric route is rejected.
+  The prior implementation failed the new Wi-Fi-label/rmnet0 regression test.
+  The separately verified USB Wi-Fi lease remains an explicit path. We retain
+  refusal of known cellular agents and do not copy the broader upstream prefix
+  allowances for unknown `en*`/`ncm*` interfaces.
+
+| New upstream area | Decision for this target |
+| --- | --- |
+| Dependency ordering, compatible replacement and `!id` conflicts | Our three-component installer already uses fixed ordering and exact manifest pins; no generic package/dependency engine added. Existing data-preserving APK replacement and readback remain. |
+| Download cancellation, loading/retry/error UI | Existing foreground cancellation, bounded transfers, error handling and partial cleanup already cover the corresponding app workflow. Store-specific pages were not copied. |
+| Saved core updates | Adapted as authenticated APK caching above; preserves old bytes until a replacement succeeds. |
+| Network/modem and hotspot rules | Actual-route check adopted; no built-in modem opt-in added. |
+| Built-in Wi-Fi tile | Upstream opens Android's existing Wi-Fi picker only when a module/feature is present. Our separate USB Wi-Fi screen remains; this update supplies no USB adapter driver. |
+| Stopped/deferred service state and uninstall cleanup | Our Wi-Fi/SSH helpers are explicitly started and stopped with no auto-boot watchdog. No NEMESIS service manager to replace. |
+| Manifest paths/IDs and nested ZIP descriptor selection | Existing strict signed metadata, exact archive member checks and fixed destinations retained. No basename-based descriptor lookup added. |
+| USB handler use-after-free, mount wrapper, boot-hook wipe | Those NEMESIS native components are not in our project. No OEM boot/system or USB auto-execution code imported. |
+| Update badges, dependency dialogs, resources and versioned media | Reviewed as parts of the package-store feature; not required by our two-app updater. Native/OTA payloads retained only in the private reference snapshot. |
+
+Validation:68 Python tests,13 Java programs,19 signed-cache scenarios,
+14 actual Activity lifecycle checks and11 actual network-gate scenarios. The last
+three sets are within the Python suite. A further4 bootstrap tests and13 one-shot
+orchestration tests passed. The Hub builds for API17/DEX035 and a signed v14 USB
+bundle was prepared. The one-shot installer selects v14 and accepts only the
+known exact v11/v12/v13 preview hashes in addition to the release/current candidate.
+[Validation record](validation/nemesis-update-20261103.json).
+
+No upstream source file was copied. The previously delivered v13 archive remains
+unchanged. No vehicle install, new emulator execution or public push/release was
+performed in this follow-up. The old API17 runtime evidence below is not a v14
+runtime claim.
 
 ## Implemented in our code (unreleased)
 
@@ -20,7 +68,7 @@ Separately, the owner's navigation-info reference was implemented as an optional
 
 Initial adoption validation (before the follow-up): **48 Python tests**, **11 Java host programs**, including **23 actual service/receiver scenarios under Android stubs**, and an API17-targeted Hub build (API16 compile library, DEX035). New regression tests failed on the earlier code before these changes. [Validation record](validation/nemesis-adoption-20261102.json)
 
-Both generated APKs are unsigned. The released v6/v10 APKs, `release.json` and installer-selected APKs remain unchanged by these code changes. The current source is a post-v6/v10 candidate, despite retaining those manifest version fields until release preparation. Do not identify the new source build as the already tested release.
+The original comparison builds were unsigned. The released v6/v10 APKs, `release.json` and installer-selected APKs remain unchanged. Subsequent [app update preparation](APP_UPDATES.md) advances the preview source to v7/v11 and prepares local signed candidates; these are not the vehicle-tested release.
 
 Vehicle limitations: OEM event delivery/order, actual QuickBoot delivery to the private receiver and full power-off restoration still need target checks. A process started after an OEM off event cannot reconstruct that missed event from these in-memory flags; PowerManager/keyguard checks still apply. The QuickBoot broadcast handler does not enable QuickBoot or install a boot hook. NEMESIS's 3-second full-screen launch delay was not adopted because our service restores a shortcut rather than launching an app.
 
@@ -42,7 +90,7 @@ Our released apps target **STD_H / tcc893x / Android 4.2.2 / API17**. NEMESIS Ma
 | [Service readiness / restart policy](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/native/svc.c) | Service readiness / restart policy | Our subscriber startup had a PGS/HSCAN-only retry gap. Adopted bounded retry delays, successful-peer retention and listener cleanup in VehicleDataClient; not a native process watchdog. |
 | [Error persistence](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/manager/src/com/nemesis/manager/CrashLog.java) | Error persistence | Adopted independently with Application-level initialization, two strictly bounded private files and bounded message-free formatting. No shared world-readable log path. |
 | [Launcher listing](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/manager/src/com/nemesis/manager/AppList.java) | Launcher listing | Already covered by HubActivity.launchable: package deduplication, label sorting and accessibility checks. No extra app-list layer added. |
-| [Clock/network update gating](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/manager/src/com/nemesis/manager/UpdateRule.java) | Clock/network update gating | Our telemetry and radio timeouts already use elapsedRealtime. No app-side network updater exists to gate; retained existing clocks instead of adding update traffic. |
+| [Clock/network update gating](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/manager/src/com/nemesis/manager/UpdateRule.java) | Clock/network update gating | Our telemetry and radio timeouts already use elapsedRealtime. The comparison initially retained existing clocks. Subsequent independently implemented [app update preparation](APP_UPDATES.md) adds user-initiated checks, elapsed-time deadlines and local-network policy; no upstream updater was copied. |
 | [Bounded download / hash verification](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/manager/src/com/nemesis/manager/Portal.java) | Bounded download / hash verification | Our prepare_menu_tools already limits downloads to 64 MiB, checks pinned SHA256 before writing, and uses a new local output directory. menu_entry verifies upload/readback hashes. No on-device store, CA bundle or HTTP update client added. |
 | [Process execution](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/manager/src/com/nemesis/manager/Cli.java) | Process execution | Upstream reads all output then waits without a timeout. Our host ADB wrapper already has explicit timeouts and argument quoting. Not adopted as a replacement. |
 | [Archive parsing](https://github.com/xwtk/hmg_nemesis/blob/b0178ed95a217879e779750d7a28d9f6b677d06f/Sources/native/zip.c) | Archive parsing | Kept Python zipfile and our duplicate-member, aggregate-size, CRC, DEX and payload-hash checks in menu_entry. No custom native ZIP parser needed. |
@@ -73,3 +121,7 @@ NEMESIS의 루트 실행 방식은 OTA 검증 전에 실행되는 helper를 이�
 화면 OFF→ON 처리와 QuickBoot **방송 수신**은 우리 내 앱 소스에 반영했습니다. OEM/Android의 꺼짐 상태를 따로 유지하며 언어 변경·서비스 재요청으로 버튼이 다시 나오지 않도록 합니다. 켜 둔 바로가기만 복원하고 앱 화면은 자동으로 열지 않습니다. 설치 기록도 임시 파일 동기화→교체→POSIX 디렉터리 동기화로 보강했습니다. 호스트 테스트·API17 대상 빌드는 통과했지만 새 소스의 실차 동작은 미검증이며 배포 APK는 그대로입니다. QuickBoot를 활성화하거나 시스템 시작 스크립트를 바꾸지는 않았습니다. 무선 CarPlay·앨범아트·ECU 복구가 해결된 것으로 표시하지 않습니다. 기존 Gen5W NMode 이식 중단 결정을 변경하는 조사도 아닙니다.
 
 추가 비교에서 PGS/HSCAN만 준비가 늦는 경우의 재시도 누락을 수정했습니다. 등록 실패 정리·오래된 리스너 차단·BCM 실패 시 수신 보류도 검증했습니다. 앱 내부 오류 파일은 앱별 최대64 KiB로 제한하고 기존 Android 예외 처리를 유지합니다. 전체 Python50·Java13 검사와 두 앱 API17 대상 빌드가 통과했습니다. 선택형 퍼포먼스 계기판은 사용자 이미지에서 착안한 별도 작업이며 기존 수신값만 사용합니다. 모든 새 코드의 실차 설치·전원 종료 시험은 미실시입니다.
+
+11/03에는1.16.5까지3커밋·48변경 파일을 추가 대조했습니다. 받은 업데이트를
+나중에 오프라인으로 설치하는 기능과 실제 기본 경로 확인을 내 앱 v14에 반영했습니다.
+Wi-Fi 버튼은 기존 모듈의 설정 화면을 여는 기능이며 USB 동글 드라이버 추가가 아닙니다.

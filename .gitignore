@@ -14,3 +14,4 @@ logs/
 *.pk8
 *.odex
 .menu-venv/
+!updates/update-public.pem

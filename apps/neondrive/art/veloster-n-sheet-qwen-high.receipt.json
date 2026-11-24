@@ -1,0 +1,29 @@
+{
+  "model": "alibaba/qwen-image-3/text-to-image",
+  "body": {
+    "prompt": "Sprite sheet for a retro 1980s arcade racing game, player car seen from the classic Out Run chase camera: the camera is HIGH, about 2.5 metres above the road and 5 metres behind the car, looking DOWN at about 20 degrees. Because of this elevated view the whole roof, the top surface of the big rear roof spoiler, the full rear window seen from above and the top of the boot are clearly visible, and the car looks slightly foreshortened from above. The same high camera height for every view. One single horizontal row of SEVEN views of the SAME car: a 2019 Hyundai Veloster N hatchback (second generation, JS body) in light Performance Blue paint, red accent strip on the lower rear bumper, black rear diffuser, two large round exhaust tips one on each side, slim horizontal tail lamps. Left to right the car is rotated about its vertical axis: 1) 35 degrees showing its right side, 2) 20 degrees right side, 3) 10 degrees right side, 4) exactly straight from behind, symmetric, 5) 10 degrees showing its left side, 6) 20 degrees left side, 7) 35 degrees left side. All seven cars identical in size, scale, colours and lighting, evenly spaced, each centred in its own equal-width cell, tyre bottoms aligned on one baseline, nothing overlapping or cut off. Tail lamps and brake lights OFF (dark red, unlit). Clean cel-shaded illustration with crisp edges and a dark outline, no blur. Background: perfectly flat solid pure magenta #FF00FF everywhere. No ground, no road, no shadow, no text, no labels, no numbers, no grid lines.",
+    "resolution": "2k",
+    "aspect_ratio": "21:9",
+    "prompt_extend": true,
+    "enable_thinking": false,
+    "seed": 8080,
+    "negative_prompt": "text, labels, numbers, watermark, shadow, road, ground, gradient background, blur, photo, cropped car, low camera, eye-level view, bumper-level view, different car models, sedan, SUV"
+  },
+  "estimate": {
+    "type": "estimate",
+    "credits": "1.200",
+    "usd": "0.075",
+    "discount": null
+  },
+  "request_id": "01a2084f-b122-751c-a34a-846ddfbddfb5",
+  "idempotency_key": "b755f5f8-d077-4eed-9ad4-5dd5e54813f4",
+  "submitted_at": "2026-11-23T21:09:30+0900",
+  "final_status": "completed",
+  "images": [
+    {
+      "file": "image-0.png",
+      "sha256": "0c64d6e2bb3193d68dc07f60033c832cfc80a594a5927334f57999b51dcef9fa",
+      "bytes": 1416973
+    }
+  ]
+}

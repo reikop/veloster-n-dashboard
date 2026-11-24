@@ -9,7 +9,7 @@ import java.util.Locale;
 
 /** Draws six or twelve cards below the shared navigation. */
 public final class GaugeRenderer {
-    private final Paint p=new Paint(3);
+    private final ThemedPaint p=new ThemedPaint(3);
     private static final int BLUE=0xffa4d9ef,WHITE=0xffe1edf2,MUTED=0xff8299a4,LINE=0xff293943;
     private void text(Canvas c,String s,float x,float y,float size,int color){p.setStyle(Paint.Style.FILL);p.setColor(color);p.setTypeface(Typeface.DEFAULT);p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);c.drawText(s,x,y,p);}
     private void line(Canvas c,float x,float y,float xx,float yy,int color,float width){p.setColor(color);p.setStrokeWidth(width);c.drawLine(x,y,xx,yy,p);}

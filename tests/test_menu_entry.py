@@ -154,6 +154,26 @@ class DeployTests(unittest.TestCase):
     def no_mutations(self):
         self.assertFalse(any(c[0] in ("push", "rm") or c[:2] == ("pm", "install") for c in self.adb.calls))
 
+    def test_hub_bootstrap_preserves_unknown_dashboard(self):
+        hub='com.veloster.carplayhub';dashboard='com.veloster.dashboard'
+        remote=self.adb.packages[dashboard];self.adb.files[remote]=b'private dashboard trial'
+        # Different, recognized old Hub forces the selected package through install/readback.
+        old=b'old hub';self.adb.files[self.adb.packages[hub]]=old;self.apps[hub]['accepted'].add(digest(old))
+        journal=m.change(self.adb,self.profile,'install-apps',self.backup,
+                         apps={hub:self.apps[hub]},companions=(hub,))
+        self.assertEqual(journal.data['status'],'verified')
+        self.assertEqual(self.adb.install_count,1)
+        self.assertEqual(self.adb.files[remote],b'private dashboard trial')
+        self.assertFalse(any(dashboard in str(c) for c in self.adb.calls))
+
+    def test_companion_subset_invalid_selections_never_contact_adb(self):
+        for selection in [(),('unknown',),('com.veloster.carplayhub',)*2]:
+            with self.assertRaises(m.Stopped):
+                m.change(self.adb,self.profile,'install-apps',self.backup,apps=self.apps,companions=selection)
+        with self.assertRaises(m.Stopped):
+            m.change(self.adb,self.profile,'install',self.backup,apps=self.apps,companions=('com.veloster.carplayhub',))
+        self.assertEqual(self.adb.calls,[])
+
     def test_journal_sync_failure_stops_before_install(self):
         real_sync = os.fsync
 

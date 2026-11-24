@@ -56,17 +56,68 @@ python3 scripts/build.py hub \
 
 ## 실행 바로가기와 선택형 메뉴 도구
 
-현재 Hub 소스는 v10 이후의 미배포 후보이며 OEM 화면 복귀·QuickBoot 방송 처리를 추가했습니다. 매니페스트 버전은 릴리스 준비 전까지 v10으로 유지하므로 새 빌드와 기존 배포 APK를 해시로 구분합니다. 부팅 시 직접 켜 둔 바로가기만 복원합니다. 호스트 검사는 실제 서비스·리시버를 작은 Android 스텁과 실행하지만 실제 차량 표시/부팅 전달을 대신하지 않습니다.
+현재 소스는 내 앱 v24 / `1.23-wireless-preview`·계기판 v7의 미배포 preview이며 OEM 화면 복귀·QuickBoot·앱 업데이트·연결 진단과 [무선 수신기 조립](WIRELESS_CARPLAY.md)을 포함합니다. 기존 배포 v10/v6와 버전 및 해시로 구분하며, 로컬 서명 후보도 실차 검증본이 아닙니다. 부팅 시 직접 켜 둔 바로가기를 복원하며, CarPlay는 선택 폰과 사용자 opt-in·재시도 예산을 확인해 자동 연결을 시도합니다. 실제 차량 부팅 전달은 미검증입니다. 호스트 검사는 실제 서비스·리시버를 작은 Android 스텁과 실행하지만 실제 차량 표시/부팅 전달을 대신하지 않습니다.
 
 [단일 설치 명령](INSTALL.md)은 Python 표준 라이브러리와 ADB만 사용합니다. 빌드 도구나 키가 필요하지 않습니다. [선택형 OEM 메뉴 재구성](MENU_ENTRY_ko.md)에만 별도 JDK·Androguard·smali·개인 원본이 필요합니다. 관련 소스는 `menu-entry/`와 `scripts/build_menu_entry.py`이며, 외부 키를 받아 해당 로컬 메뉴 APK를 서명하는 경로입니다. OEM 코드가 포함된 생성물을 공개하지 않습니다.
 
 다국어 문자열은 `translations/en.json`, `ko.json`을 수정하고 `python3 scripts/generate_translations.py`로 Java 카탈로그를 갱신합니다. 빌더는 카탈로그 일치 여부를 검사하고 `res/values`, `res/values-ko`의 앱 이름 리소스도 컴파일합니다. 두 앱 소스에는 [v6/v10 이후 변경](NEMESIS_REVIEW.md#implemented-in-our-code-unreleased)이 포함됩니다. 배포 APK는 v6/v10 그대로입니다.
 
-## Experimental AVRCP Cover Art core / 실험용 앨범아트 수신 코어
+## 앱 업데이트 준비
 
-Implementation, native transport, private trial builds and validation details are now in [AVRCP Cover Art research](EXPERIMENTAL_AVRCP.md). The existing experimental notes have been preserved there. These components are outside the released APKs; see [current verification](STATUS.md) and the [experiment index](../experimental/README.md).
+[앱 업데이트 문서](APP_UPDATES.md)에 서명된 APK로 온라인/USB 공용 묶음을 만드는 절차가 있습니다. 별도 업데이트 승인 키를 사용하며 개인키는 저장소 밖에 둡니다. 도구는 로컬 파일만 만들고 배포·설치하지 않습니다.
 
-앨범아트 구현·시험본 빌드의 기존 상세 내용은 [별도 연구 문서](EXPERIMENTAL_AVRCP.md)로 옮겼습니다. 일반 앱 빌드는 위 절차를 사용합니다.
+## Removed experiments / 정리된 실험
+
+The AVRCP Cover Art and SystemUI experiment sources were removed from this repository (2026-11-24); they were never part of the released APKs.
+
+앨범아트(AVRCP)·SystemUI 실험 소스는 이 저장소에서 삭제했습니다(2026-11-24). 배포 APK에는 포함된 적이 없습니다.
 
 <a id="offline-oem-system-experiments--오프라인-시스템-수정본"></a>
 <a id="native-transport-and-private-trial-apks--native-전송부와-비공개-시험-apk"></a>
+
+## Optional wireless CarPlay preview
+
+The Hub builder includes the exported receiver Java sources. Add both
+`--carplay-crypto /path/to/libvn-carplay-crypto.so` and
+`--carplay-crypto-manifest /path/to/build-manifest.json` to package the locally
+built API17 ARMv7 JNI module. Without that pair, settings remain available but
+connection attempts report the missing module. See the
+[wireless preview guide](WIRELESS_CARPLAY.md#재현-빌드) for the native recipe,
+combined-build license and validation limits. AP/OEM installation is separate;
+the old v16 default path does not select the new explicit CarPlay installation profile.
+The local profile validates APK/JNI/AP upgrades and can include a private OEM
+auth APK with explicit original-code fallback. OEM hardware authentication and
+vehicle installation remain unverified.
+
+For a locally reviewed OEM service candidate, add
+`--oem-services-jar-sha256 <64 lowercase hex>` to a Hub build. The builder writes
+an isolated `HubApplication.java` under the new output directory, changing only
+the read-only JAR expectation; the default source keeps its current `03c4…` pin.
+`build-manifest.json` records the resolved pin and generated source hashes. Pair
+the APK with the matching framework candidate in its installation profile. This
+option packages no OEM code and grants no installation or native admission authority.
+
+`SOURCE_SHA256SUMS`, `SHA256SUMS` and `VALIDATION.json` remain earlier build/distribution snapshots. A new preview uses its own local build manifest and
+separate validation receipts; the distribution snapshots do not certify the current preview.
+
+Optional AAC-ELD packaging uses `scripts/build_carplay_eld.py` and the paired
+`--carplay-eld` / `--carplay-eld-manifest` options alongside the crypto pair.
+See the same wireless guide for the recipe and runtime capability limits.
+
+## Optional API17 HTTPS module
+
+The source-only Hub build uses system Java TLS; the generic API17 runtime could not connect to GitHub through that path. To include the separately built modern transport, provide all three files:
+
+```sh
+python3 scripts/build.py hub \
+  --java /path/to/jdk17/bin/java --android-jar /path/to/android.jar \
+  --aapt2 /path/to/aapt2 --r8-jar /path/to/r8.jar \
+  --tls-helper /path/to/native-build/bin/vn-curl-api17-armv7 \
+  --tls-ca /path/to/native-build/cacert.pem \
+  --tls-notices /path/to/native-build/THIRD_PARTY_NOTICES.txt \
+  --out build/hub-with-https
+```
+
+The [pinned offline recipe](../third_party/network/README.md) uses NDK r22b and externally supplied, hash-checked source archives. The app builder accepts an ARM32 PIE ELF and public CA material, rejects private-key PEM input and records actual hashes in APK assets. It does not fetch a helper or modify system libraries. The helper is placed in the standard ARMv7 native-library directory for installation-time extraction; its licenses are packaged in assets. `scripts/bootstrap_updater.py` authenticates a prepared Hub bundle locally by default and can later preflight/install only My Apps, preserving an existing dashboard trial. See [the bootstrap steps](APP_UPDATES.md#first-installation-of-the-updater).
+
+For the USB Wi-Fi preview, build the native helper with `scripts/build_tls_helper.py --dns cares` and the additional pinned c-ares source archive. Package it with `--tls-dns cares`; the default remains the system resolver for older builds. The capability flag must describe the actual binary. Without the isolated resolver metadata, the updater refuses external USB Wi-Fi leases. See [USB Wi-Fi preparation](USB_NETWORK.md).

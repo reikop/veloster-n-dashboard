@@ -13,9 +13,32 @@ import java.util.Locale;
 
 /** Original N/PIT drawing geometry, with only received vehicle samples as values. */
 public final class PitRenderer {
-    private final Paint paint=new Paint(3);
+    private final ThemedPaint paint=new ThemedPaint(3);
     private final Path shape=new Path();
-    private final Shader background=new LinearGradient(0,0,800,480,0xff111315,0xff030405,Shader.TileMode.CLAMP);
+    private static int T(int c){return Theme.current().map(c);}
+    /** Background and strip fades, rebuilt when the theme changes (shaders are not remapped by ThemedPaint). */
+    private Theme shaderTheme;
+    private Shader background,fadeLeft,fadeRight;
+    private void shaders(){
+        if(shaderTheme==Theme.current())return;shaderTheme=Theme.current();
+        background=new LinearGradient(0,0,800,480,T(0xff111315),T(0xff030405),Shader.TileMode.CLAMP);
+        int h=T(0xff090b0c)&0xffffff;
+        fadeLeft=new LinearGradient(DashboardPage.STRIP_LEFT,0,DashboardPage.STRIP_LEFT+26,0,0xff000000|h,h,Shader.TileMode.CLAMP);
+        fadeRight=new LinearGradient(DashboardPage.STRIP_RIGHT-26,0,DashboardPage.STRIP_RIGHT,0,h,0xff000000|h,Shader.TileMode.CLAMP);
+    }
+    /** Page whose tab is selected (DashboardPage id); records page data. */
+    private int page=DashboardPage.OVERVIEW;
+    public void setPage(int value){page=DashboardPage.normalize(value);}
+    private DriveStats stats;
+    /** Screens from the i30 PD build (sung9155/i30-pd-dashboard, MIT): 레이스, 람다 (Λ), 타코. */
+    private final RaceRenderer raceRenderer=new RaceRenderer();
+    private final LambdaCluster lambda=new LambdaCluster();
+    private final TachoCluster tacho=new TachoCluster();
+    private final RecordsRenderer recordsRenderer=new RecordsRenderer();
+    public void setRecords(DriveStats value){stats=value;}
+    /** Settings open: the gear button is lit. */
+    private boolean settingsOpen;
+    public void setSettingsOpen(boolean value){settingsOpen=value;}
     private static final int BG=0xff040506,PANEL=0xff101315,LINE=0xff303638,BLUE=0xffa4d9ef,WHITE=0xffe1edf2,MUTED=0xff91a5ae,RED=0xffff4059;
     private Telemetry.Sample[] samples;
     private int shiftTarget;
@@ -40,6 +63,15 @@ public final class PitRenderer {
         return clockText;
     }
     public void setPerformancePage(boolean value){performancePage=value;}
+    private TaxiMeter taxi;
+    private float taxiSpeed=Float.NaN;
+    private int taxiHour;
+    private final TaxiRenderer taxiRenderer=new TaxiRenderer();
+    /** Taxi page: meter to show (null hides the page), received speed km/h (NaN unknown), wall-clock hour. */
+    private boolean taxiReceipt;
+    public void setTaxi(TaxiMeter meter,float speed,int hour,boolean receipt,int pressed){taxi=meter;taxiSpeed=speed;taxiHour=hour;taxiReceipt=receipt;taxiRenderer.setPressed(pressed);}
+    /** Horse animation strip for the taxi page (frames side by side). */
+    public void setTaxiHorse(android.graphics.Bitmap strip,int frames){taxiRenderer.setHorse(strip,frames);}
     public void setArtwork(Bitmap value){artwork=value;}
     public void setGaugeLayout(GaugeLayout value){gaugeLayout=value;}
     public void setGraphLayout(GraphLayout value){graphLayout=value;}
@@ -61,28 +93,86 @@ public final class PitRenderer {
         mediaPage=cluster && media;music=track;
         shiftTarget=ShiftGuide.clamp(target);frameTime=now;
         samples=model.snapshot(now);cue=ShiftGuide.evaluate(samples,shiftTarget);
-        c.save();c.scale(width/800f,height/480f);c.drawColor(BG);
+        shaders();
+        c.save();c.scale(width/800f,height/480f);c.drawColor(T(BG));
         paint.setShader(background);c.drawRect(0,0,800,480,paint);paint.setShader(null);
         for(int y=56;y<480;y+=8)stroke(c,0,y,800,y,0x063f4948,1);
         box(c,0,0,800,52,0xff090b0c);box(c,18,51,782,52,LINE);
-        button(c,UiText.t("퍼포먼스"),DashboardPage.left(DashboardPage.PERFORMANCE),8,DashboardPage.width(DashboardPage.PERFORMANCE),38,performancePage,BLUE);
-        button(c,UiText.t("전체 조망"),144,8,100,38,!performancePage&&!cluster&&gaugeLayout==null&&graphLayout==null,BLUE);
-        button(c,"F1",250,8,72,38,cluster&&gaugeLayout==null&&graphLayout==null,BLUE);
-        button(c,UiText.t("게이지"),328,8,84,38,gaugeLayout!=null,BLUE);
-        button(c,UiText.t("그래프"),418,8,110,38,graphLayout!=null,BLUE);
-        button(c,UiText.language().toUpperCase(Locale.US),534,8,48,38,false,BLUE);
-        centered(c,clock(),620,33,22,WHITE,true);
+        boolean taxiPage=taxi!=null;
+        // N / PIT logo, then the scrollable tab strip.
+        stroke(c,19,16,13,35,RED,4);stroke(c,27,16,21,35,BLUE,4);
+        text(c,"N / PIT",36,33,23,WHITE,true);
+        int selected=page;
+        int saved=c.save();
+        c.clipRect(DashboardPage.STRIP_LEFT,0,DashboardPage.STRIP_RIGHT,52);
+        for(int tab:DashboardPage.shown()){
+            float l=DashboardPage.left(tab,tabScroll),w=DashboardPage.width(tab);
+            if(l>DashboardPage.STRIP_RIGHT||l+w<DashboardPage.STRIP_LEFT)continue;
+            button(c,tabLabel(tab),l,8,w,38,tab==selected&&!settingsOpen,BLUE);
+        }
+        c.restoreToCount(saved);
+        // Edge hints when more tabs are hidden on that side.
+        if(tabScroll>0.5f)edgeHint(c,DashboardPage.STRIP_LEFT,true);
+        if(tabScroll<DashboardPage.maxScroll()-0.5f)edgeHint(c,DashboardPage.STRIP_RIGHT,false);
+        button(c,"",DashboardPage.GEAR_LEFT,8,DashboardPage.GEAR_WIDTH,38,settingsOpen,BLUE);
+        gearIcon(c,DashboardPage.GEAR_LEFT+DashboardPage.GEAR_WIDTH/2,27,settingsOpen?BLUE:MUTED);
+        button(c,UiText.language().toUpperCase(Locale.US),LANGUAGE_X,8,48,38,false,BLUE);
+        centered(c,clock(),628,33,22,WHITE,true);
         button(c,UiText.t("돌아가기"),666,8,116,38,false,BLUE);
-        if(performancePage)performanceRenderer.draw(c,model,now);
+        boolean own=page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO||page==DashboardPage.NEON;   // ported screens with their own media handling
+        if(page==DashboardPage.NEON)centered(c,UiText.t("네온 드라이브"),400,270,22,MUTED,true);   // the Neon Drive view covers this while it runs
+        else if(page==DashboardPage.RECORDS)recordsRenderer.draw(c,stats,now);
+        else if(page==DashboardPage.RACE)raceRenderer.draw(c,samples,cue,now,stats,model.profile(),false,music,artwork);
+        else if(page==DashboardPage.LAMBDA)lambda.frame(c,samples,model,stats,model.profile(),now,null);
+        else if(page==DashboardPage.TACHO){tacho.shiftTarget=shiftTarget;tacho.frame(c,samples,model,stats,model.profile(),now,null);}
+        else if(taxiPage)taxiRenderer.draw(c,taxi,taxiSpeed,taxiHour,now,taxiReceipt);
+        else if(performancePage)performanceRenderer.draw(c,model,now);
         else if(graphLayout!=null)graphRenderer.draw(c,model,now,graphLayout);
         else if(gaugeLayout!=null)gaugeRenderer.draw(c,model,now,gaugeLayout);
         else if(mediaPage)drawCombined(c);else if(cluster)drawCluster(c);else drawDashboard(c);
-        if(!performancePage&&graphLayout==null&&!mediaPage && music!=null && music.notice)drawMedia(c,true);
-        if(cluster&&gaugeLayout==null&&graphLayout==null)drawArtworkToggle(c);
+        boolean records=page==DashboardPage.RECORDS||own;
+        if(!records&&!taxiPage&&!performancePage&&graphLayout==null&&!mediaPage && music!=null && music.notice)drawMedia(c,true);
+        if(!records&&!taxiPage&&cluster&&gaugeLayout==null&&graphLayout==null)drawArtworkToggle(c);
         c.restore();
     }
+    /** Language button left edge (after the tab strip). */
+    public static final int LANGUAGE_X=542;
+    private float tabScroll;
+    /** Horizontal offset of the header tab strip (see {@link DashboardPage}). */
+    public void setTabScroll(float value){tabScroll=DashboardPage.clampScroll(value);}
+    private static String tabLabel(int page){
+        switch(page){
+            case DashboardPage.F1:return "F1";
+            case DashboardPage.GAUGES:return UiText.t("게이지");
+            case DashboardPage.GRAPHS:return UiText.t("그래프");
+            case DashboardPage.PERFORMANCE:return UiText.t("퍼포먼스");
+            case DashboardPage.TAXI:return UiText.t("택시");
+            case DashboardPage.RECORDS:return UiText.t("기록");
+            case DashboardPage.RACE:return UiText.t("레이스");
+            case DashboardPage.LAMBDA:return UiText.t("람다");
+            case DashboardPage.TACHO:return UiText.t("타코");
+            case DashboardPage.NEON:return UiText.t("네온 드라이브");
+            default:return UiText.t("전체 조망");
+        }
+    }
+    /** Gear (settings) icon: eight teeth around a ring. */
+    private void gearIcon(Canvas c,float cx,float cy,int color){
+        paint.setColor(color);
+        for(int i=0;i<8;i++){double a=Math.PI*i/4;float dx=(float)Math.cos(a),dy=(float)Math.sin(a);
+            paint.setStrokeWidth(4);c.drawLine(cx+dx*7,cy+dy*7,cx+dx*11,cy+dy*11,paint);}
+        paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(3.5f);c.drawCircle(cx,cy,7,paint);paint.setStyle(Paint.Style.FILL);
+        c.drawCircle(cx,cy,2.2f,paint);
+    }
+    /** Fade and a small chevron at a strip edge that has hidden tabs beyond it. */
+    private void edgeHint(Canvas c,float x,boolean left){
+        paint.setShader(left?fadeLeft:fadeRight);c.drawRect(left?x:x-26,6,left?x+26:x,48,paint);paint.setShader(null);
+        float cx=left?x+8:x-8;
+        stroke(c,cx+(left?4:-4),20,cx+(left?-2:2),27,BLUE,2.5f);stroke(c,cx+(left?-2:2),27,cx+(left?4:-4),34,BLUE,2.5f);
+    }
     private void box(Canvas c,float l,float t,float r,float b,int color){paint.setColor(color);c.drawRect(l,t,r,b,paint);}
+    private final RectF cellRect=new RectF();
     private void panel(Canvas c,float x,float y,float w,float h,int fill,int edge){
+        if(ThemeShapes.cell(c,paint,shape,cellRect,x,y,x+w,y+h,fill,edge))return;   // LB / M / rose / copper / champagne / navy shapes; N keeps the cut corner
         shape.reset();shape.moveTo(x,y);shape.lineTo(x+w-12,y);shape.lineTo(x+w,y+12);
         shape.lineTo(x+w,y+h);shape.lineTo(x+12,y+h);shape.lineTo(x,y+h-12);shape.close();
         paint.setColor(fill);c.drawPath(shape,paint);
@@ -233,21 +323,52 @@ public final class PitRenderer {
         text(c,"km/h",229,148,12,MUTED,false);
         centered(c,value("속도 km/h"),150,253,88,WHITE,true);
         box(c,18,276,276,278,LINE);
-        text(c,"OIL TEMP",22,307,11,MUTED,true);
-        text(c,value("오일 온도"),175,310,22,WHITE,true);
-        text(c,"°C",250,310,11,MUTED,false);
+        f1Tile(c,0,22,175,250);
         text(c,"ENGINE",526,148,14,MUTED,true);
         text(c,"rpm",749,148,12,MUTED,false);
         centered(c,value("엔진 RPM"),653,247,69,WHITE,true);
         box(c,524,276,782,278,LINE);
-        text(c,"COOLANT",528,307,11,MUTED,true);
-        text(c,value("냉각수 온도"),685,310,22,WHITE,true);
-        text(c,"°C",760,310,11,MUTED,false);
+        f1Tile(c,1,528,685,760);
         pedal(c,"THROTTLE", "스로틀 %", "%",18,BLUE,100);
         pedal(c,"BRAKE PRESSURE", "브레이크 압력 bar", "bar",406,RED,100);
         button(c,"−",548,452,42,27,false,BLUE);
         text(c,UiText.t("목표 ")+shiftTarget+" rpm",604,471,12,BLUE,true);
         button(c,"+",740,452,42,27,false,BLUE);
+    }
+    /** One of F1's two lines under speed and rpm: a tile (Tiles.F1) the driver re-points by holding it (oil, coolant by default). */
+    private void f1Tile(Canvas c,int i,float captionX,float valueX,float unitX){
+        int sig=Tiles.signal(Tiles.F1,i,VehicleProfile.VELOSTER_N);
+        float v=Tiles.value(sig,samples,stats);int lv=Tiles.level(sig,v);
+        text(c,Tiles.caption(sig),captionX,307,11,MUTED,true);
+        text(c,Tiles.text(sig,v),valueX,310,22,lv==2?RED:WHITE,true);
+        text(c,Tiles.unit(sig),unitX,310,11,MUTED,false);
+    }
+    /** Start-up welcome sweep (from the i30 PD build), drawn over the live dashboard for t in 0..1: a dark cover that
+     *  fades out, an accent wipe left to right and the N / VELOSTER N badge easing in. It never blocks the data. */
+    public void drawIntro(Canvas c,int width,int height,float t){
+        c.save();c.scale(width/800f,height/480f);
+        float cover=t<0.72f?1f:Math.max(0f,1f-(t-0.72f)/0.28f);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor((((int)(cover*255))&0xff)<<24|0x060a0e);c.drawRect(0,0,800,480,paint);
+        float sp=Math.min(1f,t/0.55f),se=1f-(1f-sp)*(1f-sp),x=800*se;
+        if(sp<1f){
+            paint.setColor((((int)(cover*36))&0xff)<<24|0x5bc8f5);c.drawRect(0,0,x,480,paint);
+            paint.setColor((((int)(cover*210))&0xff)<<24|0x5bc8f5);c.drawRect(x-3,0,x+1,480,paint);
+        }
+        float lp=Math.max(0f,Math.min(1f,(t-0.2f)/0.5f)),le=1f-(1f-lp)*(1f-lp);
+        int la=((int)(le*cover*255)&0xff)<<24;
+        float scale=0.72f+0.28f*le,size=56*scale,cy=244+(1f-le)*12;
+        paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(size);
+        float tw=paint.measureText("VELOSTER N"),sx=400-(tw+34*scale)/2;
+        paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(6*scale);
+        paint.setColor(la|0xff4059);c.drawLine(sx,cy+14*scale,sx+13*scale,cy-16*scale,paint);
+        paint.setColor(la|0xa4d9ef);c.drawLine(sx+13*scale,cy+14*scale,sx+26*scale,cy-16*scale,paint);
+        paint.setStyle(Paint.Style.FILL);
+        text(c,"VELOSTER N",sx+34*scale,cy+size*0.34f,size,la|0xffffff,true);
+        if(le>0.55f){paint.setTextSize(13);float sw=paint.measureText("N  /  P I T   D A S H B O A R D");
+            int sa=((int)((le-0.55f)/0.45f*cover*150)&0xff)<<24;
+            text(c,"N  /  P I T   D A S H B O A R D",400-sw/2,cy+size*0.34f+28,13,sa|0xbcd0d8,false);}
+        c.restore();
     }
     private void drawDashboard(Canvas c){
         String[] names={"SPEED / km/h","ENGINE / rpm","EMS GEAR","THROTTLE / %","BRAKE / bar"};
@@ -273,7 +394,8 @@ public final class PitRenderer {
             for(int n=0;n<3;n++){
                 float t=y+43+n*22;Telemetry.Sample s=samples[i+n];
                 text(c,UiText.t(Telemetry.LABELS[i+n]),x+10,t,12,MUTED,false);
-                text(c,s.valid?(s.value==1?UiText.t("작동"):UiText.t("비작동")):"—",x+66,t,16,s.valid&&s.value==1?RED:BLUE,true);
+                // TCS / ESC 1 = switched off (the lamp lights), ABS 1 = warning lamp (wording from the i30 PD build, sung9155, MIT)
+                paint.setTextSize(16);paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setRawColor(s.valid&&s.value==1?Theme.current().danger:Theme.current().calm(BLUE));c.drawText(s.valid?(s.value==1?UiText.t(n==2?"경고":"꺼짐"):UiText.t("정상")):"—",x+66,t,paint);   // already themed: not mapped again
             }
         }
     }

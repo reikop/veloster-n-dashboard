@@ -1,0 +1,29 @@
+{
+  "model": "alibaba/qwen-image-3/text-to-image",
+  "body": {
+    "prompt": "Animation sprite sheet of a galloping horse: ONE single horizontal row of EIGHT frames of the SAME horse, side view, facing LEFT in every frame, showing one complete gallop stride in order, like Eadweard Muybridge's 'The Horse in Motion'. Frame 1: one hind leg landing under the belly, the other hind leg reaching forward, forelegs folded up under the chest. Frame 2: both hind legs on the ground pushing off, starting to extend backwards. Frame 3: both HIND LEGS KICKING BACK, stretched far out behind the horse, hooves high behind, the leading foreleg reaching forward. Frame 4: body fully stretched out long and low, hind legs extended straight back behind, forelegs reaching far forward. Frame 5: the front hooves land one after the other, hind legs still trailing behind and lifting. Frame 6: weight on one foreleg, hind legs swinging forward. Frame 7: all four legs gathered tightly under the body, the horse in the air (moment of suspension). Frame 8: hind legs swinging forward to land again, forelegs folded. The kick-back of the hind legs in frames 3 to 5 must be clearly visible. Same horse size and the same body position in every frame, evenly spaced, each horse centred in its own equal-width cell, nothing overlapping or cut off. Style: a glowing icon on a vacuum fluorescent display of a vintage taxi meter: the horse drawn as one clean continuous bright cyan outline (line art, hollow, no fill), neck raised, head slightly forward, mane and tail streaming behind, anatomically correct thoroughbred. Thin line with a soft cyan glow. Background perfectly flat solid pure black #000000. No text, no numbers, no ground line, no shadow, no rider, no frame borders.",
+    "resolution": "2k",
+    "aspect_ratio": "21:9",
+    "prompt_extend": false,
+    "enable_thinking": false,
+    "seed": 1878,
+    "negative_prompt": "text, labels, numbers, watermark, ground, shadow, filled silhouette, solid fill, photo, rider, saddle, jockey, cropped horse, different horses, horse facing right, dog, deer, legs always under the body, trotting, walking"
+  },
+  "estimate": {
+    "type": "estimate",
+    "credits": "1.200",
+    "usd": "0.075",
+    "discount": null
+  },
+  "request_id": "01a20bd5-d44c-75d3-90be-af33ff5a8d6f",
+  "idempotency_key": "0d8872bf-436c-45bc-b810-fc0fe3350e95",
+  "submitted_at": "2026-11-24T13:34:53+0900",
+  "final_status": "completed",
+  "images": [
+    {
+      "file": "image-0.png",
+      "sha256": "5af4359312491fe36af32a29987d8ad6efd97e63ba183c7ab4aa7c34dd3de824",
+      "bytes": 677602
+    }
+  ]
+}

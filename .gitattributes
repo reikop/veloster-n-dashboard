@@ -1,0 +1,6 @@
+# owner installers: shells need LF, Windows scripts keep CRLF (install.ps1 also keeps its UTF-8 BOM)
+installer/*.command text eol=lf
+installer/linux/*.sh text eol=lf
+installer/test/* text eol=lf
+installer/*.cmd text eol=crlf
+installer/install.ps1 -text

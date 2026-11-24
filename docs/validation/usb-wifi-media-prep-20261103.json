@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-03",
+  "scope": "Local pre-vehicle USB Wi-Fi/media-pair preparation; no physical device or vehicle session",
+  "hub_version": 12,
+  "apk_sha256": "968170321b73786fac975b0ec8c465ed2e2158728dd7fedd5921ca49b6d3665a",
+  "python_tests": 66,
+  "java_host_programs": 13,
+  "lease_binding_checks": 30,
+  "credentials_process_checks": 19,
+  "native_transport_checks": 31,
+  "android_runtime": {
+    "hardware": "generic goldfish ARM emulator",
+    "api": 17,
+    "actual_app_screen": true,
+    "app_uid_native_helper": true,
+    "wpa2_known_vector": true,
+    "explicit_dns_source_tls_fixture": true,
+    "hostname_mismatch_rejected": true,
+    "usb_or_radio_tested": false,
+    "oem_manager_or_media_tested": false
+  },
+  "support_host_tests": {
+    "manager_lifecycle": 15,
+    "loader_sanitized": 31,
+    "sha256_vectors": 134,
+    "bootstrap": 32
+  },
+  "support_manifest_sha256": "befd538ecbd5a014b094672d197b7499b3245438bef27686b91d20166cbe85ba",
+  "vehicle_installed": false,
+  "published": false,
+  "limits": [
+    "Exact current250902 full kernel unavailable",
+    "No physical USB enumeration, power, radio or media playback",
+    "WPA2-PSK/RSN/CCMP only",
+    "Manual saved-network reconnect after reboot",
+    "Support-kit OTA upgrades not implemented",
+    "No wireless CarPlay/Android Auto completion"
+  ]
+}

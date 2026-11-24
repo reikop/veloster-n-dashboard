@@ -314,15 +314,18 @@ def install_one(adb, package, artifact, journal, label):
             journal.step(package=package, stage="cleanup_warning", error=str(error))
 
 
-def change(adb, profile, action, out, bundle=None, apps=None, check=False):
+def change(adb, profile, action, out, bundle=None, apps=None, check=False, companions=None):
     require(action in ("install", "restore", "install-apps"), "Unknown mutation action")
+    packages = COMPANIONS if companions is None else tuple(companions)
+    require(companions is None or action == "install-apps", "Partial companions apply only to app installation")
+    require(bool(packages) and len(set(packages)) == len(packages) and set(packages) <= set(COMPANIONS), "Unknown companion selection")
     journal = Journal(out, action, adb)
     try:
         journal.data["identity"] = check_identity(adb, profile)
         active = {}
         if action != "restore":
             require(apps is not None, "Companion release validation is required")
-            for package in COMPANIONS:
+            for package in packages:
                 record = backup_package(adb, package, journal.directory / "companions" / (package + ".apk"),
                                         optional=action == "install-apps")
                 if action == "install-apps":
@@ -349,7 +352,7 @@ def change(adb, profile, action, out, bundle=None, apps=None, check=False):
         journal.data["status"] = "applying"
         journal.save()
         if action == "install-apps":
-            changes = [(package, apps[package], active[package], package) for package in COMPANIONS]
+            changes = [(package, apps[package], active[package], package) for package in packages]
         else:
             order = MENU_ORDER if action == "install" else tuple(reversed(MENU_ORDER))
             kind = "candidate" if action == "install" else "fallback"

@@ -13,6 +13,7 @@ public class AdditionalTelemetryTest {
         Telemetry t=new Telemetry();byte[] additional=new byte[40];additional[20]=(byte)255;additional[21]=121;
         t.additional(additional,1000);check(near(t.sample(Telemetry.STEERING,1000).value,-13.5f),"retained packet signed steering angle");
         additional[21]=120;t.additional(additional,1100);check(near(t.sample(Telemetry.STEERING,1100).value,-13.6f),"negative steering change");
+        t.additional(new byte[41],1150);check(t.sample(Telemetry.STEERING,1150).valid&&near(t.sample(Telemetry.STEERING,1150).value,-13.6f),"an unknown reply length does not blank the last values");
         t.additional(new byte[19],1200);check(t.sample(Telemetry.STEERING,1200).ageMs==100,"legacy packet does not refresh absent angle");
         check(!t.sample(Telemetry.STEERING,61100).valid,"steering expires after one minute");
         t.units(new byte[]{2,60,0},2000);check(t.sample(Telemetry.AMBIENT,2000).valid&&t.sample(Telemetry.AMBIENT,2000).value==20,"JSN Celsius ambient");

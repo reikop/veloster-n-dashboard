@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-04",
+  "app_version_code": 16,
+  "apk_sha256": "8846ab0172e9aa8d09229bf2571dbf62d2aaf552ccde1e0002832b5a8b0abc5a",
+  "modern_source_sha256": "d22348ed1794812f96aaaeaa9229af44218e315b42b5d537053c751df181f41a",
+  "ca_manifest_sha256": "322fdd4cf7b0183647a819f5c47077357e32df891c7c2760cf3b379151b3f40f",
+  "tests": {
+    "python": 69,
+    "java_host_programs": 13,
+    "shared_https_cases": 38,
+    "wifi_process_cases": 49,
+    "one_shot": 15,
+    "ca_native_sanitizer": 16,
+    "ca_installer": 9,
+    "modern_api17_scenarios": 9,
+    "ca_api17_scenarios": 7
+  },
+  "modern_runtime": {
+    "passed": true,
+    "cases": [
+      {
+        "case": "TLS1.2 GET",
+        "output": "uid=10099\nBODY=abc"
+      },
+      {
+        "case": "TLS1.3 GET",
+        "output": "uid=10099\nBODY=abc"
+      },
+      {
+        "case": "HEAD404 proves TLS success",
+        "output": "uid=10099\nHTTP=404"
+      },
+      {
+        "case": "APK bytes and SHA256",
+        "output": "uid=10099\nDOWNLOAD=3"
+      },
+      {
+        "case": "expired leaf rejected",
+        "output": "uid=10099\nFAIL=CERTIFICATE:60"
+      },
+      {
+        "case": "unknown root rejected",
+        "output": "uid=10099\nFAIL=CERTIFICATE:60"
+      },
+      {
+        "case": "wrong hostname rejected",
+        "output": "uid=10099\nFAIL=CERTIFICATE:60"
+      },
+      {
+        "case": "TLS1.0-only server refused",
+        "output": "uid=10099\nFAIL=TLS:35"
+      },
+      {
+        "case": "cancel stalled response",
+        "output": "uid=10099\nFAIL=CANCELLED:0"
+      }
+    ],
+    "source_sha256": "d22348ed1794812f96aaaeaa9229af44218e315b42b5d537053c751df181f41a",
+    "helper_sha256": "996934ecb39c512c40356766ad62eda53921556fd68ca31b51a72dba80ade46a",
+    "scope": "Real ARM API17 Java + packaged curl as UID10099; local TLS fixtures via trusted test-only --connect-to. No vehicle/OEM/radio, no CA bypass.",
+    "vehicle_accessed": false
+  },
+  "ca_runtime": {
+    "passed": true,
+    "baseline_roots": 140,
+    "merged_roots": 247,
+    "added_roots": 107,
+    "bundle_roots": 118,
+    "cases": [
+      "ordinary-app-default-TrustManager-sees-original-plus-pinned-roots",
+      "actual-bind-overlay-is-read-only",
+      "duplicate-start-preserves-overlay",
+      "stop-restores-original-default-trust",
+      "user-disabled-root-DER-is-not-resurrected",
+      "original-system-files-byte-identical",
+      "stop-idempotent"
+    ],
+    "controller_sha256": "36f390fd338c7f307bf64a3dfe97b6bca6fa3d301a95220abc496016c378d701",
+    "scope": "Owned generic ARM API17 read-only bind mount and ordinary app default TrustManager; no vehicle, no TLS protocol upgrade, no OEM runtime claim"
+  },
+  "ui": {
+    "signed_install": true,
+    "screen_launch": true,
+    "network_policy_denial_rendered": true,
+    "end_to_end_OEM_root": false
+  },
+  "scope": "Reusable modern HTTPS market/catalog/download transport, explicit diagnostics, optional CA trust-list supplementation",
+  "vehicle_accessed": false,
+  "published": false,
+  "limits": [
+    "Market catalog authorization and arbitrary-app installation are not implemented",
+    "CA supplement does not upgrade third-party TLS or remove old OEM roots",
+    "TrustManager root-list observation is not external TLS handshake proof",
+    "ConnectivityManager external-network registration unresolved",
+    "Physical Wi-Fi/USB, OEM amossu/mount policy and vehicle runtime untested",
+    "Windows launcher untested"
+  ]
+}

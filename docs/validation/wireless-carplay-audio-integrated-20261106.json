@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-06",
+  "scope": "Unsigned development source/build inspection; no new release",
+  "source_manifest_sha256": "42da89653904978c75ce7408f6e543ecc201582369182bcc6d1b1eafb32afa71",
+  "exported_files": 248,
+  "production_java": 225,
+  "apk_sha256": "9559cf22f91310562ef4d27fb3fd1430a7eaa4ce16aec8f422c0491684c96083",
+  "dex_sha256": "51033a16949a307fbd91131c728c5aaa1a68ec47f41a342758c222cfdef8babd",
+  "build_manifest_sha256": "82076f4cf7cfcc619c24cc895de151c8cf642ffd1f6f37ff8ae5913d445a5f58",
+  "file_consistency": {
+    "passed": true,
+    "build_inputs_checked": 272,
+    "apk_assets_checked": 23,
+    "unsigned": true,
+    "version_code": 24,
+    "min_api": 17
+  },
+  "oem_composite_jar_pin": "a28006e0449e991018a21c5ed46f98b3e4fdbdcc6febab1eb73928d8c769909f",
+  "oem_code_bundled": false,
+  "host_validation": {
+    "python_tests": 81,
+    "java_programs": 14,
+    "audio_profile_checks": 35,
+    "suite_to_build_delta": "Only HubApplication OEM JAR pin changed after the full suite. Three affected class disassemblies match after normalizing that literal. Actual Hub/core compilation and Settings 11-suite test rerun passed after the pin change."
+  },
+  "eld": {
+    "bit26": "current-attempt input and output proof required",
+    "bit25": "current-attempt output proof required; input forbidden",
+    "fdk_bundled": false,
+    "whole_factory_runtime_complete": false
+  },
+  "audit_receipt_sha256": "1284712d9f8d71f187f12f8a90fccde56742cae28e11abef30fa64edc9b47e2b",
+  "limits": [
+    "Full compressed speech/telephony/48k factory run remains incomplete due to emulator input and host termination.",
+    "Separate OEM/USB/Bluetooth/AP/driver prerequisites are not bundled or installed by the Hub build.",
+    "Complete new one-shot installation and recovery integration is unfinished.",
+    "Physical OEM buttons, microphone, audio, iPhone and wireless interoperability are unverified.",
+    "No signing, deployment, vehicle installation or new release."
+  ]
+}

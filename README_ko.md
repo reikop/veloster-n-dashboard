@@ -14,11 +14,13 @@
 
 | N 계기판 | 내 앱 |
 | --- | --- |
-| F1 화면·20개 카드 전체조망 | 계기판·설치 앱 실행 |
-| 편집 가능한 6칸/12칸 게이지·그래프 | 선택형 가장자리 버튼·알림 바로가기 |
-| RPM·속도·수신 가능한 온도·네 바퀴 TPMS 공기압 | 엔지니어링 모드·USB 디버깅·Android 도구 |
-| 미디어 제어·음원에서 제공하는 앨범아트 표시 | Bluetooth 페어링·확인창을 거치는 재시작 |
-| 화면 배치 저장·한국어/영어 선택 | 앱 목록 편집·한국어/영어 선택 |
+| 화면 11개: 전체 조망·F1·게이지·그래프·퍼포먼스·택시 미터기·기록·레이스·람다·타코·네온 드라이브 | 계기판·설치 앱 실행 |
+| 화면 목록(보이기·숨기기·순서)·테마 20종·길게 눌러 칸 바꾸기·주행 모드 색/화면 | 선택형 가장자리 버튼·알림 바로가기 |
+| 다른 앱 위 플로팅 창·설정 백업·기록실(가속 측정 상위 기록 보관) | 엔지니어링 모드·USB 디버깅·Android 도구 |
+| GPS로 고르는 17개 시·도 택시 요금·엔진 사운드·변속 알림음·과속 차임 | Bluetooth 페어링·확인창을 거치는 재시작 |
+| RPM·속도·온도·TPMS·TCS/ESC/ABS·미디어 제어·앨범아트 | 앱 목록 편집·한국어/영어 선택 |
+
+플로팅 창·설정 백업·기록실·테마·화면 목록·레이스/람다/타코·소리·택시 지역 요금·차주용 설치기는 i30 PD 포팅 [sung9155/i30-pd-dashboard](https://github.com/sung9155/i30-pd-dashboard)(MIT)에서 가져와 벨로스터 N에 맞췄습니다. 차주용 설치 안내: [INSTALL.md](INSTALL.md).
 
 차량 데이터는 기존 수신 경로를 사용하며 ECU 진단 요청을 새로 보내지 않습니다. 미수신·만료 값은 알 수 없음으로 남깁니다. Bluetooth 앨범아트 수신·배기온·e-LSD는 미해결이며 무선 CarPlay·자동 업데이트는 구현하지 않았습니다. [상세 한계](docs/LIMITATIONS.md)
 
@@ -72,7 +74,7 @@
 
 ## 개발
 
-[`apps/`](apps/)는 두 앱, [`shared/`](shared/)는 계기판 UI·데이터 처리 소스입니다. [`compile-stubs/`](compile-stubs/)는 빌드 전용 OEM 선언이고, [`scripts/`](scripts/)·[`tests/`](tests/)는 빌드·무결성·호스트 검사 도구입니다. [`experimental/`](experimental/README.md)는 별도 로컬 연구 안내입니다. 해당 실험 소스는 이번 공개 변경에 포함하지 않습니다.
+[`apps/`](apps/)는 두 앱, [`shared/`](shared/)는 계기판 UI·데이터 처리 소스입니다. [`compile-stubs/`](compile-stubs/)는 빌드 전용 OEM 선언이고, [`scripts/`](scripts/)·[`tests/`](tests/)는 빌드·무결성·호스트 검사 도구입니다. [`installer/`](installer/README.md)는 차주용 설치기(Windows·macOS·리눅스)입니다.
 
 [빌드·테스트](docs/BUILD.md) · [개발 과정](docs/RESEARCH_ko.md) · [NEMESIS 검토](docs/NEMESIS_REVIEW.md)
 
