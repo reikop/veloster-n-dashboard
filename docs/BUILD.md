@@ -66,11 +66,11 @@ python3 scripts/build.py hub \
 
 [앱 업데이트 문서](APP_UPDATES.md)에 서명된 APK로 온라인/USB 공용 묶음을 만드는 절차가 있습니다. 별도 업데이트 승인 키를 사용하며 개인키는 저장소 밖에 둡니다. 도구는 로컬 파일만 만들고 배포·설치하지 않습니다.
 
-## Experimental AVRCP Cover Art core / 실험용 앨범아트 수신 코어
+## Removed experiments / 정리된 실험
 
-Implementation, native transport, private trial builds and validation details are now in [AVRCP Cover Art research](EXPERIMENTAL_AVRCP.md). The existing experimental notes have been preserved there. These components are outside the released APKs; see [current verification](STATUS.md) and the [experiment index](../experimental/README.md).
+The AVRCP Cover Art and SystemUI experiment sources were removed from this repository (2026-11-24); they were never part of the released APKs.
 
-앨범아트 구현·시험본 빌드의 기존 상세 내용은 [별도 연구 문서](EXPERIMENTAL_AVRCP.md)로 옮겼습니다. 일반 앱 빌드는 위 절차를 사용합니다.
+앨범아트(AVRCP)·SystemUI 실험 소스는 이 저장소에서 삭제했습니다(2026-11-24). 배포 APK에는 포함된 적이 없습니다.
 
 <a id="offline-oem-system-experiments--오프라인-시스템-수정본"></a>
 <a id="native-transport-and-private-trial-apks--native-전송부와-비공개-시험-apk"></a>

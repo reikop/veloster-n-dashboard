@@ -77,7 +77,7 @@ The generic API17 ARM emulator ran the final Hub v11 with its normal app UID, ve
 
 ## Experimental work
 
-The research vehicle used a private Cover Art dashboard trial after the public v6 installation. Its later screenshots/logs must not be presented as an unchanged public v6 test. Bluetooth Cover Art remains blocked at SDP discovery; image transfer/display has not succeeded. Fixed-volume experiments failed and the prior Bluetooth trial was restored. SystemUI/fullscreen/bottom-bar candidates remain uninstalled. None is a released feature. [Experimental projects](../experimental/README.md)
+The research vehicle used a private Cover Art dashboard trial after the public v6 installation. Its later screenshots/logs must not be presented as an unchanged public v6 test. Bluetooth Cover Art remains blocked at SDP discovery; image transfer/display has not succeeded. Fixed-volume experiments failed and the prior Bluetooth trial was restored. SystemUI/fullscreen/bottom-bar candidates remain uninstalled. None is a released feature; their sources were removed from this repository on 2026-11-24.
 
 ## USB Wi-Fi local preview (2026-11-03)
 

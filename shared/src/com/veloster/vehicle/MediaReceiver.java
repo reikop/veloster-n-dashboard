@@ -6,13 +6,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.SystemClock;
 
-/** Passive subscription to the same OEM broadcasts consumed by the home widget. */
-final class MediaReceiver extends BroadcastReceiver {
+/** Passive subscription to the same OEM broadcasts consumed by the home widget. Shared with Neon Drive. */
+public final class MediaReceiver extends BroadcastReceiver {
     private static final String MODE_CHANGED="com.hkmc.intent.action.MODE_CHANGED";
     private final MediaState state;
     private Context registered;
-    MediaReceiver(MediaState state){this.state=state;}
-    void start(Context context){
+    public MediaReceiver(MediaState state){this.state=state;}
+    public void start(Context context){
         if(registered!=null)return;
         IntentFilter filter=new IntentFilter();for(String action:MediaState.ACTIONS)filter.addAction(action);
         filter.addAction(MODE_CHANGED);
@@ -26,7 +26,7 @@ final class MediaReceiver extends BroadcastReceiver {
         }
         catch(RuntimeException e){android.util.Log.e("VehicleDash","Media receiver unavailable",e);}
     }
-    void stop(){
+    public void stop(){
         if(registered==null)return;
         try{registered.unregisterReceiver(this);}
         catch(RuntimeException e){android.util.Log.e("VehicleDash","Media receiver detach failed",e);}

@@ -10,7 +10,7 @@ import java.util.Locale;
 /** Reference-inspired layout. Draws only existing received Telemetry samples; no new decoding. */
 public final class PerformanceRenderer {
     private static final int BG=0xff0c1820,PANEL=0xff10212b,LINE=0xff29424e,WHITE=0xffe4f1f6,BLUE=0xffa4d9ec,MUTED=0xff91aebb;
-    private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final ThemedPaint p=new ThemedPaint(Paint.ANTI_ALIAS_FLAG);
     private Telemetry.Sample[] samples;
     private boolean valid(int i){return samples[i].valid&&!Float.isNaN(samples[i].value)&&!Float.isInfinite(samples[i].value);}
     private float number(int i){return Telemetry.displayValue(i,samples[i].value);}

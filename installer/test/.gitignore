@@ -1,0 +1,8 @@
+server/
+inst/
+tmp/
+home/
+calls.log
+out.txt
+rc
+diag_*.txt

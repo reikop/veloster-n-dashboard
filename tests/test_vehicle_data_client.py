@@ -9,7 +9,7 @@ from test_quick_entry_runtime import java_tools
 ROOT = Path(__file__).resolve().parents[1]
 STUBS = {
     "com/veloster/diagnostics/ErrorLog.java": "package com.veloster.diagnostics;public class ErrorLog {public static void record(String s,Throwable e){}}",
-    'android/content/Context.java': 'package android.content; public class Context {}',
+    'android/content/Context.java': 'package android.content; public class Context {public Context getApplicationContext(){return this;}}',
     'android/util/Log.java': 'package android.util; public class Log {public static int e(String t,String m,Throwable e){return 0;}}',
     'android/os/Handler.java': '''package android.os; import java.util.*;
 public class Handler {
@@ -25,6 +25,7 @@ public class VehicleDash {public static int writes,clears;
  public static void temperatures(byte[] b){writes++;}public static void units(byte[] b){writes++;}
  public static void additional(byte[] b){writes++;}public static void wheels(byte[] b){writes++;}
  public static void speed(int s){writes++;}public static void rearView(int s){writes++;}
+ public static void driveMode(byte v,byte m){writes++;}
 }''',
     'com/veloster/dashboard/HscanDataClient.java': '''package com.veloster.dashboard;
 final class HscanDataClient {interface Gate {boolean accepts();}static int fail,creates,starts,stops;static Gate gate;
@@ -38,10 +39,14 @@ public class VehicleInfoManager {public static final String BCM_SERVICE="bcm";pu
     'com/hkmc/micom/NModeListener.java': '''package com.hkmc.micom;public class NModeListener {
  public void onPowerTorqueTurboBoostReceived(byte[] b){} public void onGForceDataReceived(byte[] b){}
  public void onOilCoolantTemperature(byte[] b){}public void onSpeedTempUnitTempReceived(byte[] b){}
- public void onNAddInfoReceived(byte[] b){}public void onNModeZeroSpeedChanged(byte[] b){}}
+ public void onNAddInfoReceived(byte[] b){}public void onNModeZeroSpeedChanged(byte[] b){}public void onIndividualDriveModeChanged(DriveMode m){}}
 ''',
     'com/hkmc/micom/VehicleInfoListener.java': 'package com.hkmc.micom;public class VehicleInfoListener {public void onVehicleSpeedChanged(int n){}}',
     'com/hkmc/bcm/BCMPowerListener.java': 'package com.hkmc.bcm;public class BCMPowerListener {public void onIgnitionChanged(boolean b){}}',
+    'com/hkmc/micom/DriveMode.java': 'package com.hkmc.micom;public class DriveMode {public byte mIsValid,mCurrentDrviceMode;}',
+    'com/veloster/vehicle/DayNight.java': 'package com.veloster.vehicle;public class DayNight {public static volatile int oemDim=-1,oemIllum=-1;}',
+    'com/hkmc/setup/VideoSetupListener.java': 'package com.hkmc.setup;public class VideoSetupListener {public void onDimChanged(int d){}public void onIlluminateStatusChanged(boolean on){}}',
+    'com/hkmc/setup/VideoSetupManager.java': 'package com.hkmc.setup;public class VideoSetupManager {public VideoSetupManager(android.content.Context c){}public void addListener(VideoSetupListener l){}public void removeListener(VideoSetupListener l){}public boolean getIlluminateStatus(){return false;}public int getDim(){return 0;}}',
     'com/hkmc/pgs/PgsStatusListener.java': 'package com.hkmc.pgs;public class PgsStatusListener {public void onRVMViewStatusChanged(int n){}}',
 }
 for pkg, cls, listener, add, remove in (
@@ -58,6 +63,7 @@ public class {cls} {{
  public void {add}({listener} l){{adds++;previous=current;current=l;if(failAdd-->0)throw new IllegalStateException("partial registration");}}
  public void {remove}({listener} l){{removes++;if(failRemove)throw new IllegalStateException("unregister failed");}}
  public boolean getIGNStatus(){{return ignition;}}
+ public com.hkmc.micom.DriveMode getIndividualDriveMode(){{return null;}}
  public static void reset(){{creates=adds=removes=failCreate=failAdd=0;failRemove=false;ignition=true;current=previous=null;}}
 }}'''
 

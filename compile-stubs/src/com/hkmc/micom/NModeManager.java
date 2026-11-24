@@ -3,4 +3,5 @@ public class NModeManager {
     public NModeManager(android.content.Context c){}
     public void registerNModeListener(NModeListener l){}
     public void unregisterNModeListener(NModeListener l){}
+    public DriveMode getIndividualDriveMode(){return null;}
 }

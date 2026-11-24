@@ -1,0 +1,29 @@
+{
+  "model": "alibaba/qwen-image-3/text-to-image",
+  "body": {
+    "prompt": "Sprite sheet for a retro 1980s arcade racing game, player car seen from a third-person chase camera that is only SLIGHTLY above the car: camera about 1.8 metres above the road and 6 metres behind, looking down about 12 degrees. The full rear of the car is visible and dominant; the top of the rear roof spoiler and only a THIN sliver of the roof are visible above it; the rear window is seen at a steep angle. Not a top-down view, not an eye-level view. Exactly the same camera height and tilt for every view. One single horizontal row of SEVEN views of the SAME car: a 2019 Hyundai Veloster N hatchback (second generation, JS body) in light Performance Blue paint, red accent strip on the lower rear bumper, black rear diffuser, two large round exhaust tips one on each side, big roof spoiler, slim horizontal tail lamps. Left to right the car is rotated about its vertical axis: 1) 35 degrees showing its right side, 2) 20 degrees right side, 3) 10 degrees right side, 4) exactly straight from behind, symmetric, 5) 10 degrees showing its left side, 6) 20 degrees left side, 7) 35 degrees left side. All seven cars identical in size, scale, colours and lighting, evenly spaced with clear empty magenta gaps between them, each centred in its own equal-width cell, tyre bottoms aligned on one baseline, nothing overlapping or cut off. Tail lamps and brake lights OFF (dark red, unlit). Clean cel-shaded illustration with crisp edges and a dark outline, no blur. Background: perfectly flat solid pure magenta #FF00FF everywhere. No ground, no road, no shadow, no text, no labels, no numbers, no grid lines.",
+    "resolution": "2k",
+    "aspect_ratio": "21:9",
+    "prompt_extend": true,
+    "enable_thinking": false,
+    "seed": 3131,
+    "negative_prompt": "text, labels, numbers, watermark, shadow, road, ground, gradient background, blur, photo, cropped car, top-down view, bird's-eye view, roof dominant, eye-level view, overlapping cars, different car models, sedan, SUV"
+  },
+  "estimate": {
+    "type": "estimate",
+    "credits": "1.200",
+    "usd": "0.075",
+    "discount": null
+  },
+  "request_id": "01a20853-4530-71bb-96a8-b4b9de5f3e5e",
+  "idempotency_key": "e2795976-c8fc-4199-aaa9-ce5dc08fb5b1",
+  "submitted_at": "2026-11-23T21:13:24+0900",
+  "final_status": "completed",
+  "images": [
+    {
+      "file": "image-0.png",
+      "sha256": "7560c3c8d38bcaf851836ebf3e171f18a7b0f8d27c4bc4432f1c91d51de3dcad",
+      "bytes": 1163493
+    }
+  ]
+}

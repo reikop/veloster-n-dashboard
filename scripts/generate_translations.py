@@ -44,6 +44,8 @@ public final class UiText {
         String value=("ko".equals(language)?KO:EN).get(key);
         return value==null?key:value;
     }
+    /** The English text whatever the language (layouts that label in English, like the floating window's skins). */
+    public static String en(String key){if(key==null)return "";String value=EN.get(key);return value==null?key:value;}
     public static String[] list(String[] keys){String[] result=new String[keys.length];for(int i=0;i<keys.length;i++)result[i]=t(keys[i]);return result;}
 }
 '''

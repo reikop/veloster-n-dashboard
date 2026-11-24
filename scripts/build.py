@@ -23,7 +23,7 @@ def executable(value):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("app", choices=("dashboard", "hub"))
+    parser.add_argument("app", choices=("dashboard", "hub", "neondrive"))
     parser.add_argument("--android-jar", required=True, type=Path)
     parser.add_argument("--r8-jar", required=True, type=Path)
     parser.add_argument("--aapt2", required=True)
@@ -96,14 +96,21 @@ def main():
     shared = ROOT / "shared" / "src"
     sources = sorted((app / "src").rglob("*.java"))
     classpath = str(sdk)
-    if args.app == "dashboard":
+    if args.app in ("dashboard", "neondrive"):
         abi = out / "compile-only-abi"
         abi.mkdir()
         stubs = sorted((ROOT / "compile-stubs" / "src").rglob("*.java"))
         run("compile-abi", [javac, "-encoding", "UTF-8", "-source", "7", "-target", "7",
                             "-classpath", sdk, "-d", abi, *stubs])
         classpath = os.pathsep.join((str(sdk), str(abi)))
-        sources += sorted(p for p in shared.rglob("*.java") if p.name != "UsbDebugControl.java")
+        if args.app == "dashboard":
+            sources += sorted(p for p in shared.rglob("*.java") if p.name != "UsbDebugControl.java")
+            # Neon Drive runs as a dashboard page too (NeonDrivePage); its standalone activity stays in its own app.
+            sources += sorted(p for p in (ROOT / "apps/neondrive/src").rglob("*.java") if p.name != "NeonDriveActivity.java")
+        else:
+            # neondrive: passive hscand socket, compile-only OEM listener ABI (gear) and the shared
+            # now-playing receiver (OEM media widget broadcasts) with its artwork decoder.
+            sources += [shared / "com/veloster/vehicle" / (n + ".java") for n in ("MediaState", "MediaReceiver", "ArtworkLoader")]
     else:
         sources.append(shared / "com/veloster/vehicle/UsbDebugControl.java")
         sources += sorted((shared / "com/veloster/i18n").rglob("*.java"))

@@ -1,0 +1,29 @@
+{
+  "model": "alibaba/qwen-image-3/text-to-image",
+  "body": {
+    "prompt": "Pixel art sprite sheet for a retro 16-bit 1980s arcade racing game in the style of classic Out Run player cars. One single horizontal row of SEVEN views of the SAME car: a 2019 Hyundai Veloster N hatchback (second generation, JS body) in Performance Blue paint, with its red accent strip along the lower rear bumper, black rear diffuser, two large round exhaust tips one on each side, big roof spoiler, slim horizontal tail lamps. Camera is behind the car at slightly above bumper height. Left to right the car is rotated: 1) rear view turned 35 degrees so its right side shows, 2) turned 20 degrees right side showing, 3) turned 10 degrees right side showing, 4) exactly straight rear view, perfectly symmetric, 5) turned 10 degrees left side showing, 6) turned 20 degrees left side showing, 7) turned 35 degrees left side showing. All seven cars identical in size, scale, colours and lighting, evenly spaced, each centred in its own equal-width cell, tyre bottoms aligned on one baseline, nothing overlapping or cut off. Tail lamps and brake lights OFF (dark red, unlit). Crisp hard-edged pixels, limited palette, dark outline, no blur. Background: perfectly flat solid pure magenta #FF00FF everywhere. No ground, no road, no shadow, no text, no labels, no numbers, no grid lines.",
+    "resolution": "2k",
+    "aspect_ratio": "21:9",
+    "prompt_extend": true,
+    "seed": 1987,
+    "negative_prompt": "text, labels, numbers, watermark, shadow, road, ground, gradient background, blur, photo, cropped car, different car models, sedan, SUV",
+    "enable_thinking": false
+  },
+  "estimate": {
+    "type": "estimate",
+    "credits": "1.200",
+    "usd": "0.075",
+    "discount": null
+  },
+  "request_id": "01a20835-be51-718b-ba37-3b44e204e839",
+  "idempotency_key": "8b557952-78ce-4a39-ae01-8dc0643762ec",
+  "submitted_at": "2026-11-23T20:41:09+0900",
+  "final_status": "completed",
+  "images": [
+    {
+      "file": "image-0.png",
+      "sha256": "9f0f607d73322ade3987125956553002560250b058eb1970c1d24030250287dc",
+      "bytes": 1250649
+    }
+  ]
+}

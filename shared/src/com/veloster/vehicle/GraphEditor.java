@@ -24,7 +24,7 @@ public final class GraphEditor {
     public void edit(final int slot){
         if(slot<0||slot>=GraphLayout.SLOTS||activity.isFinishing())return;
         dismiss();final AlertDialog next=new AlertDialog.Builder(activity).setTitle(UiText.t("그래프 ")+(slot+1)+UiText.t(" · 표시 항목"))
-            .setSingleChoiceItems(UiText.list(Telemetry.LABELS),layout.signal(slot),new DialogInterface.OnClickListener(){public void onClick(DialogInterface d,int signal){layout.signal(slot,signal);save();d.dismiss();}})
+            .setSingleChoiceItems(UiText.list(Telemetry.CORE_LABELS),layout.signal(slot),new DialogInterface.OnClickListener(){public void onClick(DialogInterface d,int signal){layout.signal(slot,signal);save();d.dismiss();}})
             .setNegativeButton(UiText.t("취소"),null).create();
         dialog=next;next.setOnDismissListener(new DialogInterface.OnDismissListener(){public void onDismiss(DialogInterface d){if(dialog==next)dialog=null;}});next.show();
     }

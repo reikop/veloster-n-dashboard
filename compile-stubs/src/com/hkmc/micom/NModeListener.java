@@ -6,4 +6,5 @@ public class NModeListener {
     public void onOilCoolantTemperature(byte[] b){}
     public void onSpeedTempUnitTempReceived(byte[] b){}
     public void onNAddInfoReceived(byte[] b){}
+    public void onIndividualDriveModeChanged(DriveMode m){}
 }

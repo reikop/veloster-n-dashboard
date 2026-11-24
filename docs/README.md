@@ -30,7 +30,7 @@ Start with compatibility, connect ADB, install, then verify a visible shortcut. 
 | [Performance dashboard](PERFORMANCE.md) | Unreleased optional page and actual-code previews / 새 선택형 화면·미리보기 |
 | [Private error records](DIAGNOSTICS.md) | Bounded app diagnostics and read-only retrieval / 오류 기록·읽기 |
 | [NEMESIS review](NEMESIS_REVIEW.md) | Platform differences and reusable ideas / 적용 가능성·참고 코드 |
-| [Experiments](../experimental/README.md) | AVRCP and SystemUI work outside released apps / 미배포 실험 |
+| [Installer](../installer/README.md) | Owner installers for Windows, macOS and Linux / 차주용 설치기 |
 | [Installation audit, 2026-10-26](INSTALL_AUDIT.md) | Historical v9 entry-point findings / 당시 진입점 개선 기록 |
 | [Release metadata](../release.json) · [Validation history](../VALIDATION.json) | Artifact identities and recorded check scope / 산출물·검사 이력 |
 
