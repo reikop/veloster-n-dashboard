@@ -9,7 +9,9 @@ OUT="${1:?usage: ci_tools.sh DIR}"; mkdir -p "$OUT"; cd "$OUT"
 sha() { if command -v sha256sum >/dev/null; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi; }
 get() {  # url file sha256 [base64]
   [ -f "$2" ] && [ "$(sha "$2")" = "$3" ] && return 0
-  if [ "${4:-}" = base64 ]; then curl -fsSL "$1" | base64 -d > "$2"; else curl -fsSLo "$2" "$1"; fi
+  # retries: a passing 503 from googlesource / dl.google.com failed the v1.11.2 release run once (2026-11-25)
+  local R="--retry 4 --retry-all-errors --retry-delay 5"
+  if [ "${4:-}" = base64 ]; then curl -fsSL $R "$1" | base64 -d > "$2"; else curl -fsSL $R -o "$2" "$1"; fi
   [ "$(sha "$2")" = "$3" ] || { echo "SHA-256 mismatch: $2" >&2; exit 1; }
 }
 get https://dl.google.com/android/repository/android-16_r05.zip android-16_r05.zip fd7f269a423d1f1d079eabf9f918ceab49108702a1c6bb2589d57c23393503d3
