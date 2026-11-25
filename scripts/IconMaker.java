@@ -22,6 +22,8 @@ import javax.imageio.ImageIO;
 public class IconMaker {
     static final int CELL_W = 89, CELL_H = 74, FRAME = 5, WHEEL_ROW = 4, TAIL_ROW = 7;   // CarSprite
     static final int BG_TOP = 0xff2a1450, BG_BOTTOM = 0xff0b0a1e, GLOW = 0xffff3fb4;      // Neon Drive's dusk
+    /** Horizon row of the 64 px scene: high enough that the whole car stands on the road below it, as in Neon Drive. */
+    static final int HORIZON = 24;
 
     public static void main(String[] args) throws Exception {
         Path root = Paths.get(args.length > 0 ? args[0] : ".").toAbsolutePath();
@@ -85,13 +87,13 @@ public class IconMaker {
     /** Neon Drive at dusk in fat pixels (64 x 64, each pixel 4 x 4 at 256): banded sky, a striped sun, the sea, the road
      *  running to the horizon with its neon edges and centre dashes. */
     static BufferedImage scene() {
-        int n = 64, hz = 36;   // horizon row
+        int n = 64, hz = HORIZON;   // horizon row
         BufferedImage p = new BufferedImage(n, n, BufferedImage.TYPE_INT_ARGB);
         int[] sky = {0xff1a0b3a, 0xff2b0f52, 0xff45145f, 0xff6a1a6b, 0xff962673, 0xffc23a74, 0xffe85d6e, 0xfff58a5c};
         for (int y = 0; y < hz; y++) { int band = Math.min(sky.length - 1, y * sky.length / hz); for (int x = 0; x < n; x++) p.setRGB(x, y, sky[band]); }
-        for (int y = 0; y < 3; y++) for (int x = (y * 7) % 11; x < n; x += 13 + y) p.setRGB(x, y * 4 + 2, 0xffffe9f6);   // a few stars
+        for (int y = 0; y < 2; y++) for (int x = (y * 7) % 11; x < n; x += 13 + y) p.setRGB(x, y * 4 + 2, 0xffffe9f6);   // a few stars
         // sun: a disc on the horizon with the synthwave cuts in its lower half
-        double cx = 32, cy = hz - 2, r = 13;
+        double cx = 32, cy = hz - 1, r = 11;
         for (int y = (int) (cy - r); y < hz; y++) for (int x = 0; x < n; x++) {
             double d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d > r) continue;
             int rel = (int) (cy - y); boolean cut = y > cy - 6 && ((y - (int) (cy - 6)) % 3 == 2);
@@ -99,10 +101,10 @@ public class IconMaker {
         }
         // sea
         int[] sea = {0xff2a1f6b, 0xff23185a, 0xff1c1349};
-        for (int y = hz; y < hz + 6; y++) for (int x = 0; x < n; x++) p.setRGB(x, y, sea[Math.min(2, (y - hz) / 2)]);
+        for (int y = hz; y < hz + 4; y++) for (int x = 0; x < n; x++) p.setRGB(x, y, sea[Math.min(2, (y - hz) * 3 / 4)]);
         for (int x = 20; x < 44; x += 3) p.setRGB(x, hz + 1, 0xffff9f80);   // the sun on the water
         // ground and road (perspective from the vanishing point at the horizon centre)
-        for (int y = hz + 6; y < n; y++) {
+        for (int y = hz + 4; y < n; y++) {
             double t = (y - hz) / (double) (n - hz);   // 0 at the horizon .. 1 at the bottom
             double half = 3 + t * 34, edge = Math.max(1, t * 2.2);
             for (int x = 0; x < n; x++) {
@@ -124,9 +126,9 @@ public class IconMaker {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.drawImage(scene(), 0, 0, 256, 256, null);
         if (withCar) {
-            int k = 2, w = car.getWidth() * k, h = car.getHeight() * k;   // small enough that the sun and the road show
-            g.setColor(new Color(0x88000000, true)); g.fill(new Ellipse2D.Double(128 - w * 0.48, 226, w * 0.96, 14));   // shadow
-            g.drawImage(car, 128 - w / 2, 236 - h, w, h, null);
+            int k = 2, w = car.getWidth() * k, h = car.getHeight() * k, bottom = 246;   // the roof stays below the horizon (row HORIZON x 4)
+            g.setColor(new Color(0x88000000, true)); g.fill(new Ellipse2D.Double(128 - w * 0.48, bottom - 12, w * 0.96, 14));   // shadow
+            g.drawImage(car, 128 - w / 2, bottom - h, w, h, null);
         }
         g.dispose();
         return b;
@@ -158,7 +160,10 @@ public class IconMaker {
     static BufferedImage adaptive(BufferedImage car, int s, boolean mono) {
         BufferedImage b = new BufferedImage(s, s, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = b.createGraphics();
-        put(g, car, s * 0.5, s * 0.58, s * 66 / 108.0 * 0.9);
+        // the background puts the horizon at HORIZON*540/64-54 px of 432; the car stands on the road below it, inside the safe circle
+        double k = 2 * s / 432.0; int w = (int) Math.round(car.getWidth() * k), h = (int) Math.round(car.getHeight() * k), bottom = (int) Math.round(340 * s / 432.0);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.drawImage(car, s / 2 - w / 2, bottom - h, w, h, null);
         g.dispose();
         if (mono) for (int y = 0; y < s; y++) for (int x = 0; x < s; x++) { int a = b.getRGB(x, y) >>> 24; b.setRGB(x, y, a << 24 | 0xffffff); }
         return b;
