@@ -131,6 +131,19 @@ final class FloatLayouts extends ClusterKit {
         if(al==Paint.Align.RIGHT){text(c,d.unit,x,y,us,mut,Paint.Align.RIGHT,face);text(c,d.val,x-uw,y,vs,col,Paint.Align.RIGHT,bold);}
         else{text(c,d.val,x,y,vs,col,Paint.Align.LEFT,bold);text(c,d.unit,x+vw+3*k,y,us,mut,Paint.Align.LEFT,face);}
     }
+    /** The peak (최고값) on a reading's name line, at the other end from the name, l..r the line (nameLeft: the name starts
+     *  at l). Drawn only where name and peak both fit: the name is kept in the bitmap layer, nothing may cover it. */
+    private void peakTag(Canvas c,FloatSkin.Cell a,float l,float r,float y,float ns,boolean nameLeft,float k,Typeface nf){
+        if(a.pk==null)return;String s="▲ "+a.pk,name=nm(a);float ps=Math.max(7*k,ns-k);
+        float nw=pix?(name.length()*6-1)*Math.max(1,Math.round(ns/7f)):width(name,ns,nf);
+        float pw=pix?(s.replace("▲ ","HI").replace("°","").length()*6-1)*Math.max(1,Math.round(ps/7f)):width(s,ps,face);
+        if(Math.min(nw,r-l)+pw+6*k>r-l)return;
+        t(c,s,nameLeft?r:l,y,ps,mut,nameLeft?Paint.Align.RIGHT:Paint.Align.LEFT,face);}
+    /** The peak on a 270 degree dial (135..405): a tick across the ring, and its figure between hub and value. */
+    private void ringPeak(Canvas c,FloatSkin.Cell a,float cx,float cy,float rad,float k){
+        if(a.pk==null||Float.isNaN(a.pf))return;double an=Math.toRadians(135+270*Math.max(0,Math.min(1,a.pf)));
+        line(c,cx+(float)Math.cos(an)*(rad-4*k),cy+(float)Math.sin(an)*(rad-4*k),cx+(float)Math.cos(an)*(rad+4*k),cy+(float)Math.sin(an)*(rad+4*k),2*k,plain?0xffffffff:txt);
+        fit(c,"▲ "+a.pk,cx,cy+16*k,8*k,40*k,mut,Paint.Align.CENTER,face);}
     private void bar(Canvas c,FloatSkin.Cell d,float x,float y,float w,float h,float k,boolean peak){
         if(pix){int nb=Math.max(4,Math.round(w/(9*k)));float bw=w/nb,hh=Math.max(h,4*k);boolean has=!Float.isNaN(d.f)&&d.bar;float fc=has?Math.max(0,Math.min(1,d.f)):0;   // HP blocks, lit from the bar's start
             for(int i=0;i<nb;i++){boolean lt=FloatSkin.lit(i,nb,fc,d.zero,has);if(pass==ALL||pass==STAT||lt)fill(c,Math.round(x+i*bw),Math.round(y),Math.round(x+(i+1)*bw-2*k),Math.round(y+hh),lt&&pass!=STAT?(i>=nb*.8f?0xffff3d3d:acc):track);}return;}
@@ -170,7 +183,7 @@ final class FloatLayouts extends ClusterKit {
                 fit(c,gear,cx,cy+6*k,17*k,22*k,txt,Paint.Align.CENTER,bold);}
             for(int i=0;i<u;i++){float x=(44+i*81)*k;
                 if(st){if(i>0)fill(c,x-7*k,9*k,x-6*k,31*k,div);fit(c,nm(d[i]),x,14*k,7.5f*k,72*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
-                if(dy)vu(c,d[i],x,33*k,16*k,72*k,k,Paint.Align.LEFT);}
+                if(dy){vu(c,d[i],x,33*k,16*k,72*k,k,Paint.Align.LEFT);peakTag(c,d[i],x,x+72*k,14*k,7.5f*k,true,k,Typeface.DEFAULT);}}
             break;}
         case HERO:case DIAL:{   // one big reading on the left (a bar, or a round 270 degree dial with a needle), the next three as rows
             FloatSkin.Cell a=d[0];boolean dial=shape==DIAL;float lw=(dial?132:140)*k;
@@ -192,14 +205,15 @@ final class FloatLayouts extends ClusterKit {
                 String nb=nm(b);if(st)fit(c,nb,x,y+(dial?(pix?9:12):10)*k,(dial?8:7.5f)*k,rr-x,mut,Paint.Align.LEFT,Typeface.DEFAULT);
                 if(dy){
                 float nw=pix?(nb.length()*6-1)*Math.max(1,Math.round(7.5f*k/7f)):width(nb,7.5f*k,Typeface.DEFAULT);   // a row's value keeps clear of its name
-                String v=b.val+(b.unit.isEmpty()?"":" "+b.unit);fit(c,v,rr,y+(dial?(pix?26:24):12)*k,(dial?14:13)*k,dial?rr-x:Math.min((rr-x)*.6f,rr-x-nw-6*k),warn(b.lv,txt),Paint.Align.RIGHT,bold);}
-                if(!dial){FloatSkin.Cell bb=b;bar(c,bb,x,y+18*k,rr-x,2*k,k,false);}}
+                String v=b.val+(b.unit.isEmpty()?"":" "+b.unit);fit(c,v,rr,y+(dial?(pix?26:24):12)*k,(dial?14:13)*k,dial?rr-x:Math.min((rr-x)*.6f,rr-x-nw-6*k),warn(b.lv,txt),Paint.Align.RIGHT,bold);
+                if(dial)peakTag(c,b,x,rr,y+(pix?9:12)*k,8*k,true,k,Typeface.DEFAULT);}   // the value sits on the next line there; on 큰 값 + 목록 the bar carries the peak
+                if(!dial){FloatSkin.Cell bb=b;bar(c,bb,x,y+18*k,rr-x,2*k,k,true);}}
             break;}
         case GEAR:{   // the race screen's gear box in the middle, an rpm line over it, a reading in each corner
             if(st){body(c,W,H,k,-1);fill(c,94*k,18*k,154*k,96*k,box);fill(c,94*k,10*k,154*k,13*k,track);}
             if(dy){fit(c,gear,124*k,78*k,58*k,54*k,boxInk,Paint.Align.CENTER,bold);if(rOk)fill(c,94*k,10*k,94*k+60*k*rf,13*k,rf>.85f?0xffff4b3c:acc);}
             for(int i=0;i<Math.min(4,n);i++){boolean left=i%2==0;float x=(left?10:238)*k,y=(n<=2?36:i<2?10:62)*k;Paint.Align al=left?Paint.Align.LEFT:Paint.Align.RIGHT;
-                if(st)fit(c,nm(d[i]),x,y+11*k,8*k,76*k,mut,al,Typeface.DEFAULT);if(dy)vu(c,d[i],x,y+34*k,20*k,78*k,k,al);}
+                if(st)fit(c,nm(d[i]),x,y+11*k,8*k,76*k,mut,al,Typeface.DEFAULT);if(dy){vu(c,d[i],x,y+34*k,20*k,78*k,k,al);peakTag(c,d[i],left?x:x-76*k,left?x+76*k:x,y+11*k,8*k,left,k,Typeface.DEFAULT);}}
             break;}
         case DIAG:{   // the N logo's slant splits each band: a big reading left, the next one right
             if(st)body(c,W,H,k,-1);
@@ -208,19 +222,20 @@ final class FloatLayouts extends ClusterKit {
                 if(dy){if(a.pk!=null)t(c,"▲ "+a.pk,112*k,y+18*k,8*k,mut,Paint.Align.RIGHT,face);vu(c,a,12*k,y+52*k,28*k,100*k,k,Paint.Align.LEFT);}bar(c,a,12*k,y+60*k,96*k,3*k,k,true);
                 if(b*2+1<n){FloatSkin.Cell e=d[b*2+1];
                     if(st){line(c,138*k,y+8*k,118*k,y+64*k,2*k,acc);fit(c,nm(e),236*k,y+18*k,9*k,80*k,mut,Paint.Align.RIGHT,Typeface.DEFAULT_BOLD);}
-                    if(dy)vu(c,e,236*k,y+52*k,26*k,86*k,k,Paint.Align.RIGHT);bar(c,e,150*k,y+60*k,86*k,3*k,k,true);}}
+                    if(dy){vu(c,e,236*k,y+52*k,26*k,86*k,k,Paint.Align.RIGHT);peakTag(c,e,150*k,236*k,y+18*k,9*k,false,k,Typeface.DEFAULT_BOLD);}bar(c,e,150*k,y+60*k,86*k,3*k,k,true);}}
             break;}
         case TICK:{   // one thin line: name, value, a hair of a bar
             if(st)body(c,W,H,k,-1);
             for(int i=0;i<n;i++){FloatSkin.Cell a=d[i];float x=i*96*k;if(st&&i>0)fill(c,x,6*k,x+1,H-6*k,div);
                 if(pix){if(st)fit(c,nm(a),x+8*k,16*k,7*k,42*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);if(dy)fit(c,a.val,x+86*k,16*k,7*k,34*k,warn(a.lv,txt),Paint.Align.RIGHT,bold);continue;}   // 8-bit: one pixel size, no unit, no bar (the frame is there)
-                if(st)fit(c,nm(a),x+8*k,16*k,7.5f*k,34*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);if(dy)vu(c,a,x+90*k,17*k,13*k,48*k,k,Paint.Align.RIGHT);bar(c,a,x+8*k,21*k,82*k,2*k,k,false);}
+                if(st)fit(c,nm(a),x+8*k,16*k,7.5f*k,34*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);if(dy)vu(c,a,x+90*k,17*k,13*k,48*k,k,Paint.Align.RIGHT);bar(c,a,x+8*k,21*k,82*k,2*k,k,true);}
             break;}
         case FILLS:{   // rows whose ground fills with the reading (the name sits on the fill, so it is drawn each frame)
             if(st)body(c,W,H,k,-1);
             for(int i=0;i<n;i++){FloatSkin.Cell a=d[i];float y=(4+i*30)*k,l=8*k,rr=W-8*k;if(st)fill(c,l,y+3*k,rr,y+27*k,track);if(!dy)continue;
                 if(!Float.isNaN(a.f)&&a.bar){float f=Math.max(0,Math.min(1,a.f)),lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);int col=warn(a.lv,acc);
                     fill(c,l+(rr-l)*lo,y+3*k,Math.max(l+(rr-l)*hi,l+(rr-l)*lo+2),y+27*k,col&0xffffff|0x55000000);float e=l+(rr-l)*f;fill(c,e-k,y+3*k,e+k,y+27*k,col);}
+                if(a.pk!=null&&!Float.isNaN(a.pf)){float e=l+(rr-l)*Math.max(0,Math.min(1,a.pf));fill(c,e-.5f*k,y+3*k,e+.5f*k,y+27*k,plain?0xffffffff:txt);}   // the peak, a hairline across the row
                 fit(c,nm(a),l+8*k,y+19*k,9*k,66*k,txt,Paint.Align.LEFT,Typeface.DEFAULT_BOLD);vu(c,a,rr-8*k,y+20*k,14*k,76*k,k,Paint.Align.RIGHT);}
             break;}
         case BARS:{   // a standing bar per reading, the value under it
@@ -229,6 +244,7 @@ final class FloatLayouts extends ClusterKit {
                 if(st){fill(c,cx-8*k,t0,cx+8*k,b0,track);for(int j=0;j<=4;j++){float ty=b0-(b0-t0)*j/4;fill(c,cx+11*k,ty,cx+(j%2==0?17:14)*k,ty+1,mut);}
                     fit(c,nm(a)+(a.unit.isEmpty()?"":" "+a.unit.replace("°","")),cx,101*k,7.5f*k,52*k,mut,Paint.Align.CENTER,Typeface.DEFAULT);}
                 if(dy){if(!Float.isNaN(a.f)&&a.bar){float f=Math.max(0,Math.min(1,a.f)),lo=Math.min(a.zero,f),hi=Math.max(a.zero,f),yb=b0-(b0-t0)*lo;fill(c,cx-8*k,Math.min(b0-(b0-t0)*hi,yb-2),cx+8*k,yb,warn(a.lv,acc));}
+                    if(a.pk!=null&&!Float.isNaN(a.pf)){float py=b0-(b0-t0)*Math.max(0,Math.min(1,a.pf));fill(c,cx-10*k,py-k,cx+10*k,py+k,plain?0xffffffff:txt);}   // the peak, a bar across
                     fit(c,a.val,cx,86*k,15*k,50*k,warn(a.lv,txt),Paint.Align.CENTER,bold);}}
             break;}
         case TWIN:{   // a 270 degree dial with a needle per reading (open at the bottom like the round gauges): the value in the opening, name and unit under it
@@ -240,7 +256,7 @@ final class FloatLayouts extends ClusterKit {
                 boolean has=!Float.isNaN(a.f);float f=has?Math.max(0,Math.min(1,a.f)):0;
                 if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(warn(a.lv,acc));c.drawArc(r,135+270*lo,Math.max(1,270*(hi-lo)),false,p);p.setStyle(Paint.Style.FILL);}
                 if(has){double an=Math.toRadians(135+270*f);line(c,cx,cy,cx+(float)Math.cos(an)*(rad-7*k),cy+(float)Math.sin(an)*(rad-7*k),2*k,0xffff6b5b);}
-                dot(c,cx,cy,3*k,0xffff6b5b);
+                ringPeak(c,a,cx,cy,rad,k);dot(c,cx,cy,3*k,0xffff6b5b);
                 fit(c,a.val,cx,cy+31*k,14*k,44*k,warn(a.lv,txt),Paint.Align.CENTER,bold);}   // under the hub, between the ring's ends, where the needle never goes
             break;}
         case WEDGE:{   // rpm as a row of bars that grow to the right, the gear at its end, readings under it
@@ -249,7 +265,7 @@ final class FloatLayouts extends ClusterKit {
             if(dy)fit(c,gear,238*k,27*k,(pix?14:26)*k,36*k,txt,Paint.Align.RIGHT,bold);
             for(int i=0;i<n;i++){FloatSkin.Cell a=d[i];float x=(i%2)*124*k,y=(34+(i/2)*44)*k;
                 if(st){if(i%2==1)fill(c,x,y+6*k,x+1,y+38*k,div);if(i>=2&&i%2==0)fill(c,8*k,y,W-8*k,y+1,div);fit(c,nm(a),x+12*k,y+13*k,8*k,100*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
-                if(dy)vu(c,a,x+12*k,y+35*k,19*k,100*k,k,Paint.Align.LEFT);}
+                if(dy){vu(c,a,x+12*k,y+35*k,19*k,100*k,k,Paint.Align.LEFT);peakTag(c,a,x+12*k,x+112*k,y+13*k,8*k,true,k,Typeface.DEFAULT);}}
             break;}
         case VRPM:{   // 세로 띠 + RPM: six readings stacked, the rpm as a lit column the window's height on the right
             if(st)body(c,W,H,k,-1);
@@ -258,12 +274,12 @@ final class FloatLayouts extends ClusterKit {
             for(int i=0;i<Math.min(n,6);i++){FloatSkin.Cell a=d[i];float y=(4+i*R)*k;
                 if(st){if(i>0)fill(c,8*k,y,(VR_COL-6)*k,y+1,div);fit(c,nm(a),8*k,y+12*rk,8*rk,(VR_COL-16)*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
                 if(dy){if(a.quad!=null&&!pix)FloatPanel.tyres(c,2*k,y+14*rk,(VR_COL-4)*k,(VR_ROW-15)*rk,rk,a.quad,a.l4,a.t4,txt,div,bold);   // the wheels as a car seen from above
-                    else vu(c,a,8*k,y+50*rk,28*rk,(VR_COL-14)*k,rk,Paint.Align.LEFT);}}   // the value as large as the row allows (the name sits small above it)
+                    else{vu(c,a,8*k,y+50*rk,28*rk,(VR_COL-14)*k,rk,Paint.Align.LEFT);peakTag(c,a,8*k,(VR_COL-8)*k,y+12*rk,8*rk,true,k,Typeface.DEFAULT);}}}   // the value as large as the row allows (the name sits small above it)
             {float by=vrBox()*k,bh=H-4*k-by;if(st)fill(c,8*k,by,(VR_COL-6)*k,by+1,div);
                 if(n>6&&!vrMusic){FloatSkin.Cell a=d[6];   // no track: the seventh reading, larger than a row's
                     if(st)fit(c,nm(a),8*k,by+16*k,9*k,(VR_COL-16)*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);
                     if(dy){if(a.quad!=null&&!pix)FloatPanel.tyres(c,2*k,by+20*k,(VR_COL-4)*k,bh-24*k,k,a.quad,a.l4,a.t4,txt,div,bold);
-                        else vu(c,a,8*k,by+Math.min(bh-12*k,20*k+(bh-20*k)/2+13*k),Math.min(34*k,bh*.4f),(VR_COL-14)*k,k,Paint.Align.LEFT);}}}
+                        else{vu(c,a,8*k,by+Math.min(bh-12*k,20*k+(bh-20*k)/2+13*k),Math.min(34*k,bh*.4f),(VR_COL-14)*k,k,Paint.Align.LEFT);peakTag(c,a,8*k,(VR_COL-8)*k,by+16*k,9*k,true,k,Typeface.DEFAULT);}}}}
             break;}
         case TOWER:{   // a narrow column for the screen's side: the gear box on top, readings stacked under it, the rpm as a lit lane on the right
             float C=TW_COL*k;
@@ -272,7 +288,7 @@ final class FloatLayouts extends ClusterKit {
             lane(c,C+2*k,W-5*k,8*k,H-8*k,k,rOk,rf,st,dy);
             for(int i=0;i<n;i++){FloatSkin.Cell a=d[i];float y=(72+i*40)*k;
                 if(st){if(i>0)fill(c,6*k,y,C-4*k,y+1,div);fit(c,nm(a),8*k,y+13*k,8*k,C-14*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
-                if(dy)vu(c,a,8*k,y+33*k,17*k,C-12*k,k,Paint.Align.LEFT);}
+                if(dy){vu(c,a,8*k,y+33*k,17*k,C-12*k,k,Paint.Align.LEFT);peakTag(c,a,8*k,C-6*k,y+13*k,8*k,true,k,Typeface.DEFAULT);}}
             break;}
         case VCAP:{   // 세로 캡슐: a screen-high pill; the first reading (boost) as a dial in the top end, the rest stacked, the rpm lane beside them, the gear in the bottom end
             float C=VC_COL*k,cx=W/2,cy=46*k,rad=34*k,top=VC_TOP*k,end=H-VC_END*k;FloatSkin.Cell a=d[0];
@@ -283,6 +299,7 @@ final class FloatLayouts extends ClusterKit {
             if(dy){boolean has=!Float.isNaN(a.f);float f=has?Math.max(0,Math.min(1,a.f)):0;
                 if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(warn(a.lv,acc));c.drawArc(r,135+270*lo,Math.max(1,270*(hi-lo)),false,p);p.setStyle(Paint.Style.FILL);
                     double an=Math.toRadians(135+270*f);line(c,cx,cy,cx+(float)Math.cos(an)*(rad-7*k),cy+(float)Math.sin(an)*(rad-7*k),2*k,0xffff6b5b);}
+                ringPeak(c,a,cx,cy,rad,k);   // the peak (최고값)
                 dot(c,cx,cy,3*k,0xffff6b5b);fit(c,a.val,cx,cy+30*k,14*k,44*k,warn(a.lv,txt),Paint.Align.CENTER,bold);}   // under the hub, where the needle never goes
             lane(c,C+2*k,W-8*k,top+6*k,end-6*k,k,rOk,rf,st,dy);
             float R=vcRow(n),rk=Math.min(1,R/64f)*k;
@@ -291,7 +308,7 @@ final class FloatLayouts extends ClusterKit {
                 if(vrMusic&&i>=n-2)continue;
                 if(st){fit(c,nm(b),10*k,y+14*rk,8*rk,C-16*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
                 if(dy){if(b.quad!=null&&!pix)FloatPanel.tyres(c,2*k,y+14*rk,C-6*k,R*k-16*rk,rk,b.quad,b.l4,b.t4,txt,div,bold);   // the wheels as a car seen from above
-                    else vu(c,b,10*k,y+44*rk,24*rk,C-16*k,rk,Paint.Align.LEFT);}}
+                    else{vu(c,b,10*k,y+44*rk,24*rk,C-16*k,rk,Paint.Align.LEFT);peakTag(c,b,10*k,C-6*k,y+14*rk,8*rk,true,k,Typeface.DEFAULT);}}}
             if(dy)fit(c,gear,W/2,H-16*k,(pix?14:26)*k,W-24*k,txt,Paint.Align.CENTER,bold);
             break;}
         default:{   // SHIFT: a shift-light strip the window's width, the readings in a row under it
@@ -299,7 +316,7 @@ final class FloatLayouts extends ClusterKit {
             for(int i=0;i<leds;i++){boolean on=rOk&&(i+.5f)/leds<rf;if(pass!=STAT)fill(c,8*k+i*lw+k,6*k,8*k+(i+1)*lw-k,10*k,on?led(i,leds):track);}   // each frame, as the rpm bars above
             for(int i=0;i<n;i++){float x=i*70*k;
                 if(st){if(i>0)fill(c,x,18*k,x+1,56*k,div);fit(c,nm(d[i]),x+10*k,28*k,8*k,54*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
-                if(dy)vu(c,d[i],x+10*k,52*k,17*k,54*k,k,Paint.Align.LEFT);}
+                if(dy){vu(c,d[i],x+10*k,52*k,17*k,54*k,k,Paint.Align.LEFT);peakTag(c,d[i],x+10*k,x+64*k,28*k,8*k,true,k,Typeface.DEFAULT);}}
             break;}
         }
     }

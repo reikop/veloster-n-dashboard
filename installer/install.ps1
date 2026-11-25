@@ -67,7 +67,7 @@ function Write-Host {
   foreach($part in ([string]$Object -split "`r?`n")){ foreach($l in (Fit $part)){ Microsoft.PowerShell.Utility\Write-Host $l @p } }
 }
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
-$InstallerVersion = '1.11.0'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+$InstallerVersion = '1.11.1'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 $Product = 'jsn_kr'                              # 벨로스터 N 국내 사양 내비
 $VerifiedBuild = 'eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 유일한 빌드(docs/INSTALL.md). 다르면 설치하지 않는다.
 $PT_URL = 'https://dl.google.com/android/repository/platform-tools-latest-windows.zip'
