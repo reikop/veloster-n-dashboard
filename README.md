@@ -24,6 +24,23 @@ Floating window, settings backup, records room, themes, screen list, race/Λ/tac
 
 Vehicle telemetry uses existing receive paths without adding ECU diagnostic requests. Missing or expired readings stay unknown. Bluetooth album-art reception, exhaust temperature and e-LSD remain unresolved. Wireless CarPlay and automatic updates are not provided. [Full limitations](docs/LIMITATIONS.md)
 
+## Screens
+
+All 20 tabs. Show, hide or reorder them by holding the tab strip or in Settings → Screens. These are **screenshots of the real dashboard app on an Android emulator (800×480)**. The emulator has no car data, so a screenshot-only build replays one minute of synthetic driving. They are not photos of the car, and the text uses Android's default font rather than the head unit's. Neon Drive runs its demo without car signals, and the circuit screen's GPS wait is how the current app behaves. Retake with `scripts/emulator_screens.py`.
+
+<table>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/01-overview.png" alt="Overview" width="100%"><br><b>1. Overview</b> · Every value at a glance</td><td width="50%" valign="top"><img src="docs/images/screens/en/02-f1.png" alt="F1" width="100%"><br><b>2. F1</b> · F1-style cluster</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/03-gauges.png" alt="Gauges" width="100%"><br><b>3. Gauges</b> · Your chosen gauges</td><td width="50%" valign="top"><img src="docs/images/screens/en/04-graphs.png" alt="Graphs" width="100%"><br><b>4. Graphs</b> · Values over time</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/05-performance.png" alt="Performance" width="100%"><br><b>5. Performance</b> · N Performance screen</td><td width="50%" valign="top"><img src="docs/images/screens/en/06-taxi.png" alt="Taxi" width="100%"><br><b>6. Taxi</b> · Taxi meter</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/07-records.png" alt="Records" width="100%"><br><b>7. Records</b> · Acceleration runs and peaks</td><td width="50%" valign="top"><img src="docs/images/screens/en/08-race.png" alt="Race" width="100%"><br><b>8. Race</b> · Shift lights · tyres · G-ball</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/09-lambda.png" alt="Lambda" width="100%"><br><b>9. Lambda</b> · Λ rpm and speed</td><td width="50%" valign="top"><img src="docs/images/screens/en/10-tacho.png" alt="Tacho" width="100%"><br><b>10. Tacho</b> · Round rpm · downshift</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/11-neon.png" alt="Neon Drive" width="100%"><br><b>11. Neon Drive</b> · Pixel-art drive screen</td><td width="50%" valign="top"><img src="docs/images/screens/en/12-night.png" alt="Night" width="100%"><br><b>12. Night</b> · Night minimal</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/13-vfd.png" alt="VFD" width="100%"><br><b>13. VFD</b> · 80s digital dash</td><td width="50%" valign="top"><img src="docs/images/screens/en/14-hud.png" alt="HUD" width="100%"><br><b>14. HUD</b> · Fighter HUD</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/15-gcircle.png" alt="G circle" width="100%"><br><b>15. G circle</b> · Friction circle · G trail</td><td width="50%" valign="top"><img src="docs/images/screens/en/16-warp.png" alt="Warp" width="100%"><br><b>16. Warp</b> · Starship warp</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/17-drag.png" alt="Drag" width="100%"><br><b>17. Drag</b> · Drag tree · 0-100</td><td width="50%" valign="top"><img src="docs/images/screens/en/18-cassette.png" alt="Cassette" width="100%"><br><b>18. Cassette</b> · Cassette deck · VU meters</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/19-show.png" alt="Show" width="100%"><br><b>19. Show</b> · Powerband · boost · G circle</td><td width="50%" valign="top"><img src="docs/images/screens/en/20-circuit.png" alt="Circuit" width="100%"><br><b>20. Circuit</b> · Circuit map · lap times</td></tr>
+</table>
+
 ## Compatibility
 
 The guarded installer supports **Korean Veloster N JSN**, product `jsn_kr`, **Android 4.2.2 / API 17**, incremental build `eng.vmadmin.20250902.081552` (`250902`, `STD_H`). The dashboard requires the factory `automotive` library. Other models, regions, firmware and ordinary Android devices are not validated.
