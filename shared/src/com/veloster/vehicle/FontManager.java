@@ -102,7 +102,7 @@ public final class FontManager {
         return new Snapshot(entries,current,currentName,pending(),new File(AMOSSU).isFile(),free());
     }
     static String bundledDetail(BundledFonts.Font b,boolean installed){
-        return UiText.t(installed?"앱에 포함 · 내비에 설치됨":"앱에 포함")+" · "+UiText.t(b.kind==BundledFonts.HANDWRITING?"손글씨":"고딕")
+        return UiText.t(installed?"앱에 포함 · 내비에 설치됨":"앱에 포함")+" · "+UiText.t(b.kind==BundledFonts.HANDWRITING?"손글씨":b.kind==BundledFonts.MYEONGJO?"명조":"고딕")
             +" · "+(b.bold!=null?"R·B":"R")+" · "+UiText.t("한글 전체")+String.format(Locale.US," · %.1f MB",b.bytes/1048576.0);
     }
     static String detail(SystemFonts.Family f,boolean usable){

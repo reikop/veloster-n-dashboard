@@ -35,7 +35,7 @@ public class FontPanePreview {
    SettingsPanel.State s=new SettingsPanel.State();s.cat=SettingsPanel.FONT;
    List<FontManager.Entry> l=new ArrayList<FontManager.Entry>();
    l.add(new FontManager.Entry(UiText.t("순정 글꼴 (Mobis · Roboto)"),UiText.t("공장 출고 설정"),Typeface.DEFAULT,Typeface.DEFAULT_BOLD,true));
-   FontManager.Entry app=new FontManager.Entry(UiText.t("나눔스퀘어"),UiText.t("앱에 포함")+" · "+UiText.t("고딕")+" · R·B · "+UiText.t("한글 전체")+" · 1.4 MB",null,null,true);app.load=true;l.add(app);
+   FontManager.Entry app=new FontManager.Entry(UiText.t("부산단디고딕"),UiText.t("앱에 포함")+" · "+UiText.t("고딕")+" · R·B · "+UiText.t("한글 전체")+" · 1.4 MB",null,null,true);app.load=true;l.add(app);
    l.add(new FontManager.Entry("Asta Sans",UiText.t("내비에 설치됨")+" · R·B·L · "+UiText.t("한글 전체"),Typeface.DEFAULT,Typeface.DEFAULT_BOLD,true));
    for(int i=0;i<6;i++)l.add(new FontManager.Entry("Installed Font "+i,UiText.t("내비에 설치됨")+" · R · "+UiText.t(i==2?"한글 없음":"한글 일부"),i==4?null:Typeface.DEFAULT,null,i!=4));
    if(state==0){s.fontBusy=true;}

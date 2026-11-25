@@ -634,9 +634,6 @@
   "불러오는 중…": "Loading…",
   "앱에 든 글꼴 파일이 손상됐습니다: ": "A font file inside the app is damaged: ",
   "'내 앱' → 강제 재시작으로 재부팅하세요.": "Reboot with My Apps → Restart head unit.",
-  "나눔고딕": "NanumGothic",
-  "나눔스퀘어": "NanumSquare",
-  "나눔스퀘어라운드": "NanumSquareRound",
   "나눔손글씨 펜": "Nanum Pen Script",
   "나눔손글씨 붓": "Nanum Brush Script",
   "서툰이야기 (Poor Story)": "Poor Story",
@@ -715,5 +712,12 @@
   "포천 레이스웨이": "Pocheon Raceway",
   "한 번 더 누르면 초기화": "Tap again to reset",
   "합성 G": "Combined G",
-  "후드 열림": "Hood open"
+  "후드 열림": "Hood open",
+  "프리텐다드 (Pretendard)": "Pretendard",
+  "나눔스퀘어 네오": "NanumSquare Neo",
+  "부산단디고딕": "Busan Dandi Gothic",
+  "부산단디명조": "Busan Dandi Myeongjo",
+  "부산단디손글씨": "Busan Dandi Script",
+  "이서윤체": "LeeSeoyun",
+  "명조": "serif"
 }

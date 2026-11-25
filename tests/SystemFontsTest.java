@@ -194,8 +194,8 @@ public class SystemFontsTest {
             check(g.size()==1&&(g.get(0).bold!=null)==(b.bold!=null),"one family, bold as listed: "+b.name);
             check(g.get(0).installedName(g.get(0).regular).equals(BundledFonts.installedRegular(b))&&(b.bold==null||g.get(0).installedName(g.get(0).bold).equals(BundledFonts.installedBold(b))),"installed names "+BundledFonts.installedRegular(b));
         }
-        for(String n:assets.list())check(n.startsWith("OFL-")||listed.contains(n),"unlisted asset "+n);
-        check(total<24L*1024*1024,"the bundled fonts stay small: "+total);
+        for(String n:assets.list())check(n.startsWith("OFL-")||n.startsWith("LICENSE-")||listed.contains(n),"unlisted asset "+n);
+        check(total<60L*1024*1024,"the bundled fonts stay small: "+total);
         System.out.println("PASS font reader (format 4/12, names, weight, rejects), family grouping, system_fonts.xml, change plan, the root script on a temporary /system and the "+BundledFonts.FONTS.length+" fonts inside the app");
     }
     static String sha(File f)throws Exception{java.security.MessageDigest d=java.security.MessageDigest.getInstance("SHA-256");StringBuilder b=new StringBuilder();
