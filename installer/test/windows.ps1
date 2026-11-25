@@ -12,7 +12,8 @@ New-Item -ItemType Directory -Force $Kit, $Fake, $Rel | Out-Null
 $PS = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $py = (Get-Command python -ErrorAction SilentlyContinue).Source; if(-not $py){ $py = (Get-Command py).Source }
 $fails = 0; $script:out = ''; $script:rc = 0
-function Ok([string]$name, [bool]$c){ if($c){ "PASS $name" } else { "FAIL $name"; $script:fails++; '----- out -----'; $script:out; '---------------' } }
+function Ok([string]$name, [bool]$c){ if($c){ "PASS $name" } else { "FAIL $name"; $script:fails++; '----- out -----'; $script:out; '---------------'
+  $lf = ([regex]::Match($script:out, '(?m)^@@FILE (.+)$')).Groups[1].Value.Trim(); if($lf -and (Test-Path -LiteralPath $lf)){ '----- log (asks) -----'; Get-Content -LiteralPath $lf -Encoding UTF8 | Where-Object { $_ -match '→' } } } }
 function Calls(){ $f = Join-Path $Fake 'calls.log'; if(Test-Path $f){ @(Get-Content $f -Encoding UTF8) } else { @() } }
 function Count($lines, [string]$pat){ @($lines | Where-Object { $_ -match $pat }).Count }
 function Reset(){ foreach($p in 'inst','tmp','calls.log','clash.done'){ Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $Fake $p) } }
