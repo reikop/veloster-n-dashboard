@@ -183,11 +183,9 @@ public final class UiText {
         EN.put("꺼짐","Off");
         EN.put("끄기","Disable");
         EN.put("끔","Off");
-        EN.put("나눔고딕","NanumGothic");
         EN.put("나눔손글씨 붓","Nanum Brush Script");
         EN.put("나눔손글씨 펜","Nanum Pen Script");
-        EN.put("나눔스퀘어","NanumSquare");
-        EN.put("나눔스퀘어라운드","NanumSquareRound");
+        EN.put("나눔스퀘어 네오","NanumSquare Neo");
         EN.put("나이트","Night");
         EN.put("나중에","Later");
         EN.put("날짜","Date");
@@ -256,6 +254,7 @@ public final class UiText {
         EN.put("막대","Bar");
         EN.put("만든 소리입니다 (녹음 아님)","synthesised (not a recording)");
         EN.put("맑은 차임","Clear chime");
+        EN.put("명조","serif");
         EN.put("모노","Mono");
         EN.put("모드 색","Mode colour");
         EN.put("모드 색: SPORT·N 빨강, N CUSTOM 보라, ECO 초록","Mode colour: SPORT·N red, N CUSTOM purple, ECO green");
@@ -306,6 +305,9 @@ public final class UiText {
         EN.put("복사한 글꼴 파일이 원본과 다릅니다: ","The copied font file differs from the original: ");
         EN.put("복원","Reset");
         EN.put("부산","Busan");
+        EN.put("부산단디고딕","Busan Dandi Gothic");
+        EN.put("부산단디명조","Busan Dandi Myeongjo");
+        EN.put("부산단디손글씨","Busan Dandi Script");
         EN.put("부스트","Boost");
         EN.put("부스트 (계산)","Boost (calc.)");
         EN.put("부정 출발","Red light");
@@ -509,6 +511,7 @@ public final class UiText {
         EN.put("이미 페어링된 기기입니다. 프로필 연결은 해당 앱에서 진행하세요.","Already paired. Connect the required profile from the relevant app.");
         EN.put("이번","This run");
         EN.put("이번 랩 / 지난 랩","this lap / last lap");
+        EN.put("이서윤체","LeeSeoyun");
         EN.put("이용해 주셔서 감사합니다","Thank you for riding");
         EN.put("이전","Previous");
         EN.put("이전 시험 백업이 남아 있습니다. 먼저 원상복구하세요.","A previous test backup remains. Restore the original settings first.");
@@ -690,6 +693,7 @@ public final class UiText {
         EN.put("표시 항목","Signal");
         EN.put("표시할 설치 앱이 없습니다. 앱 설치 뒤 다시 열거나 목록 편집에서 선택하세요.","No installed apps to show. Reopen after installing an app or select one in Edit app list.");
         EN.put("풀 배기 · 팝앤뱅","Straight pipe · pops");
+        EN.put("프리텐다드 (Pretendard)","Pretendard");
         EN.put("플로팅","Floating");
         EN.put("플로팅 중","While floating");
         EN.put("플로팅 창","Floating window");

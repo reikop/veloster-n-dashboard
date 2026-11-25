@@ -4,17 +4,22 @@
 
 ## 앱에 포함된 글꼴
 
-공개 글꼴 7종을 앱에 넣었습니다(파일 합계 22.7 MB, APK 안에서는 약 8.2 MB). 모두 현대 한글 11,172자를 모두 담고 있고 SIL Open Font License 1.1이며 파일은 고치지 않았습니다.
+글꼴 10종을 앱에 넣었습니다(파일 합계 약 53 MB, APK 안에서는 약 17 MB). 모두 현대 한글 11,172자를 모두 담고 있고 파일은 고치지 않았습니다(부산단디체·이서윤체는 파일 이름만 영문으로 바꿈).
 
-| 글꼴 | 종류 | 굵기 | 크기 | 출처 |
+| 글꼴 | 종류 | 굵기 | 크기 | 만든 곳 · 라이선스 |
 | --- | --- | --- | --- | --- |
-| Asta Sans (Pleos · 42dot) | 고딕 | Regular·Bold | 4.9 MB | 42dot(현대자동차그룹), github.com/42dot/Asta-Sans |
-| 나눔고딕 | 고딕 | Regular·Bold | 3.9 MB | NAVER, google/fonts |
-| 나눔스퀘어 | 고딕 | Regular·Bold | 1.4 MB | NAVER 배포 zip |
-| 나눔스퀘어라운드 | 고딕 | Regular·Bold | 2.0 MB | NAVER 배포 zip |
-| 나눔손글씨 펜 | 손글씨 | Regular | 3.1 MB | NAVER, google/fonts |
-| 나눔손글씨 붓 | 손글씨 | Regular | 3.4 MB | NAVER, google/fonts |
-| 서툰이야기 (Poor Story) | 손글씨 | Regular | 3.8 MB | 윤디자인, google/fonts |
+| Asta Sans (Pleos · 42dot) | 고딕 | Regular·Bold | 4.9 MB | 42dot(현대자동차그룹) · OFL |
+| 프리텐다드 (Pretendard) | 고딕 | Regular·Bold | 5.1 MB | 길형진 · OFL |
+| 나눔스퀘어 네오 | 고딕 | Regular·Bold | 4.2 MB | 네이버 · OFL |
+| 부산단디고딕 | 고딕 | Medium·Bold | 5.2 MB | 부산광역시 · 부산시 전용서체 조건 |
+| 부산단디명조 | 명조 | Medium·Bold | 13.4 MB | 부산광역시 · 부산시 전용서체 조건 |
+| 나눔손글씨 펜 | 손글씨 | Regular | 3.1 MB | 네이버 · OFL |
+| 나눔손글씨 붓 | 손글씨 | Regular | 3.4 MB | 네이버 · OFL |
+| 서툰이야기 (Poor Story) | 손글씨 | Regular | 3.8 MB | 윤디자인 · OFL |
+| 부산단디손글씨 | 손글씨 | Regular | 8.8 MB | 부산광역시 · 부산시 전용서체 조건 |
+| 이서윤체 | 손글씨 | Regular | 1.3 MB | 흥국생명 · 흥국생명 서체 조건 |
+
+부산단디체는 "영상, 인쇄, 출판, 웹, 모바일 등 … 무료로 자유롭게 사용"할 수 있고 판매나 배포 대가 청구는 금지됩니다. 이서윤체는 무료·상업 사용이 가능하고 판매와 수정 후 재배포가 금지됩니다. 두 조건 모두 앱에 함께 넣는 무료 배포를 명시적으로 다루지는 않습니다. 원문은 `apps/dashboard/assets/fonts/LICENSE-*.txt`에 있습니다.
 
 목록에서 고르면 APK에서 바로 읽어 미리보기를 그립니다(한 번에 하나만 메모리에 둠). 적용할 때만 앱 저장소에 잠시 꺼내 SHA-256을 확인한 뒤 `/system/fonts/VN-*`로 복사하고, 꺼낸 파일은 지웁니다.
 
@@ -46,6 +51,6 @@ Asta Sans는 현대자동차그룹 계열 42dot이 만든 글꼴로, Pleos Conne
 
 **N Dashboard → Settings (gear) → Fonts** changes the head unit's system font (factory screens, navigation and most apps).
 
-Seven open-licence fonts ship inside the app (OFL 1.1, unmodified, all 11,172 Hangul syllables, 22.7 MB of files): Asta Sans (42dot, Hyundai Motor Group; the Pleos Connect typeface), NanumGothic, NanumSquare, NanumSquareRound, Nanum Pen Script, Nanum Brush Script and Poor Story. Hyundai Sans and Kia Signature are not public fonts, and Hyundai Group's NeoHyundai forbids redistribution, so none of them is included. The list shows only the factory set, the in-app fonts and extra fonts already in /system/fonts; font files on a USB stick or the head unit storage are not offered. Pick a row to preview it with the head unit's own font engine, then **Apply selected font** → **Reboot now** (the same Android reboot request as My Apps → Restart head unit); Android 4.2 reads the font settings only at start-up. **Factory fonts (Mobis · Roboto)** at the top puts the original mapping back.
+Ten fonts ship inside the app (unmodified, all 11,172 Hangul syllables, about 53 MB of files): Asta Sans (42dot, Hyundai Motor Group; the Pleos Connect typeface), Pretendard, NanumSquare Neo, Nanum Pen Script, Nanum Brush Script and Poor Story under OFL 1.1; Busan Dandi Gothic, Myeongjo and Script under the Busan city font terms (free use in any medium, no fee for distribution); LeeSeoyun under the Heungkuk Life terms (free use, no sale, no modified redistribution). The non-OFL terms do not expressly cover bundling in an app; they are quoted in assets/fonts/LICENSE-*.txt. Hyundai Sans and Kia Signature are not public fonts, and Hyundai Group's NeoHyundai forbids redistribution, so none of them is included. The list shows only the factory set, the in-app fonts and extra fonts already in /system/fonts; font files on a USB stick or the head unit storage are not offered. Pick a row to preview it with the head unit's own font engine, then **Apply selected font** → **Reboot now** (the same Android reboot request as My Apps → Restart head unit); Android 4.2 reads the font settings only at start-up. **Factory fonts (Mobis · Roboto)** at the top puts the original mapping back.
 
 The change runs as root through the factory `/system/bin/amossu`: the files are copied to `/system/fonts/VN-*`, checked, and `/system/etc/system_fonts.xml` is swapped last (devicedefault, sans-serif, Droid Sans, sans-serif-light/-thin/-condensed; serif, monospace and the fallback chain stay). Both are read back and compared after the change. The XML from before the first change is kept in `/data/local/tmp/vn-fonts/`; `adb shell /system/bin/amossu /data/local/tmp/vn-fonts/restore.sh` and a reboot put it back. Only unused `VN-*` files are ever removed. Font collections (`.ttc`) are not supported; files over 40 MB are skipped. As of 2026-11-25 the owner confirmed amossu gives root; applying from this screen and the font after the reboot are unverified on the vehicle.
