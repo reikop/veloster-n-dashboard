@@ -9,17 +9,17 @@ package com.veloster.vehicle;
  */
 public final class DashboardPage {
     public static final int OVERVIEW=0,F1=1,GAUGES=2,GRAPHS=3,PERFORMANCE=4,TAXI=5,RECORDS=6,RACE=7,LAMBDA=8,TACHO=9,NEON=10,
-        NIGHT=11,VFD=12,HUD=13,GCIRCLE=14,WARP=15,DRAG=16,CASSETTE=17,SHOW=18,CIRCUIT=19,COUNT=20;
+        NIGHT=11,VFD=12,HUD=13,GCIRCLE=14,WARP=15,DRAG=16,CASSETTE=17,SHOW=18,CIRCUIT=19,CAR3D=20,COUNT=21;
     /** Strip bounds and tab spacing. */
     public static final float STRIP_LEFT=138,STRIP_RIGHT=486,GAP=6,TOP=8,BOTTOM=46;
     /** Gear button (settings) right of the strip. */
     public static final float GEAR_LEFT=492,GEAR_WIDTH=44;
     /** Each page's tab width, by page id. */
-    private static final int[] WIDTH={100,72,84,110,120,84,72,84,84,72,120,84,72,72,72,72,84,84,60,72};
+    private static final int[] WIDTH={100,72,84,110,120,84,72,84,84,72,120,84,72,72,72,72,84,84,60,72,72};
     /** Korean names (UiText at the call) and the settings list's second line. */
-    public static final String[] NAMES={"전체 조망","F1","게이지","그래프","퍼포먼스","택시","기록","레이스","람다","타코","네온 드라이브","나이트","VFD","HUD","G 원","워프","드래그","카세트","쇼","서킷"};
+    public static final String[] NAMES={"전체 조망","F1","게이지","그래프","퍼포먼스","택시","기록","레이스","람다","타코","네온 드라이브","나이트","VFD","HUD","G 원","워프","드래그","카세트","쇼","서킷","내 차"};
     public static final String[] DESC={"모든 값 한눈에","F1 스타일 계기판","고른 값 게이지","시간 그래프","N 퍼포먼스 화면","택시 미터기","가속 측정·최고값","변속 표시·공기압·G볼","Λ RPM·속도계","원형 RPM·다운시프트","도트 드라이브 화면",
-        "밤용 최소 화면","80년대 디지털 계기판","전투기 HUD","마찰원·G 꼬리","우주선 워프","드래그 출발 신호·0-100","카세트 덱·VU 미터","출력 곡선·부스트·G 원","서킷 지도·랩 타임"};
+        "밤용 최소 화면","80년대 디지털 계기판","전투기 HUD","마찰원·G 꼬리","우주선 워프","드래그 출발 신호·0-100","카세트 덱·VU 미터","출력 곡선·부스트·G 원","서킷 지도·랩 타임","3D 모델·램프·핸들 연동"};
     private static final int ALL=(1<<COUNT)-1;
     /** Display order and hidden mask in use (VehicleDash sets them from preferences). */
     private static int[] order=naturalOrder();

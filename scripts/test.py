@@ -36,6 +36,8 @@ def main():
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("FontFile", "SystemFonts", "BundledFonts")]
     # Circuit screen: the circuits (OpenStreetMap, ODbL), lap detection and the lap clock (i30 PD build v1.17.7).
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("Circuits", "CircuitData", "CircuitLap", "LapTimer", "TrackPath")]
+    # 내 차 (3D car): the mesh reader and the lamp / steering state.
+    sources += [ROOT / "apps/dashboard/src/com/veloster/car3d" / (name + ".java") for name in ("CarModel", "CarState", "CarScene")]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,
