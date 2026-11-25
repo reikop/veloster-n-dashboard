@@ -30,7 +30,7 @@ I = ROOT / "installer"
 SETS = {
     "windows": [("N계기판설치.cmd", "N계기판설치.cmd", 0o644), ("gui.ps1", "gui.ps1", 0o644),
                 ("설치.cmd", "설치.cmd", 0o644), ("삭제.cmd", "삭제.cmd", 0o644), ("진단기록.cmd", "진단기록.cmd", 0o644),
-                ("install.ps1", "install.ps1", 0o644)],
+                ("install.ps1", "install.ps1", 0o644), ("icon/installer.ico", "installer.ico", 0o644)],
     "mac": [("설치.command", "설치.command", 0o755), ("삭제.command", "삭제.command", 0o755), ("진단기록.command", "진단기록.command", 0o755)],
     "linux": [("설치.command", "install.sh", 0o755), ("linux/uninstall.sh", "uninstall.sh", 0o755), ("linux/diag.sh", "diag.sh", 0o755)],
 }
