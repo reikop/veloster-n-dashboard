@@ -17,10 +17,13 @@ final class HscanFeed {
 
     HscanFeed(DriveSignals signals) { this.signals = signals; }
 
-    /** The framing is verified only on this build; elsewhere the view runs the demo. */
+    /**
+     * The Veloster N head unit (any build number). The framing was captured on eng.vmadmin.20250902.081552;
+     * HscanFrames accepts only exact frames (header, XOR checksum, sizes, zero padding), so another build with
+     * other framing just stays at NO SIGNAL. Elsewhere (not jsn_kr) the view runs the demo.
+     */
     static boolean supported() {
-        return "jsn_kr".equals(android.os.Build.PRODUCT)
-            && "eng.vmadmin.20250902.081552".equals(android.os.Build.VERSION.INCREMENTAL);
+        return "jsn_kr".equals(android.os.Build.PRODUCT);
     }
 
     synchronized void start() {

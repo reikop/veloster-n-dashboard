@@ -1,6 +1,6 @@
 ﻿# The Windows installer (install.ps1) without a car, against fakeadb.py, on Windows PowerShell 5.1 (GitHub Actions
 # windows runner, or any Windows PC with Python). Mirrors run.sh: parse check of install.ps1 and gui.ps1, install, the
-# same install again (skipped), an unverified build (refused), diagnostics (masked, read only), uninstall with the car
+# same install again (skipped), another build (warned), API 19 (refused), diagnostics (masked, read only), uninstall with the car
 # gone and normally, -Gui waiting / ask no / ask yes / refusal (through redirected stdin, as gui.ps1 runs it), a tampered
 # APK and a missing bundle.txt, and the update check / fetch / tampered fetch against fakerelease.py.
 # usage: powershell -NoProfile -ExecutionPolicy Bypass -File installer\test\windows.ps1
@@ -39,7 +39,7 @@ $env:VN_RELEASES = "http://127.0.0.1:$port"
 
 function Run([string[]]$a, [string]$stdin = '', [hashtable]$envs = @{}, [string]$kit = $Kit){
   Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $Fake 'calls.log')
-  foreach($k in 'FAKE_ABSENT','FAKE_BUILD','FAKE_GONE','FAKE_CLASH'){ Remove-Item "env:$k" -ErrorAction SilentlyContinue }
+  foreach($k in 'FAKE_ABSENT','FAKE_BUILD','FAKE_SDK','FAKE_GONE','FAKE_CLASH'){ Remove-Item "env:$k" -ErrorAction SilentlyContinue }
   foreach($k in $envs.Keys){ Set-Item "env:$k" $envs[$k] }
   $psi = New-Object System.Diagnostics.ProcessStartInfo
   $psi.FileName = $PS
@@ -70,7 +70,8 @@ foreach($f in "$Kit\install.ps1", "$Kit\gui.ps1"){
 Reset
 Run @('-Yes'); Ok '1 install' ($rc -eq 0 -and (Count (Calls) 'pm install') -eq 2)
 Run @('-Yes'); Ok '2 same install skipped' ($rc -eq 0 -and (Count (Calls) 'pm install') -eq 0 -and ([regex]::Matches($out, '건너뜀').Count -eq 2))
-Run @('-Yes') -envs @{FAKE_BUILD='eng.vmadmin.20260114.000000'}; Ok '3 unverified build refused' ($rc -ne 0 -and (Count (Calls) 'pm install') -eq 0 -and $out -match '확인된 내비 빌드가 아닙니다')
+Run @('-Yes') -envs @{FAKE_BUILD='eng.vmadmin.20260114.000000'}; Ok '3 another build warns, goes on' ($rc -eq 0 -and $out -match '빌드입니다\(eng\.vmadmin\.20260114\.000000\)' -and ([regex]::Matches($out, '건너뜀').Count -eq 2))
+Run @('-Yes') -envs @{FAKE_SDK='19'}; Ok '3b API 19 refused' ($rc -ne 0 -and (Count (Calls) 'pm install') -eq 0 -and $out -match '지원하지 않는 내비입니다\(API 19')
 Run @('-Yes','-Diag'); $d = ([regex]::Match($out, '만든 파일: (.+)')).Groups[1].Value.Trim()
 Ok '4 diag file, read only' ($rc -eq 0 -and $d -and (Test-Path -LiteralPath $d) -and (Count (Calls) 'pm install|uninstall|service call|push') -eq 0)
 if($d -and (Test-Path -LiteralPath $d)){ $dt = Get-Content -LiteralPath $d -Raw -Encoding UTF8
@@ -84,7 +85,7 @@ Reset
 Run @('-Gui') "n`n" @{FAKE_CLASH='1'}; Ok '8 gui ask no' ($rc -ne 0 -and $out -match '(?m)^@@ASK ' -and (Count (Calls) 'uninstall') -eq 0 -and $out -match '(?m)^@@DONE fail')
 Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $Fake 'clash.done')
 Run @('-Gui') "y`n" @{FAKE_CLASH='1'}; Ok '9 gui ask yes' ($rc -eq 0 -and (Count (Calls) 'uninstall com.veloster.dashboard') -ge 1 -and (Last) -eq '@@DONE ok')
-Run @('-Gui') -envs @{FAKE_BUILD='eng.vmadmin.20260114.000000'}; Ok '10 gui refusal' ($rc -ne 0 -and $out -match '(?m)^@@DONE fail 확인된 내비 빌드가 아닙니다' -and $out -match '(?m)^@@FILE ')
+Run @('-Gui') -envs @{FAKE_SDK='19'}; Ok '10 gui refusal' ($rc -ne 0 -and $out -match '(?m)^@@DONE fail 지원하지 않는 내비입니다' -and $out -match '(?m)^@@FILE ')
 $k2 = "$Kit-tamper"; Copy-Item -Recurse $Kit $k2
 [IO.File]::AppendAllText("$k2\My-Apps-API17.apk", 'x')
 Run @('-Yes') -kit $k2; Ok '11 tampered APK refused' ($rc -ne 0 -and $out -match 'SHA-256 불일치' -and (Count (Calls) 'push|pm ') -eq 0)

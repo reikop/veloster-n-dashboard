@@ -69,7 +69,7 @@ public final class DriveModel {
     private boolean eightSpeed;
     /** 8-speed DCT setting: only changes the demo's gear steps (live gears come from the car). */
     public void setEightSpeed(boolean on) { eightSpeed = on; }
-    /** False when this device cannot provide the hscand stream at all (not the supported build). */
+    /** False when this device cannot provide the hscand stream at all (not a jsn_kr head unit). */
     public void setFeedAvailable(boolean available) { feedAvailable = available; }
 
     public State state() { return state; }

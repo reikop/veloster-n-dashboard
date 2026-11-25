@@ -1,6 +1,6 @@
 import sys,os,shutil
 # Fake adb for the PC installers (see run.sh). State next to this file: inst/<pkg>.apk (installed), tmp/ (pushed).
-# FAKE_ABSENT=n: the first n 'devices' calls see no car. FAKE_BUILD: the head unit's build (default the verified one).
+# FAKE_ABSENT=n: the first n 'devices' calls see no car. FAKE_BUILD: the head unit's build (default the verified one). FAKE_SDK: its API level (default 17).
 # FAKE_GONE=1: the cable comes out before the uninstall (uninstall and pm path answer with adb's error).
 # FAKE_CLASH=1: the first dashboard 'pm install' fails with a signature clash (state: clash.done).
 d=os.path.dirname(os.path.abspath(__file__));a=sys.argv[1:]
@@ -26,7 +26,7 @@ elif a[0]=='shell':
     c=a[1:]
     if c[:1]==['getprop']:
         k=c[1] if len(c)>1 else ''
-        print({'ro.product.name':'jsn_kr','ro.product.device':'jsn_kr','ro.build.version.sdk':'17','ro.build.version.incremental':os.environ.get('FAKE_BUILD','eng.vmadmin.20250902.081552'),'sys.usb.state':'adb'}.get(k,''))
+        print({'ro.product.name':'jsn_kr','ro.product.device':'jsn_kr','ro.build.version.sdk':os.environ.get('FAKE_SDK','17'),'ro.build.version.incremental':os.environ.get('FAKE_BUILD','eng.vmadmin.20250902.081552'),'sys.usb.state':'adb'}.get(k,''))
     elif c[:2]==['pm','path']:
         if os.path.exists(os.path.join(inst,c[2]+'.apk')):print('package:/data/app/%s-1.apk\r'%c[2])
     elif c[:3]==['pm','install','-r'] and os.environ.get('FAKE_CLASH')=='1' and 'Dashboard' in c[3] and not os.path.exists(os.path.join(d,'clash.done')):

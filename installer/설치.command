@@ -2,7 +2,7 @@
 # 벨로스터 N 계기판 설치 — macOS·리눅스(라즈베리파이 포함). 맥은 Finder에서 더블클릭, 리눅스는 터미널에서  bash install.sh
 # (리눅스 ZIP의 install.sh는 이 파일과 같다). 맥은  bash 설치.command 로도 된다.
 # install.ps1(Windows)과 같은 일을 한다: adb 준비 → 동봉 APK 확인(bundle.txt의 SHA-256) → 차 화면 안내 → 차(product:jsn_kr) 연결 대기 →
-# 빌드 확인(검증 빌드가 아니면 멈춤) → 두 앱 설치(서명 충돌 시 묻고 재설치) → '내 앱' 실행. 차가 아닌 기기에는 아무것도 하지 않는다.
+# 빌드 확인(API 17이 아니면 멈춤, 검증 빌드가 아니면 경고만) → 두 앱 설치(서명 충돌 시 묻고 재설치) → '내 앱' 실행. 차가 아닌 기기에는 아무것도 하지 않는다.
 # i30 PD 포팅(sung9155/i30-pd-dashboard, MIT)의 설치기를 벨로스터 N JSN에 맞게 고친 것이다.
 # 기본 macOS bash 3.2 에서 돌아가야 하므로 bash 4 기능(연관 배열 등)은 쓰지 않는다.
 #
@@ -21,9 +21,9 @@
 ROOT="$(cd "$(dirname "$0")" && pwd)"; ME="$(basename "$0")"
 # OS: Darwin(맥) / Linux. VN_OS로 바꿀 수 있다(시험 도구가 Windows Git Bash에서 리눅스 경로를 돌릴 때).
 OS="${VN_OS:-$(uname -s)}"; [ "$OS" = Darwin ] || OS=Linux
-INSTALLER_VERSION='1.11.4'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+INSTALLER_VERSION='1.11.5'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 PRODUCT='jsn_kr'                               # 벨로스터 N 국내 사양 내비
-VERIFIED_BUILD='eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 유일한 빌드(docs/INSTALL.md). 다르면 설치하지 않는다.
+VERIFIED_BUILD='eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 빌드(docs/INSTALL.md). 다르면 경고만 하고 설치한다.
 # Google platform-tools: 맥, 리눅스 x86_64만 있다. 라즈베리파이 같은 ARM 리눅스는 배포판 adb 패키지(apt)를 쓴다.
 PT_URL=''
 if [ "$OS" = Darwin ]; then PT_URL='https://dl.google.com/android/repository/platform-tools-latest-darwin.zip'
@@ -324,10 +324,12 @@ if [ -n "$DIAG" ]; then
   if [ -n "$GUI" ]; then printf '@@FILE %s\n' "$out"; elif [ -z "$YES" ]; then reveal "$out"; fi
   usb_off; finish 0
 fi
-# 이 저장소의 설치 도구와 같은 원칙: 확인한 대상(jsn_kr · API 17 · 검증 빌드)이 아니면 설치하지 않는다. 삭제는 막지 않는다.
-if [ -z "$UNINSTALL" ] && { [ "$build" != "$VERIFIED_BUILD" ] || [ "$sdk" != 17 ]; }; then
-  die "확인된 내비 빌드가 아닙니다(API $sdk / $build). 이 설치기는 API 17 · $VERIFIED_BUILD 에서만 설치합니다.
-다른 빌드의 호환성은 확인되지 않았습니다(docs/INSTALL.md)." 1
+# jsn_kr · API 17이 아니면 설치하지 않는다. 빌드 번호만 다르면 경고하고 설치한다(앱은 API 17 공개 API만 쓴다). 삭제는 막지 않는다.
+if [ -z "$UNINSTALL" ] && [ "$sdk" != 17 ]; then
+  die "지원하지 않는 내비입니다(API $sdk / $build). 이 설치기는 API 17 내비에만 설치합니다." 1
+fi
+if [ -z "$UNINSTALL" ] && [ "$build" != "$VERIFIED_BUILD" ]; then
+  warn "주의: 검증한 빌드($VERIFIED_BUILD)와 다른 빌드입니다($build). 호환성은 확인되지 않았지만 설치를 계속합니다."
 fi
 
 # --- 삭제 모드 --------------------------------------------------------------

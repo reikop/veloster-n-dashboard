@@ -1,7 +1,7 @@
 ﻿<#
   벨로스터 N 계기판 설치 — PowerShell. 사용자는 "설치.cmd"를 더블클릭한다(이 파일을 직접 열 필요 없음).
   연결 확인 · 설치 · '내 앱' 실행을 대신 한다. 엔지니어링 모드 · Factory Test는 차 화면에서 사람이 해야 하므로
-  안내만 한다(docs/ADB.md). 차(product:jsn_kr)가 아닌 기기, 검증 빌드가 아닌 내비에는 설치하지 않는다.
+  안내만 한다(docs/ADB.md). 차(product:jsn_kr)가 아닌 기기, API 17이 아닌 내비에는 설치하지 않는다(빌드 번호만 다르면 경고 후 설치).
   i30 PD 포팅(sung9155/i30-pd-dashboard, MIT)의 설치기를 벨로스터 N JSN에 맞게 고친 것이다.
 
   무서명 .exe 가 SmartScreen/백신에 막히던 문제를 없애려고 배치 + PowerShell 로 바꿨다. powershell.exe 는
@@ -67,9 +67,9 @@ function Write-Host {
   foreach($part in ([string]$Object -split "`r?`n")){ foreach($l in (Fit $part)){ Microsoft.PowerShell.Utility\Write-Host $l @p } }
 }
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
-$InstallerVersion = '1.11.4'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+$InstallerVersion = '1.11.5'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 $Product = 'jsn_kr'                              # 벨로스터 N 국내 사양 내비
-$VerifiedBuild = 'eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 유일한 빌드(docs/INSTALL.md). 다르면 설치하지 않는다.
+$VerifiedBuild = 'eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 빌드(docs/INSTALL.md). 다르면 경고만 하고 설치한다.
 $PT_URL = 'https://dl.google.com/android/repository/platform-tools-latest-windows.zip'
 $USB_URL = 'https://dl.google.com/android/repository/usb_driver_r13-windows.zip'
 # APK를 폴더에서 못 찾으면 공개 배포 레포에서 받는다: 안정화 = 최신 정식 릴리스, 테스트 = 'test' 사전 배포(덮어쓰며 갱신).
@@ -432,10 +432,12 @@ if($Diag){
   if($Gui){ Write-Host "@@FILE $out" } elseif(-not $Yes){ Start-Process explorer.exe "/select,`"$out`"" }
   UsbOffNote; Done
 }
-# 이 저장소의 설치 도구와 같은 원칙: 확인한 대상(jsn_kr · API 17 · 검증 빌드)이 아니면 설치하지 않는다. 삭제는 막지 않는다.
-if(-not $Uninstall -and ($build -ne $VerifiedBuild -or $sdk -ne '17')){
-  Die ("확인된 내비 빌드가 아닙니다(API $sdk / $build). 이 설치기는 API 17 · $VerifiedBuild 에서만 설치합니다.`n" +
-       "다른 빌드의 호환성은 확인되지 않았습니다(docs/INSTALL.md).") 1
+# jsn_kr · API 17이 아니면 설치하지 않는다. 빌드 번호만 다르면 경고하고 설치한다(앱은 API 17 공개 API만 쓴다). 삭제는 막지 않는다.
+if(-not $Uninstall -and $sdk -ne '17'){
+  Die "지원하지 않는 내비입니다(API $sdk / $build). 이 설치기는 API 17 내비에만 설치합니다." 1
+}
+if(-not $Uninstall -and $build -ne $VerifiedBuild){
+  Note "주의: 검증한 빌드($VerifiedBuild)와 다른 빌드입니다($build). 호환성은 확인되지 않았지만 설치를 계속합니다." Yellow
 }
 
 # --- 삭제 모드 --------------------------------------------------------------

@@ -11,7 +11,7 @@
 ## 준비
 
 - 먼저 [앱 설치](INSTALL.md)를 완료하고 ADB로 최신 ‘내 앱’과 N 계기판이 열리는지 확인합니다.
-- 대상은 `jsn_kr`, API 17, `eng.vmadmin.20250902.081552`입니다. 원본 APK·ODEX·프레임워크도 [프로필](../menu-entry/profile.json) 해시와 일치해야 합니다. 다른 버전이면 중단하며 해시를 바꿔 우회하지 않습니다.
+- 대상은 `jsn_kr`, API 17, `eng.vmadmin.20250902.081552`입니다. 원본 APK·ODEX·프레임워크도 [프로필](../menu-entry/profile.json) 해시와 일치해야 합니다. 빌드 번호만 다르면 경고 후 진행하고, 제품·API가 다르거나 원본 해시가 하나라도 다르면 중단합니다. 해시를 바꿔 우회하지 않습니다.
 - PC에 Python 3.9 이상, JDK 17, ADB가 필요합니다. 단계마다 새 출력·백업 폴더를 지정합니다.
 - 예시는 bash/zsh입니다. Windows는 `py -3`과 실제 일련번호를 직접 사용하고, 가상환경 Python 경로를 `.menu-venv\Scripts\python.exe`로 바꿉니다.
 

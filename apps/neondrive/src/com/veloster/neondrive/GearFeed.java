@@ -10,7 +10,7 @@ import com.hkmc.pgs.PgsStatusListener;
 /**
  * Gear for the HUD: the same passive OEM subscriptions the N dashboard uses (N-mode additional info for
  * the forward gear, rear view status for reverse). Listeners only; no setters, commands or app IPC.
- * Only on the supported head unit build; any missing service is logged and the gear stays unknown.
+ * Only on the Veloster N head unit (jsn_kr, any build); any missing service is logged and the gear stays unknown.
  */
 final class GearFeed {
     private final Context context;

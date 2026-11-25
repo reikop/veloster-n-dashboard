@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 /**
  * The phone installer's steps, the same as installer/install.ps1 and installer/설치.command: check the bundled APKs
  * (assets/bundle: the two APKs + bundle.txt, put in by build.sh; only bytes whose SHA-256 bundle.txt names), find the car
- * (product jsn_kr only), check the build (API 17 + the verified build, otherwise stop), push + pm install (a signature
+ * (product jsn_kr only), check the build (API 17, otherwise stop; another build number only warns), push + pm install (a signature
  * clash alone is fixed by uninstalling), open '내 앱'. Also removes both apps (any build), or only reads the car for a
  * diagnostics file. No Android imports: MainActivity supplies the USB link and the screen, the desktop test a TCP link.
  */
@@ -45,11 +45,11 @@ final class Flow {
     /** A failure the user should read as is (no stack trace). */
     static final class Stop extends Exception { Stop(String m) { super(m); } }
 
-    static final String VERSION = "1.11.4";   // the release version (MAJOR.MINOR.PATCH), shown on screen and compared with the published source; raise on every change
+    static final String VERSION = "1.11.5";   // the release version (MAJOR.MINOR.PATCH), shown on screen and compared with the published source; raise on every change
     static final String RELEASES = "https://github.com/reikop/veloster-n-dashboard/releases";
     static final String RAW = "https://raw.githubusercontent.com/reikop/veloster-n-dashboard/";
     static final String APK_NAME = "vn-installer-android.apk";
-    /** The same target as the desktop installers: exactly this product, API 17 and this one build, or no install. */
+    /** The same target as the desktop installers: exactly this product and API 17, or no install; another build only warns. */
     static final String PRODUCT = "jsn_kr", VERIFIED_BUILD = "eng.vmadmin.20250902.081552", SDK = "17";
     static final String[][] APPS = {
             {"N-Dashboard-API17.apk", "com.veloster.dashboard", "N 계기판"},
@@ -133,10 +133,11 @@ final class Flow {
             ui.say("차에 깔린 버전: " + onCar);
             if (mode == Mode.INSTALL) ui.say("설치할 버전: " + bundled(bundleDir));
             if (mode == Mode.DIAG) return diag(adb, dir, ui);
-            // The desktop installers' rule: only the checked target (jsn_kr · API 17 · verified build) installs. Uninstall is never blocked.
-            if (mode == Mode.INSTALL && (!build.equals(VERIFIED_BUILD) || !sdk.equals(SDK)))
-                throw new Stop("확인된 내비 빌드가 아닙니다(API " + sdk + " / " + build + "). 이 설치기는 API 17 · " + VERIFIED_BUILD
-                        + " 에서만 설치합니다.\n다른 빌드의 호환성은 확인되지 않았습니다(docs/INSTALL.md). 차에는 아무것도 하지 않았습니다.");
+            // The desktop installers' rule: jsn_kr · API 17 or no install; another build number only warns. Uninstall is never blocked.
+            if (mode == Mode.INSTALL && !sdk.equals(SDK))
+                throw new Stop("지원하지 않는 내비입니다(API " + sdk + " / " + build + "). 이 설치기는 API 17 내비에만 설치합니다.\n차에는 아무것도 하지 않았습니다.");
+            if (mode == Mode.INSTALL && !build.equals(VERIFIED_BUILD))
+                ui.say("주의: 검증한 빌드(" + VERIFIED_BUILD + ")와 다른 빌드입니다(" + build + "). 호환성은 확인되지 않았지만 설치를 계속합니다.");
 
             if (mode == Mode.UNINSTALL) {
                 ui.say("\n■ 앱 삭제");

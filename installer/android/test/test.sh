@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Phone installer without a phone or a car: Flow + Adb on the desktop JDK (17) against fake_adbd.py. Runs on macOS / Linux.
 # Covers new-key prompt, known-key signature, signature clash reinstall, uninstall (two apps only, ☆ never changed),
-# a non-jsn_kr navi, a jsn_kr navi on another build, skipping an identical install, the masked diagnostics file, and a
+# a non-jsn_kr navi, a jsn_kr navi on API 19, another build number (warned, installed), skipping an identical install, the masked diagnostics file, and a
 # tampered bundled APK / a missing bundle.txt (refused before the car is touched). The APKs are bundled (no download).
 # Adapted from sung9155/i30-pd-dashboard (i30pd_port/installer/android/test/test.sh, MIT).
 set -euo pipefail
@@ -58,8 +58,8 @@ grep -q '다른 서명' "$T/out2.txt" || fail "2 should ask before uninstalling"
 grep -q '삭제 완료' "$T/out3.txt" && grep -q '☆를 길게 눌러' "$T/out3.txt" || fail "3 uninstall messages"
 ! grep -q 'service call' "$L" || fail "no installer step may run service call (☆ is never changed)"
 ! c 4 | grep -qE 'push|pm ' && grep -q 'jsn_kr2' "$T/out4.txt" || fail "4 must not touch a non-jsn_kr navi"
-! c 5 | grep -qE 'push|pm |am start' && grep -q '확인된 내비 빌드가 아닙니다' "$T/out5.txt" && grep -q 'eng.vmadmin.20260114.084130' "$T/out5.txt" || fail "5 must not install on another build"
-[ "$(c 6 | grep -c '^push ')" = 2 ] || fail "6 installs both"
+! c 5 | grep -qE 'push|pm |am start' && grep -q '지원하지 않는 내비입니다(API 19' "$T/out5.txt" || fail "5 must not install on API 19"
+[ "$(c 6 | grep -c '^push ')" = 2 ] && grep -q '다른 빌드입니다(eng.vmadmin.20260114.084130)' "$T/out6.txt" || fail "6 another build warns and installs both"
 ! c 7 | grep -qE '^push |pm install' && [ "$(c 7 | grep -c '^pull ')" = 2 ] && [ "$(grep -c '건너뜀' "$T/out7.txt")" = 2 ] || fail "7 skips identical apps"
 ! c 8 | grep -qE '^push |pm ' || fail "8 diagnostics must not change the car"
 D=$(sed -n 's/^DIAG //p' "$T/out8.txt"); [ -f "$D" ] || fail "8 no diagnostics file"

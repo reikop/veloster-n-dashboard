@@ -1,7 +1,7 @@
 #!/bin/bash
 # The macOS / Linux installer (설치.command) without a car, against fakeadb.py. Runs on macOS or Linux.
 # The installer carries its APKs: a kit folder holds 설치.command, the two APKs and bundle.txt (as a release ZIP does).
-# Covers install, the same install again (skipped), a new bundle (installed), an unverified head-unit build (refused),
+# Covers install, the same install again (skipped), a new bundle (installed), another head-unit build (warned, installed), API other than 17 (refused),
 # diagnostics (masked, read only), uninstall with the car gone (not "삭제 완료"), uninstall, a tampered bundled APK and
 # a missing bundle.txt (refused), and the window installer's --gui protocol: waiting for the car (@@WAIT), steps,
 # @@ASK answered no / yes on stdin for a signature clash, @@DONE ok / fail.
@@ -32,7 +32,8 @@ reset; apks
 run; [ "$(cat $F/rc)" = 0 ] && [ "$(grep -c 'pm install' $F/calls.log)" = 2 ] && grep -q "이 설치기에 든 버전: N 계기판 1.5-test · '내 앱' 1.9-test" $F/out.txt || fail "1 install"
 run; [ "$(cat $F/rc)" = 0 ] && ! grep -q 'pm install' $F/calls.log && [ "$(grep -c '건너뜀' $F/out.txt)" = 2 ] || fail "2 same install skipped"
 apks; run; [ "$(cat $F/rc)" = 0 ] && [ "$(grep -c 'pm install' $F/calls.log)" = 2 ] || fail "3 new bundle installs"
-apks; FAKE_BUILD=eng.vmadmin.20260114.000000 run; [ "$(cat $F/rc)" != 0 ] && ! grep -q 'pm install' $F/calls.log && grep -q '확인된 내비 빌드가 아닙니다' $F/out.txt || fail "4 unverified build refused"
+apks; FAKE_BUILD=eng.vmadmin.20260114.000000 run; [ "$(cat $F/rc)" = 0 ] && [ "$(grep -c 'pm install' $F/calls.log)" = 2 ] && grep -q '검증한 빌드.*다른 빌드입니다(eng.vmadmin.20260114.000000)' $F/out.txt || fail "4 another build warns and installs"
+apks; FAKE_SDK=19 run; [ "$(cat $F/rc)" != 0 ] && ! grep -q 'pm install' $F/calls.log && grep -q '지원하지 않는 내비입니다(API 19' $F/out.txt || fail "4b API 19 refused"
 run --diag
 D="$(sed -n 's/.*만든 파일: //p' $F/out.txt | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r')"
 [ "$(cat $F/rc)" = 0 ] && [ -f "$D" ] || fail "5 diag file ($D)"
@@ -60,8 +61,8 @@ apks; rm -f "$F/clash.done"; FAKE_CLASH=1 ANSWER=$'n\n' gui
 rm -f "$F/clash.done"; FAKE_CLASH=1 ANSWER=$'y\n' gui
 [ "$(cat $F/rc)" = 0 ] && grep -q '^@@ASK ' $F/out.txt && grep -q 'uninstall com.veloster.dashboard' $F/calls.log && [ "$(tail -1 $F/out.txt)" = '@@DONE ok' ] || fail "11 gui ask → yes"
 # --gui refusal still stops, as a fail line
-apks; FAKE_BUILD=eng.vmadmin.20260114.000000 gui
-[ "$(cat $F/rc)" != 0 ] && grep -q '^@@DONE fail 확인된 내비 빌드가 아닙니다' $F/out.txt && grep -q '^@@FILE ' $F/out.txt && ! grep -q 'pm install' $F/calls.log || fail "12 gui refusal"
+apks; FAKE_SDK=19 gui
+[ "$(cat $F/rc)" != 0 ] && grep -q '^@@DONE fail 지원하지 않는 내비입니다' $F/out.txt && grep -q '^@@FILE ' $F/out.txt && ! grep -q 'pm install' $F/calls.log || fail "12 gui refusal"
 FAKE_GONE=1 gui --uninstall; grep -q '^@@DONE fail ' $F/out.txt || fail "13 gui uninstall failure"
 # update: --check-update is silent when the latest release is this version, names a newer one
 gui --check-update; [ "$(cat $F/rc)" = 0 ] && [ ! -s $F/out.txt ] || fail "14 no update when current"
@@ -80,4 +81,4 @@ gui --update; [ "$(cat $F/rc)" != 0 ] && grep -q '^@@DONE fail 받은 파일의 
   && [ -z "$(ls "$F/home/Library/Application Support/vn-installer/update" "$F/home"/vn-installer-* 2>/dev/null)" ] || fail "17 tampered update refused"
 echo "$CUR" > "$R/latest.txt"
 reset; rm -rf "$K" "$F/home" "$F/out.txt" "$F/rc" "$R"
-echo "OK[$WHO]: install, skip identical, new bundle, unverified build refused, diag (masked, read only), uninstall, tampered/missing bundle refused, --gui wait/ask/done, update check/fetch/tampered"
+echo "OK[$WHO]: install, skip identical, new bundle, another build warned, API 19 refused, diag (masked, read only), uninstall, tampered/missing bundle refused, --gui wait/ask/done, update check/fetch/tampered"
