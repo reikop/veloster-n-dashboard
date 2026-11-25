@@ -481,7 +481,7 @@ public final class VehicleDash extends View implements Runnable {
         Telemetry.Sample m=DATA.sample(Telemetry.DRIVE_MODE,SystemClock.elapsedRealtime());settingsState.modeNow=m.valid?(int)m.value:-1;}
     private void syncSoundState(){SettingsPanel.State st=settingsState;st.engineOn=soundOn;st.beepOn=beepOn;st.floatEngine=floatSound;st.floatBeep=floatBeep;
         st.engine=soundEngine;st.exhaust=soundExhaust;st.engineVol=soundVol;st.beep=beepSound;st.beepVol=beepVol;st.chimeKmh=SpeedChime.kmh;st.chime=SpeedChime.sound;st.fxVol=fxVol;}
-    private void openSettings(int cat){syncModeState();syncSoundState();settings=true;settingsState.cat=cat<0||cat>=SettingsPanel.CATS?0:cat;gaugeEditor.dismiss();graphEditor.dismiss();refreshBackupTime();refreshUsb();invalidate();}
+    private void openSettings(int cat){syncModeState();syncSoundState();settings=true;settingsState.cat=cat<0||cat>=SettingsPanel.CATS?0:cat;gaugeEditor.dismiss();graphEditor.dismiss();refreshBackupTime();refreshUsb();fontFirstScan();invalidate();}
     private void closeSettings(){settings=false;cellPicker.dismiss();invalidate();}
     /** The back key: true when it closed the open settings. */
     public static boolean closeSettings(Activity a){VehicleDash d=current.get();if(d==null||d.activity!=a||!d.settings)return false;d.closeSettings();return true;}
@@ -489,7 +489,7 @@ public final class VehicleDash extends View implements Runnable {
     private void saveScreens(){ui().edit().putString("dashboard_order",DashboardPage.csv(DashboardPage.order())).putInt("dashboard_hidden",DashboardPage.hidden()).apply();}
     private void settingsAction(int a){
         if(a==SettingsPanel.DONE){closeSettings();return;}
-        if(a>=SettingsPanel.CAT&&a<SettingsPanel.CAT+SettingsPanel.CATS){settingsState.cat=a-SettingsPanel.CAT;cellPicker.dismiss();refreshBackupTime();refreshUsb();return;}
+        if(a>=SettingsPanel.CAT&&a<SettingsPanel.CAT+SettingsPanel.CATS){settingsState.cat=a-SettingsPanel.CAT;cellPicker.dismiss();refreshBackupTime();refreshUsb();fontFirstScan();return;}
         if(a>=SettingsPanel.SCREEN_TOGGLE&&a<SettingsPanel.SCREEN_TOGGLE+DashboardPage.COUNT){
             int[] o=DashboardPage.order();int pg=o[a-SettingsPanel.SCREEN_TOGGLE];int h=DashboardPage.toggle(DashboardPage.hidden(),pg);
             if(h==DashboardPage.hidden()){Toast.makeText(activity,UiText.t("화면을 하나 이상 남겨야 합니다"),Toast.LENGTH_SHORT).show();return;}
@@ -516,11 +516,95 @@ public final class VehicleDash extends View implements Runnable {
             backupSave(activity,new Runnable(){public void run(){activity.runOnUiThread(new Runnable(){public void run(){refreshBackupTime();invalidate();
                 Toast.makeText(activity,UiText.t(backupFile().isFile()?"설정을 저장했습니다":"설정을 저장하지 못했습니다"),Toast.LENGTH_SHORT).show();}});}});return;}
         if(a==SettingsPanel.U_ON||a==SettingsPanel.U_OFF){usbRequest(a==SettingsPanel.U_ON);return;}
+        if(a>=SettingsPanel.FONT_UP&&a<SettingsPanel.FONT_PICK+SettingsPanel.FONT_ROWS){fontAction(a);return;}
         if(a==SettingsPanel.B_RESTORE){
             if(!backupFile().isFile()){Toast.makeText(activity,UiText.t("저장해 둔 설정이 없습니다"),Toast.LENGTH_SHORT).show();return;}
             new android.app.AlertDialog.Builder(activity).setMessage(UiText.t("저장해 둔 설정으로 되돌리고 계기판을 다시 시작할까요?"))
                 .setPositiveButton(UiText.t("설정 되돌리기"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int w){restoreAndRestart();}})
                 .setNegativeButton(UiText.t("취소"),null).show();}
+    }
+    /** 글꼴 (FontManager): the list is read once when the pane first opens and again on 새로고침; applying asks first,
+     *  runs as root off the UI thread and offers the reboot the change needs. */
+    private FontManager fontManager;
+    private FontManager fonts(){if(fontManager==null)fontManager=new FontManager(activity);return fontManager;}
+    private void fontFirstScan(){if(settingsState.cat==SettingsPanel.FONT&&settingsState.fonts==null)fontScan();}
+    private void fontScan(){
+        final SettingsPanel.State st=settingsState;if(st.fontBusy)return;
+        st.fontBusy=true;invalidate();
+        FontManager.Entry was=st.fonts!=null&&st.fontPick>=0&&st.fontPick<st.fonts.entries.size()?st.fonts.entries.get(st.fontPick):null;
+        final String wasKey=was==null?null:was.key();
+        new Thread(new Runnable(){public void run(){FontManager.Snapshot r=null;
+            try{r=fonts().scan();}catch(RuntimeException e){android.util.Log.w("VehicleDash","font scan",e);}
+            final FontManager.Snapshot result=r;
+            activity.runOnUiThread(new Runnable(){public void run(){st.fontBusy=false;
+                if(result!=null){
+                    int pick=result.current>=0?result.current:0;
+                    for(int i=0;i<result.entries.size();i++)if(result.entries.get(i).key().equals(wasKey))pick=i;
+                    st.fonts=result;st.fontPick=result.entries.isEmpty()?-1:pick;fontReveal();fontLoadPicked();
+                }else Toast.makeText(activity,UiText.t("글꼴 목록을 읽지 못했습니다"),Toast.LENGTH_SHORT).show();
+                invalidate();}});
+        }},"vn-font-scan").start();
+    }
+    /** A font inside the app loads (from the APK) when its row is picked; one at a time. */
+    private boolean fontLoading;
+    private void fontLoadPicked(){
+        final SettingsPanel.State st=settingsState;final FontManager.Snapshot snap=st.fonts;
+        if(fontLoading||snap==null||st.fontPick<0||st.fontPick>=snap.entries.size())return;
+        final FontManager.Entry e=snap.entries.get(st.fontPick);if(!e.needsLoad())return;
+        fontLoading=true;
+        new Thread(new Runnable(){public void run(){
+            try{fonts().load(snap,e);}catch(RuntimeException x){android.util.Log.w("VehicleDash","font load",x);}
+            activity.runOnUiThread(new Runnable(){public void run(){fontLoading=false;invalidate();fontLoadPicked();}});
+        }},"vn-font-load").start();
+    }
+    private void fontReveal(){SettingsPanel.State st=settingsState;int n=st.fonts==null?0:st.fonts.entries.size();
+        if(st.fontPick>=0&&st.fontPick<st.fontTop)st.fontTop=st.fontPick;
+        if(st.fontPick>=st.fontTop+SettingsPanel.FONT_ROWS)st.fontTop=st.fontPick-SettingsPanel.FONT_ROWS+1;
+        st.fontTop=Math.max(0,Math.min(st.fontTop,Math.max(0,n-SettingsPanel.FONT_ROWS)));}
+    private void fontAction(int a){
+        final SettingsPanel.State st=settingsState;int n=st.fonts==null?0:st.fonts.entries.size();
+        if(a==SettingsPanel.FONT_SCAN){fontScan();return;}
+        if(a==SettingsPanel.FONT_UP){st.fontTop=Math.max(0,st.fontTop-SettingsPanel.FONT_ROWS);return;}
+        if(a==SettingsPanel.FONT_DOWN){if(st.fontTop+SettingsPanel.FONT_ROWS<n)st.fontTop+=SettingsPanel.FONT_ROWS;return;}
+        if(a>=SettingsPanel.FONT_PICK){int k=st.fontTop+a-SettingsPanel.FONT_PICK;if(k<n){st.fontPick=k;fontLoadPicked();}return;}
+        if(st.fontBusy){Toast.makeText(activity,UiText.t("작업 중…"),Toast.LENGTH_SHORT).show();return;}
+        if(a==SettingsPanel.FONT_REBOOT){fontRebootAsk(UiText.t("내비를 재부팅할까요? 화면·음악·PC 연결이 잠시 끊깁니다."));return;}
+        if(a!=SettingsPanel.FONT_APPLY)return;
+        if(st.fontPick<0||st.fontPick>=n){Toast.makeText(activity,UiText.t("왼쪽에서 글꼴을 고르세요"),Toast.LENGTH_SHORT).show();return;}
+        final FontManager.Entry e=st.fonts.entries.get(st.fontPick);
+        if(!e.usable){Toast.makeText(activity,UiText.t("이 글꼴은 적용할 수 없습니다"),Toast.LENGTH_SHORT).show();return;}
+        if(st.fontPick==st.fonts.current){Toast.makeText(activity,UiText.t("이미 설정된 글꼴입니다"),Toast.LENGTH_SHORT).show();return;}
+        StringBuilder m=new StringBuilder(e.name).append(UiText.t(" 글꼴을 내비 기본 글꼴로 바꿉니다."))
+            .append("\n\n").append(UiText.t("루트 권한으로 시스템 글꼴 설정(/system/etc/system_fonts.xml)을 바꾸며, 재부팅해야 반영됩니다. 처음 바꾸기 전 설정은 /data/local/tmp/vn-fonts에 보관됩니다."));
+        if(!e.stock()&&!e.hangul())m.append("\n\n").append(UiText.t("이 글꼴은 한글이 모자라 빠진 글자는 기존 대체 글꼴로 보입니다."));
+        if(e.variable())m.append("\n\n").append(UiText.t("가변 글꼴은 기본 굵기 하나만 쓰입니다."));
+        new android.app.AlertDialog.Builder(activity).setTitle(UiText.t("글꼴 적용")).setMessage(m.toString())
+            .setPositiveButton(UiText.t("적용"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int w){fontApply(e);}})
+            .setNegativeButton(UiText.t("취소"),null).show();
+    }
+    private void fontApply(final FontManager.Entry e){
+        settingsState.fontBusy=true;invalidate();
+        new Thread(new Runnable(){public void run(){String r;boolean ok=false;
+            try{r=fonts().apply(e);ok=true;}
+            catch(Exception x){android.util.Log.w("VehicleDash","font apply",x);r=UiText.t("글꼴을 바꾸지 못했습니다: ")+(x.getMessage()!=null?x.getMessage():x.getClass().getSimpleName());}
+            final String answer=r;final boolean done=ok;
+            activity.runOnUiThread(new Runnable(){public void run(){settingsState.fontBusy=false;fontScan();
+                if(activity.isFinishing())return;
+                if(done)fontRebootAsk(answer);
+                else new android.app.AlertDialog.Builder(activity).setMessage(answer).setPositiveButton(UiText.t("확인"),null).show();}});
+        }},"vn-font-apply").start();
+    }
+    private void fontRebootAsk(String message){
+        new android.app.AlertDialog.Builder(activity).setMessage(message)
+            .setPositiveButton(UiText.t("지금 재부팅"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int w){
+                new Thread(new Runnable(){public void run(){
+                    try{fonts().reboot();}
+                    catch(final RuntimeException x){android.util.Log.w("VehicleDash","reboot",x);
+                        activity.runOnUiThread(new Runnable(){public void run(){if(!activity.isFinishing())new android.app.AlertDialog.Builder(activity)
+                            .setMessage(UiText.t("재부팅하지 못했습니다: ")+x.getClass().getSimpleName()+"\n"+UiText.t("'내 앱' → 강제 재시작으로 재부팅하세요."))
+                            .setPositiveButton(UiText.t("확인"),null).show();}});}
+                }},"vn-reboot").start();}})
+            .setNegativeButton(UiText.t("나중에"),null).show();
     }
     /** 정보 → USB 디버깅: My Apps' OEM request (UsbDebugControl: MiscManager.setSystem 5 / 6), OFF asked first. */
     private boolean usbBusy;

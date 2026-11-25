@@ -11,12 +11,12 @@ import java.util.Locale;
 /**
  * 설정 (header gear): categories on the left, the chosen pane on the right, over the dashboard body. Draws and
  * hit-tests only; VehicleDash applies the returned action codes, saves them and opens the dialogs. Panes:
- * 화면 (show, hide and order the screens), 테마, 플로팅 (the floating window), 기록 (기록실), 백업 (settings backup) and
- * 정보 (version, credits and the USB debugging switch from My Apps). The features follow the i30 PD build's settings (sung9155/i30-pd-dashboard, MIT); the layout is this build's.
+ * 화면 (show, hide and order the screens), 테마, 플로팅 (the floating window), 기록 (기록실), 백업 (settings backup), 글꼴
+ * (the navigation's system font: FontManager) and 정보 (version, credits and the USB debugging switch from My Apps). The features follow the i30 PD build's settings (sung9155/i30-pd-dashboard, MIT); the layout is this build's.
  */
 public final class SettingsPanel {
-    public static final int SCREENS=0,THEME=1,FLOAT=2,DRIVE=3,SOUND=4,RECORDS=5,BACKUP=6,INFO=7,CATS=8;
-    public static final String[] CAT_NAMES={"화면","테마","플로팅","주행 모드","사운드","기록","백업","정보"};
+    public static final int SCREENS=0,THEME=1,FLOAT=2,DRIVE=3,SOUND=4,RECORDS=5,BACKUP=6,FONT=7,INFO=8,CATS=9;
+    public static final String[] CAT_NAMES={"화면","테마","플로팅","주행 모드","사운드","기록","백업","글꼴","정보"};
     public static final String[] THEME_NAMES={"N","레드","와인","코퍼","앰버","샴페인","네이비","람보","그린","세이지","에메랄드","틸","아이스","그라파이트","BMW","나이트","퍼플","마젠타","로즈","모노"};
     public static final String[] PRESET_NAMES={"기본","레이스","미니","음악"};
     public static final String[] DN_NAMES={"자동","낮","밤"};
@@ -27,7 +27,7 @@ public final class SettingsPanel {
         D_COLOR_ON=1000,D_COLOR_OFF=1001,D_SCREEN_ON=1002,D_SCREEN_OFF=1003,D_TARGET=1010,
         S_ENGINE_ON=1100,S_ENGINE_OFF=1101,S_ENGINE=1102,S_EXHAUST=1103,S_VOL=1110,S_BEEP_ON=1120,S_BEEP_OFF=1121,S_BEEP_SOUND=1122,S_BEEP_VOL=1130,
         S_CHIME_KMH=1140,S_CHIME_SOUND=1141,S_FX_VOL=1150,S_FLOAT_ENGINE=1160,S_FLOAT_BEEP=1161,S_TEST_BEEP=1170,S_TEST_CHIME=1171,
-        U_ON=1200,U_OFF=1201;
+        U_ON=1200,U_OFF=1201,FONT_UP=1300,FONT_DOWN=1301,FONT_SCAN=1302,FONT_APPLY=1303,FONT_REBOOT=1304,FONT_PICK=1310;
     /** Engine sound voices (EngineSynth.ENGINES / EXHAUSTS order) and shift beeps (ShiftBeep.SOUNDS order), from the i30 PD build. */
     public static final String[] SOUND_ENGINES={"직렬 4기통 터보","직렬 6기통 터보","V6 트윈터보","V8 크로스플레인","V8 플랫플레인"};
     public static final String[] SOUND_EXHAUSTS={"순정","스포츠 머플러","중통 제거","풀 배기 · 팝앤뱅"};
@@ -35,7 +35,7 @@ public final class SettingsPanel {
         "삐빅 · 3번","삐빅 · 4번 빠르게","연타 · 5번","삐빅 · 낮게","삐빅 · 높게","두 번 · 길고 짧게","상승 2음","하강 2음","하강 3음","빠른 상승 4음","5도 위로","옥타브 위로","맑은 차임","두 음 차임","낮은 차임","유리 톡","디지털 3틱","짧은 펄스 · 낮게","긴 비프","낮은 톤"};
 
     // ---- geometry (800 x 480) ------------------------------------------------------------------------------------
-    static final float CAT_L=18,CAT_R=166,CAT_T=60,CAT_H=40,CAT_STEP=45,PANE_L=180,PANE_R=782,TOP=60,BOTTOM=472;
+    static final float CAT_L=18,CAT_R=166,CAT_T=60,CAT_H=36,CAT_STEP=40,PANE_L=180,PANE_R=782,TOP=60,BOTTOM=472;
     static final float DONE_T=420,DONE_B=468;
     static final float ROW_T=62,ROW_H=58,ROW_STEP=66,ARROW_W=42,COL_W=(PANE_R-PANE_L-12)/2;
     /** The screen list in two columns of six. */
@@ -49,6 +49,10 @@ public final class SettingsPanel {
     static final float TOGGLE_T1=386,TOGGLE_T2=430,TOGGLE_H=38;
     /** 정보: the USB debugging ON / OFF buttons (the same OEM request as My Apps → USB 디버깅). */
     static final float USB_T=402,USB_H=44,USB_W=170,USB_OFF_L=PANE_R-USB_W,USB_ON_L=USB_OFF_L-8-USB_W;
+    /** 글꼴: the list (six rows a page) on the left, the preview and the state on the right, apply / reboot below. */
+    public static final int FONT_ROWS=6;
+    static final float FL_R=470,FL_ROW_H=46,FL_STEP=50,FB_T=366,FB_H=38,FP_L=482,FP_B=300,FS_T=308,FS_B=404,FA_T=414,FA_H=44,FA_SPLIT=640;
+    static float fontRow(int i){return TOP+2+i*FL_STEP;}
 
     static boolean in(float x,float y,float l,float t,float r,float b){return x>=l&&x<=r&&y>=t&&y<=b;}
     static float catTop(int i){return CAT_T+i*CAT_STEP;}
@@ -103,6 +107,14 @@ public final class SettingsPanel {
                 if(in(x,y,PANE_L,250,PANE_L+290,294))return B_SAVE;
                 if(in(x,y,PANE_R-290,250,PANE_R,294))return B_RESTORE;
                 return NONE;
+            case FONT:
+                for(int i=0;i<FONT_ROWS;i++)if(in(x,y,PANE_L,fontRow(i),FL_R,fontRow(i)+FL_ROW_H))return FONT_PICK+i;
+                if(in(x,y,PANE_L,FB_T,PANE_L+58,FB_T+FB_H))return FONT_UP;
+                if(in(x,y,PANE_L+64,FB_T,PANE_L+122,FB_T+FB_H))return FONT_DOWN;
+                if(in(x,y,PANE_L+128,FB_T,FL_R,FB_T+FB_H))return FONT_SCAN;
+                if(in(x,y,FP_L,FA_T,FA_SPLIT-4,FA_T+FA_H))return FONT_APPLY;
+                if(in(x,y,FA_SPLIT+4,FA_T,PANE_R,FA_T+FA_H))return FONT_REBOOT;
+                return NONE;
             case INFO:
                 if(in(x,y,USB_ON_L,USB_T,USB_ON_L+USB_W,USB_T+USB_H))return U_ON;
                 if(in(x,y,USB_OFF_L,USB_T,USB_OFF_L+USB_W,USB_T+USB_H))return U_OFF;
@@ -142,7 +154,9 @@ public final class SettingsPanel {
         /** 주행 모드: accent follows the mode, the mode opens its screen, the screen per mode (-1 원래 화면), the mode now (-1 none). */
         public boolean modeColor,modeScreen;
         /** 사운드: switches, voices and volumes (percent). */
-        public boolean engineOn,beepOn,floatEngine,floatBeep;public int engine,exhaust,engineVol=70,beep,beepVol=70,chimeKmh,chime,fxVol=70;public int[] modeTargets=new int[DriveModes.NAMES.length];public int modeNow=-1;}
+        public boolean engineOn,beepOn,floatEngine,floatBeep;public int engine,exhaust,engineVol=70,beep,beepVol=70,chimeKmh,chime,fxVol=70;public int[] modeTargets=new int[DriveModes.NAMES.length];public int modeNow=-1;
+        /** 글꼴: the last scan (null before the first one ends), the row picked, the first row shown, and work in progress. */
+        public FontManager.Snapshot fonts;public int fontPick=-1,fontTop;public boolean fontBusy;}
 
     public void draw(Canvas c,State s,long now){
         p.setColor(BG);c.drawRect(0,53,800,480,p);
@@ -157,6 +171,7 @@ public final class SettingsPanel {
             case SOUND:sound(c,s);break;
             case RECORDS:records(c);break;
             case BACKUP:backup(c,s);break;
+            case FONT:fonts(c,s);break;
             default:info(c,s);
         }
     }
@@ -280,6 +295,57 @@ public final class SettingsPanel {
         text(c,UiText.t("마지막 저장")+"  "+(s.backupTime.length()==0?UiText.t("없음"):s.backupTime),PANE_L+16,TOP+144,13,BLUE,false,Paint.Align.LEFT);
         button(c,UiText.t("지금 저장"),PANE_L,250,290,44,false,15);
         button(c,UiText.t("백업에서 되돌리기"),PANE_R-290,250,290,44,false,15);
+    }
+    private static final String[] FONT_SAMPLE={"가나다라 벨로스터 N","목적지까지 12.4 km","서울특별시 강남구 테헤란로 152","ABCDEFG abcdefg 0123456789"};
+    private void fonts(Canvas c,State s){
+        FontManager.Snapshot f=s.fonts;
+        int n=f==null?0:f.entries.size();
+        for(int i=0;i<FONT_ROWS;i++){
+            int k=s.fontTop+i;if(k>=n)break;
+            FontManager.Entry e=f.entries.get(k);boolean sel=k==s.fontPick,cur=k==f.current;float t=fontRow(i);
+            panel(c,PANE_L,t,FL_R-PANE_L,FL_ROW_H,sel?DIM:e.usable?PANEL:OFFCELL,sel?BLUE:LINE);
+            String name=(cur?"● ":"")+e.name;
+            p.setStyle(Paint.Style.FILL);p.setColor(e.usable?(sel?WHITE:0xffc9d6dc):MUTED);p.setTypeface(e.regular!=null?e.regular:Typeface.DEFAULT);p.setTextSize(17);
+            float m=p.measureText(name),w=FL_R-PANE_L-24;if(m>w)p.setTextSize(17*w/m);
+            c.drawText(name,PANE_L+12,t+22,p);
+            fitted(c,e.detail,PANE_L+12,t+39,11,w,cur?BLUE:MUTED);
+        }
+        if(f==null)text(c,UiText.t(s.fontBusy?"글꼴을 찾는 중…":"새로고침을 누르면 글꼴을 찾습니다"),PANE_L+12,TOP+30,14,MUTED,false,Paint.Align.LEFT);
+        boolean up=s.fontTop>0,down=s.fontTop+FONT_ROWS<n;
+        button(c,"▲",PANE_L,FB_T,58,FB_H,false,15);button(c,"▼",PANE_L+64,FB_T,58,FB_H,false,15);
+        if(!up||!down){p.setColor(0x99040506);if(!up)c.drawRect(PANE_L,FB_T,PANE_L+58,FB_T+FB_H,p);if(!down)c.drawRect(PANE_L+64,FB_T,PANE_L+122,FB_T+FB_H,p);}
+        button(c,UiText.t("새로고침"),PANE_L+128,FB_T,FL_R-PANE_L-128,FB_H,false,14);
+        fitted(c,UiText.t("순정 · 앱에 포함된 글꼴 · 내비에 설치된 글꼴"),PANE_L+2,FA_T+18,11,FL_R-PANE_L-4,MUTED);
+        fitted(c,UiText.t("적용하면 재부팅 뒤에 화면에 반영됩니다"),PANE_L+2,FA_T+36,11,FL_R-PANE_L-4,MUTED);
+        // preview of the picked row, in its own regular and bold
+        panel(c,FP_L,TOP+2,PANE_R-FP_L,FP_B-TOP-2,0xff0b0f12,LINE);
+        text(c,UiText.t("미리보기"),FP_L+10,TOP+20,11,MUTED,true,Paint.Align.LEFT);
+        FontManager.Entry pick=f!=null&&s.fontPick>=0&&s.fontPick<n?f.entries.get(s.fontPick):null;
+        if(pick==null)text(c,UiText.t("왼쪽에서 글꼴을 고르세요"),FP_L+(PANE_R-FP_L)/2,TOP+130,14,MUTED,false,Paint.Align.CENTER);
+        else if(pick.needsLoad())text(c,UiText.t("불러오는 중…"),FP_L+(PANE_R-FP_L)/2,TOP+130,14,MUTED,false,Paint.Align.CENTER);
+        else if(pick.regular==null)text(c,UiText.t("이 글꼴을 열지 못했습니다"),FP_L+(PANE_R-FP_L)/2,TOP+130,14,MUTED,false,Paint.Align.CENTER);
+        else{
+            float y=TOP+60,bw=PANE_R-FP_L-20;float[] sizes={26,21,16,16};
+            for(int i=0;i<FONT_SAMPLE.length;i++){
+                boolean bold=i==1;Typeface tf=bold?(pick.bold!=null?pick.bold:pick.regular):pick.regular;
+                p.setStyle(Paint.Style.FILL);p.setColor(WHITE);p.setTypeface(tf);p.setFakeBoldText(bold&&pick.bold==null);p.setTextSize(sizes[i]);
+                float m=p.measureText(FONT_SAMPLE[i]);if(m>bw)p.setTextSize(sizes[i]*bw/m);
+                c.drawText(FONT_SAMPLE[i],FP_L+10,y,p);p.setFakeBoldText(false);y+=sizes[i]+22;
+            }
+            fitted(c,pick.detail,FP_L+10,FP_B-12,11,bw,MUTED);
+        }
+        // state: what the system XML says now, and whether a reboot is still owed
+        panel(c,FP_L,FS_T,PANE_R-FP_L,FS_B-FS_T,PANEL,LINE);
+        float sw=PANE_R-FP_L-20;
+        if(f!=null){
+            fitted(c,UiText.t("설정된 글꼴")+"  "+f.currentName,FP_L+10,FS_T+24,13,sw,WHITE);
+            fitted(c,f.pending?UiText.t("재부팅하면 화면에 반영됩니다"):UiText.t("지금 화면의 글꼴과 같습니다"),FP_L+10,FS_T+48,12,sw,f.pending?0xffffc24a:MUTED);
+            String space=f.free>=0?String.format(Locale.US,UiText.t("시스템 남은 공간")+" %.1f MB",f.free/1048576.0):"",tool=f.root?"":UiText.t("루트 도구 없음");
+            fitted(c,space+(space.length()>0&&tool.length()>0?"  ·  ":"")+tool,FP_L+10,FS_T+72,11,sw,f.root?MUTED:0xffffc24a);
+        }
+        if(s.fontBusy)text(c,UiText.t("작업 중…"),PANE_R-10,FS_T+24,12,BLUE,true,Paint.Align.RIGHT);
+        button(c,UiText.t("선택한 글꼴 적용"),FP_L,FA_T,FA_SPLIT-4-FP_L,FA_H,false,14);
+        button(c,UiText.t("재부팅"),FA_SPLIT+4,FA_T,PANE_R-FA_SPLIT-4,FA_H,f!=null&&f.pending,14);
     }
     private void info(Canvas c,State s){
         panel(c,PANE_L,TOP+2,PANE_R-PANE_L,328,PANEL,LINE);

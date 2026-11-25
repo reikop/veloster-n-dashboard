@@ -32,13 +32,15 @@ def main():
     # Pure-Java parts ported from the i30 PD build (sung9155/i30-pd-dashboard, MIT) and their tests.
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in
                 ("VehicleProfile", "ShiftGuide", "Theme", "Records", "SettingsBackup", "DriveStats", "GearRatios", "ShiftCoach", "RevMatch", "DayNight", "DayPhase", "Tiles", "TaxiTariff", "TaxiZones", "TaxiZoneData", "DriveModes", "SpeedChime")]
+    # 설정 → 글꼴: the font reader and the system font change (FontManager runs it on the head unit).
+    sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("FontFile", "SystemFonts", "BundledFonts")]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,
                         *map(str, sources)], check=True)
         for test in tests:
             cls = ("com.veloster.dashboard." if test.stem == "HscanFrameDecoderTest" else "") + test.stem
-            subprocess.run([str(java), "-ea", "-cp", temporary, cls], check=True)
+            subprocess.run([str(java), "-ea", "-Dvn.root=" + str(ROOT), "-cp", temporary, cls], check=True)
     print("PASS: " + str(len(tests)) + " synthetic host test programs. Vehicle operation is outside this scope.")
 
 
