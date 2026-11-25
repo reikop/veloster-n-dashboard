@@ -49,8 +49,15 @@ function Run([string[]]$a, [string]$stdin = '', [hashtable]$envs = @{}, [string]
   $psi.WorkingDirectory = $kit
   $p = [System.Diagnostics.Process]::Start($psi)
   $e = $p.StandardError.ReadToEndAsync()
-  if($stdin){ $p.StandardInput.Write($stdin) }; $p.StandardInput.Close()
-  $script:out = $p.StandardOutput.ReadToEnd() + $e.Result
+  # answer each @@ASK only when it appears, as gui.ps1 does (an answer written up front can be read by an adb child)
+  $answers = New-Object System.Collections.Queue; foreach($x in ($stdin -split "`n")){ if($x){ $answers.Enqueue($x) } }
+  $sb = New-Object System.Text.StringBuilder
+  while($null -ne ($l = $p.StandardOutput.ReadLine())){
+    [void]$sb.AppendLine($l)
+    if($l -match '^@@ASK '){ $ans = $(if($answers.Count){ $answers.Dequeue() } else { 'n' }); $p.StandardInput.WriteLine($ans); $p.StandardInput.Flush() }
+  }
+  try { $p.StandardInput.Close() } catch {}
+  $script:out = $sb.ToString() + $e.Result
   $p.WaitForExit(); $script:rc = $p.ExitCode
 }
 function Last(){ ($script:out.TrimEnd() -split "`r?`n")[-1] }
