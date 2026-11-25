@@ -24,6 +24,23 @@
 
 차량 데이터는 기존 수신 경로를 사용하며 ECU 진단 요청을 새로 보내지 않습니다. 미수신·만료 값은 알 수 없음으로 남깁니다. Bluetooth 앨범아트 수신·배기온·e-LSD는 미해결이며 무선 CarPlay·자동 업데이트는 구현하지 않았습니다. [상세 한계](docs/LIMITATIONS.md)
 
+## 화면
+
+탭 20개를 모두 보여 줍니다. 탭 줄을 길게 누르거나 설정 → 화면에서 보이기·숨기기·순서를 바꿀 수 있습니다. 아래 그림은 **안드로이드 에뮬레이터(800×480)에서 실제 계기판 앱을 실행해 찍은 화면**입니다. 에뮬레이터에는 차 데이터가 없어서, 촬영용 빌드에만 1분짜리 가상 주행 값(합성값)을 넣었습니다. 실차 사진이 아니며, 글꼴은 안드로이드 기본 글꼴이라 차와 다릅니다. 네온 드라이브는 차 신호가 없어 데모 모드로 나오고, 서킷 화면의 GPS 대기 표시는 현재 앱 동작 그대로입니다. 다시 찍기: `scripts/emulator_screens.py`
+
+<table>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/01-overview.png" alt="전체 조망" width="100%"><br><b>1. 전체 조망</b> · 모든 값 한눈에</td><td width="50%" valign="top"><img src="docs/images/screens/ko/02-f1.png" alt="F1" width="100%"><br><b>2. F1</b> · F1 스타일 계기판</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/03-gauges.png" alt="게이지" width="100%"><br><b>3. 게이지</b> · 고른 값 게이지</td><td width="50%" valign="top"><img src="docs/images/screens/ko/04-graphs.png" alt="그래프" width="100%"><br><b>4. 그래프</b> · 시간 그래프</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/05-performance.png" alt="퍼포먼스" width="100%"><br><b>5. 퍼포먼스</b> · N 퍼포먼스 화면</td><td width="50%" valign="top"><img src="docs/images/screens/ko/06-taxi.png" alt="택시" width="100%"><br><b>6. 택시</b> · 택시 미터기</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/07-records.png" alt="기록" width="100%"><br><b>7. 기록</b> · 가속 측정·최고값</td><td width="50%" valign="top"><img src="docs/images/screens/ko/08-race.png" alt="레이스" width="100%"><br><b>8. 레이스</b> · 변속 표시·공기압·G볼</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/09-lambda.png" alt="람다" width="100%"><br><b>9. 람다</b> · Λ RPM·속도계</td><td width="50%" valign="top"><img src="docs/images/screens/ko/10-tacho.png" alt="타코" width="100%"><br><b>10. 타코</b> · 원형 RPM·다운시프트</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/11-neon.png" alt="네온 드라이브" width="100%"><br><b>11. 네온 드라이브</b> · 도트 드라이브 화면</td><td width="50%" valign="top"><img src="docs/images/screens/ko/12-night.png" alt="나이트" width="100%"><br><b>12. 나이트</b> · 밤용 최소 화면</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/13-vfd.png" alt="VFD" width="100%"><br><b>13. VFD</b> · 80년대 디지털 계기판</td><td width="50%" valign="top"><img src="docs/images/screens/ko/14-hud.png" alt="HUD" width="100%"><br><b>14. HUD</b> · 전투기 HUD</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/15-gcircle.png" alt="G 원" width="100%"><br><b>15. G 원</b> · 마찰원·G 꼬리</td><td width="50%" valign="top"><img src="docs/images/screens/ko/16-warp.png" alt="워프" width="100%"><br><b>16. 워프</b> · 우주선 워프</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/17-drag.png" alt="드래그" width="100%"><br><b>17. 드래그</b> · 드래그 출발 신호·0-100</td><td width="50%" valign="top"><img src="docs/images/screens/ko/18-cassette.png" alt="카세트" width="100%"><br><b>18. 카세트</b> · 카세트 덱·VU 미터</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/19-show.png" alt="쇼" width="100%"><br><b>19. 쇼</b> · 출력 곡선·부스트·G 원</td><td width="50%" valign="top"><img src="docs/images/screens/ko/20-circuit.png" alt="서킷" width="100%"><br><b>20. 서킷</b> · 서킷 지도·랩 타임</td></tr>
+</table>
+
 ## 호환성
 
 설치기 지원 대상은 **국내 벨로스터 N JSN**, product `jsn_kr`, **Android 4.2.2 / API 17**, incremental `eng.vmadmin.20250902.081552` (`250902`, `STD_H`)입니다. 계기판 실행에는 순정 `automotive` 라이브러리가 필요합니다. 다른 차종·지역·펌웨어·일반 Android 기기의 호환성은 확인하지 않았습니다.
