@@ -141,8 +141,9 @@ public final class PitRenderer {
         button(c,UiText.language().toUpperCase(Locale.US),LANGUAGE_X,8,48,38,false,BLUE);
         centered(c,clock(),628,33,22,WHITE,true);
         button(c,UiText.t("돌아가기"),666,8,116,38,false,BLUE);
-        boolean own=page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO||page==DashboardPage.NEON||kit(page)!=null||page==DashboardPage.SHOW;   // ported screens with their own media handling
+        boolean own=page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO||page==DashboardPage.NEON||page==DashboardPage.CAR3D||kit(page)!=null||page==DashboardPage.SHOW;   // ported screens with their own media handling
         if(page==DashboardPage.NEON)centered(c,UiText.t("네온 드라이브"),400,270,22,MUTED,true);   // the Neon Drive view covers this while it runs
+        else if(page==DashboardPage.CAR3D)centered(c,UiText.t("내 차"),400,270,22,MUTED,true);   // the 3D car view covers this while it runs
         else if(page==DashboardPage.RECORDS)recordsRenderer.draw(c,stats,now);
         else if(page==DashboardPage.RACE)raceRenderer.draw(c,samples,cue,now,stats,model.profile(),false,music,artwork);
         else if(page==DashboardPage.LAMBDA)lambda.frame(c,samples,model,stats,model.profile(),now,null);
@@ -177,7 +178,7 @@ public final class PitRenderer {
             case DashboardPage.TACHO:return UiText.t("타코");
             case DashboardPage.NEON:return UiText.t("네온 드라이브");
             case DashboardPage.NIGHT:case DashboardPage.VFD:case DashboardPage.HUD:case DashboardPage.GCIRCLE:case DashboardPage.WARP:
-            case DashboardPage.DRAG:case DashboardPage.CASSETTE:case DashboardPage.SHOW:case DashboardPage.CIRCUIT:return UiText.t(DashboardPage.NAMES[page]);
+            case DashboardPage.DRAG:case DashboardPage.CASSETTE:case DashboardPage.SHOW:case DashboardPage.CIRCUIT:case DashboardPage.CAR3D:return UiText.t(DashboardPage.NAMES[page]);
             default:return UiText.t("전체 조망");
         }
     }

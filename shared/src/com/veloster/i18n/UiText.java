@@ -29,6 +29,9 @@ public final class UiText {
         EN.put("1분","1 min");
         EN.put("201 m (1/8마일)","201 m (1/8 mile)");
         EN.put("3 × 2 보기","3 x 2 grid");
+        EN.put("3D 모델·램프·핸들 연동","3D model with live lamps and steering");
+        EN.put("3D 모델을 불러오지 못했습니다","Could not load the 3D model");
+        EN.put("3D 화면을 그릴 수 없습니다","Cannot draw the 3D view");
         EN.put("4 × 3 보기","4 x 3 grid");
         EN.put("5도 위로","Up a fifth");
         EN.put("5분","5 min");
@@ -198,6 +201,7 @@ public final class UiText {
         EN.put("내 앱 / My Apps","My Apps");
         EN.put("내 앱 열기 · 길게 끌어서 위치 변경 / My Apps","Open My Apps; drag to move");
         EN.put("내 앱에 표시할 앱","Apps to show in My Apps");
+        EN.put("내 차","My Car");
         EN.put("내비 시스템 공간이 부족합니다","Not enough system space on the head unit");
         EN.put("내비게이션 시스템을 재시작합니다. 화면·음악·PC 연결이 잠시 끊깁니다. 정차 중에 사용하세요.","Restart the head unit. The display, music and PC connection will be interrupted briefly. Use while parked.");
         EN.put("내비게이션 재시작","Restart head unit");
@@ -209,6 +213,7 @@ public final class UiText {
         EN.put("냉각수 온도","Coolant temperature");
         EN.put("네온 드라이브","Neon Drive");
         EN.put("네이비","Navy");
+        EN.put("노을","Sunset");
         EN.put("눌러서 N 계기판과 앱 목록 열기","Tap to open N Dashboard and your app list");
         EN.put("다른 칸과 위치 바꾸기","Swap with another slot");
         EN.put("다음","Next");
@@ -222,6 +227,7 @@ public final class UiText {
         EN.put("돌아가기","Back");
         EN.put("두 번 · 길고 짧게","Long then short");
         EN.put("두 음 차임","Two-tone chime");
+        EN.put("뒤","Rear");
         EN.put("뒤 오른쪽","Rear right");
         EN.put("뒤 오른쪽 공기압","Rear-right pressure");
         EN.put("뒤 오른쪽 타이어 온도","Rear-right tyre temperature");
@@ -269,6 +275,7 @@ public final class UiText {
         EN.put("미니","Mini");
         EN.put("미등","Position lamps");
         EN.put("미리보기","Preview");
+        EN.put("미리보기 · 화면을 누르면 시험 버튼","Preview · tap for test buttons");
         EN.put("바로가기 끄기","Turn shortcut off");
         EN.put("바로가기 서비스 종료 요청에 실패했습니다.","Could not request shortcut service shutdown.");
         EN.put("바로가기 시작 실패. 내 앱을 다시 열어 설정을 확인하세요.","Shortcut could not start. Reopen My Apps and check its settings.");
@@ -278,6 +285,7 @@ public final class UiText {
         EN.put("받지 못함","Not received");
         EN.put("밤","Night");
         EN.put("밤용 최소 화면","Night minimal");
+        EN.put("배경","Scene");
         EN.put("배기","Exhaust");
         EN.put("배기 온도 (DPF 앞·산화촉매 앞 묶음)","Exhaust temperatures (before the DPF and the catalyst)");
         EN.put("배터리","Battery");
@@ -324,6 +332,7 @@ public final class UiText {
         EN.put("블루투스 접근 권한을 확인할 수 없습니다.","Bluetooth access permission could not be confirmed.");
         EN.put("블루투스 켜짐","Bluetooth is on");
         EN.put("블루투스가 꺼져 있습니다.","Bluetooth is off.");
+        EN.put("비상","Hazard");
         EN.put("비작동","Inactive");
         EN.put("빈차","Vacant");
         EN.put("빠른 상승 4음","Quick rising 4 tones");
@@ -394,6 +403,7 @@ public final class UiText {
         EN.put("스로틀","Throttle");
         EN.put("스로틀 %","Throttle %");
         EN.put("스로틀 개도","Throttle position");
+        EN.put("스튜디오","Studio");
         EN.put("스포츠 머플러","Sport muffler");
         EN.put("승차","Pick-up");
         EN.put("시간 그래프","Values over time");
@@ -403,6 +413,7 @@ public final class UiText {
         EN.put("시스템 남은 공간","System space free");
         EN.put("시험 접속정보 보기","Show test credentials");
         EN.put("시험 핫스팟 켜기","Test hotspot");
+        EN.put("실시간","Live");
         EN.put("실행 가능한 기본 앱이 더 없습니다.","No other system apps are available to open.");
         EN.put("실행 가능한 액티비티가 없습니다: ","No launchable activity: ");
         EN.put("실행 바로가기 / Quick entry","Quick entry");
@@ -419,6 +430,7 @@ public final class UiText {
         EN.put("알림 소리","Beep sound");
         EN.put("알림만","Notification only");
         EN.put("알림만 / Notification only","Notification only");
+        EN.put("앞","Front");
         EN.put("앞 오른쪽","Front right");
         EN.put("앞 오른쪽 공기압","Front-right pressure");
         EN.put("앞 오른쪽 타이어 온도","Front-right tyre temperature");
@@ -427,6 +439,7 @@ public final class UiText {
         EN.put("앞 왼쪽 공기압","Front-left pressure");
         EN.put("앞 왼쪽 타이어 온도","Front-left tyre temperature");
         EN.put("앞 왼쪽 휠","Front-left wheel");
+        EN.put("앞바퀴","Front wheels");
         EN.put("앰버","Amber");
         EN.put("앱","Apps");
         EN.put("앱 관리","Manage apps");
@@ -435,6 +448,7 @@ public final class UiText {
         EN.put("앱에 포함","In the app");
         EN.put("앱에 포함 · 내비에 설치됨","In the app · installed");
         EN.put("야간","Night");
+        EN.put("야간 도로","Night road");
         EN.put("얇은 띠","Thin strip");
         EN.put("언어 설정을 저장하지 못했습니다.","Could not save the language setting.");
         EN.put("없음","None");
@@ -457,6 +471,7 @@ public final class UiText {
         EN.put("연타 · 5번","Rapid · 5 taps");
         EN.put("연하게","Light");
         EN.put("영수증","RECEIPT");
+        EN.put("옆","Side");
         EN.put("예상","PREDICTED");
         EN.put("오류가 나면 앱 내부 진단 기록에 남습니다 (차량 값·음원 정보 제외).","Errors go to the app's private diagnostic record (no vehicle values or track info).");
         EN.put("오른쪽","Right");
@@ -474,6 +489,7 @@ public final class UiText {
         EN.put("왼쪽에서 글꼴을 고르세요","Pick a font on the left");
         EN.put("요금","Fare");
         EN.put("요레이트","Yaw rate");
+        EN.put("우","Right");
         EN.put("우 방향지시등","Right turn signal");
         EN.put("우주선 워프","Starship warp");
         EN.put("운전석 문","Driver door");
@@ -486,6 +502,7 @@ public final class UiText {
         EN.put("원형","Dial");
         EN.put("원형 RPM·다운시프트","Round rpm · downshift");
         EN.put("원형 게이지","Round gauges");
+        EN.put("위","Top");
         EN.put("위치를 바꿀 칸","Choose a slot to swap");
         EN.put("유리 톡","Glass tap");
         EN.put("유리 톡톡","Glass tap");
@@ -568,6 +585,7 @@ public final class UiText {
         EN.put("조향 토크","Steering torque");
         EN.put("조향각","Steering angle");
         EN.put("종가속","Longitudinal G");
+        EN.put("좌","Left");
         EN.put("좌 방향지시등","Left turn signal");
         EN.put("주변 기기 검색","Find nearby devices");
         EN.put("주변 기기 검색 중","Searching for nearby devices");
@@ -600,7 +618,9 @@ public final class UiText {
         EN.put("직접 선택","Chosen by you");
         EN.put("진하게","Solid");
         EN.put("짧은 펄스 · 낮게","Short pulse · low");
+        EN.put("차고","Garage");
         EN.put("차량 속도","Vehicle speed");
+        EN.put("차량 신호 없음 · 화면을 누르면 시험 버튼","No car signal · tap for test buttons");
         EN.put("차량 표시 상태를 확인하지 못했습니다. N 계기판 버튼으로 다시 열어주세요.","Could not confirm vehicle display status. Try the N Dashboard button again.");
         EN.put("차량이 이미 받는 데이터를 읽기만 합니다. 차량에 아무것도 보내지 않습니다.","Only reads data the head unit already receives. Nothing is sent to the car.");
         EN.put("차의 알림 채널(앞 스피커)로 냅니다","On the car's alert channel (front)");
@@ -711,6 +731,7 @@ public final class UiText {
         EN.put("합성 G","Combined G");
         EN.put("핫스팟 끄기 확인 실패. 백업을 보존했습니다. 다시 복구하세요.","Could not confirm hotspot shutdown. Backup retained; retry restoration.");
         EN.put("핫스팟 요청 실패/시간 초과. 성공으로 판정하지 않습니다. 원상복구하세요.","Hotspot request failed or timed out. Success is not confirmed; restore the original settings.");
+        EN.put("핸들","Steering");
         EN.put("현재 글꼴 설정을 읽지 못했습니다","Could not read the current font settings");
         EN.put("현재 기어","Current gear");
         EN.put("현재 재생 소스에서 음악을 제어할 수 없습니다","Playback control is unavailable for this source");
@@ -729,6 +750,7 @@ public final class UiText {
         EN.put("효과음 볼륨","Effects volume");
         EN.put("후드","Hood");
         EN.put("후드 열림","Hood open");
+        EN.put("후진","Reverse");
         EN.put("후진 중이거나 RPM이 없으면 조용합니다","Silent in reverse or without rpm");
         EN.put("흡기","Intake");
         EN.put("흡기 온도","Intake temperature");

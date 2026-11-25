@@ -179,10 +179,29 @@ public final class VehicleDash extends View implements Runnable {
         if(v.getParent()!=null)((ViewGroup)v.getParent()).removeView(v);
     }
     private void exitNeon(){hideNeon();setPage(neonBack==DashboardPage.NEON?DashboardPage.OVERVIEW:neonBack,true);invalidate();}
+    // ---- 내 차 (com.veloster.car3d): the 3D car with lamps and steering, its own GL view over the dashboard ----
+    private com.veloster.car3d.CarPage car;
+    private int carBack=DashboardPage.OVERVIEW;
+    private void showCar(){
+        if(!standalone)return;
+        try{
+            if(car==null)car=new com.veloster.car3d.CarPage(activity,new Runnable(){public void run(){exitCar();}});
+            android.view.View v=car.view();
+            if(v.getParent()==null){FrameLayout parent=(FrameLayout)activity.findViewById(android.R.id.content);parent.addView(v,new FrameLayout.LayoutParams(-1,-1));}
+            v.bringToFront();car.start();
+        }catch(RuntimeException e){com.veloster.diagnostics.ErrorLog.record("car3d_page",e);android.util.Log.e("VehicleDash","3D car page unavailable",e);}
+    }
+    private void hideCar(){
+        if(car==null)return;
+        car.stop();android.view.View v=car.view();
+        if(v.getParent()!=null)((ViewGroup)v.getParent()).removeView(v);
+    }
+    private void exitCar(){hideCar();setPage(carBack==DashboardPage.CAR3D?DashboardPage.OVERVIEW:carBack,true);invalidate();}
     /** The back key: leaves Neon Drive or closes the settings; false lets the activity go back as usual. */
     public static boolean back(Activity a){
         VehicleDash d=current.get();if(d==null||d.activity!=a)return false;
         if(d.page==DashboardPage.NEON&&d.neon!=null&&d.neon.view().getParent()!=null){d.exitNeon();return true;}
+        if(d.page==DashboardPage.CAR3D&&d.car!=null&&d.car.view().getParent()!=null){d.exitCar();return true;}
         if(d.settings){d.closeSettings();return true;}
         return false;
     }
@@ -191,6 +210,8 @@ public final class VehicleDash extends View implements Runnable {
         page=DashboardPage.resolve(value);FloatPanel.screen=page;
         if(page==DashboardPage.NEON){if(before!=DashboardPage.NEON)neonBack=before;if(resumed||standalone&&getVisibility()==VISIBLE)showNeon();}
         else hideNeon();
+        if(page==DashboardPage.CAR3D){if(before!=DashboardPage.CAR3D)carBack=before;if(resumed||standalone&&getVisibility()==VISIBLE)showCar();}
+        else hideCar();
         cluster=page==DashboardPage.F1;gauges=page==DashboardPage.GAUGES;graphs=page==DashboardPage.GRAPHS;performance=page==DashboardPage.PERFORMANCE;taxiPage=page==DashboardPage.TAXI;records=page==DashboardPage.RECORDS;
         tabScroll=DashboardPage.reveal(page,tabScroll);   // keep the selected tab in view
         if(save)activity.getSharedPreferences("pit_vehicle_ui",0).edit().putInt("dashboard_page",page).apply();
@@ -226,10 +247,11 @@ public final class VehicleDash extends View implements Runnable {
         d.resumed=true;d.artwork.open();d.mediaReceiver.start(a.getApplicationContext());
         d.policy(false,"standalone-resume");d.setVisibility(VISIBLE);
         if(d.page==DashboardPage.NEON)d.showNeon();
+        if(d.page==DashboardPage.CAR3D)d.showCar();
     }
     public static void pauseStandalone(Activity a){
         VehicleDash d=current.get();if(d==null||d.activity!=a)return;
-        d.resumed=false;d.touching=false;d.removeCallbacks(d.editHold);d.removeCallbacks(d.stripHold);backupSave(a);d.hideNeon();
+        d.resumed=false;d.touching=false;d.removeCallbacks(d.editHold);d.removeCallbacks(d.stripHold);backupSave(a);d.hideNeon();d.hideCar();
         d.gaugeEditor.dismiss();d.graphEditor.dismiss();d.cellPicker.dismiss();if(!FloatPanel.musicShown()||FloatPanel.shape==FloatPanel.OFF)d.mediaReceiver.stop();d.artwork.close();
     }
     private void showDashboard(){setVisibility(VISIBLE);if(entry!=null)entry.setVisibility(GONE);bringToFront();}
@@ -286,6 +308,9 @@ public final class VehicleDash extends View implements Runnable {
     public static void calculateObserved(){DATA.calculateObserved(SystemClock.elapsedRealtime());}
     public static void temperatures(byte[] data) { DATA.temperatures(data,SystemClock.elapsedRealtime()); }
     public static void gforce(byte[] data) { DATA.gforce(data,SystemClock.elapsedRealtime()); }
+    /** The G sensor for other screens (내 차): {longitudinal (+ accelerating), lateral} in g, NaN when not received. */
+    public static float[] gSensor(){long now=SystemClock.elapsedRealtime();Telemetry.Sample x=DATA.sample(11,now),y=DATA.sample(12,now);
+        return new float[]{y.valid?y.value:Float.NaN,x.valid?x.value:Float.NaN};}
     public static void wheels(byte[] data) { DATA.wheels(data,SystemClock.elapsedRealtime()); }
     public static void rearView(int data) { DATA.rearView(data); }
     public static void units(byte[] data) { DATA.units(data,SystemClock.elapsedRealtime()); }
