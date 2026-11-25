@@ -44,6 +44,13 @@
 - [삭제]는 두 앱만 지웁니다. 진단 기록은 `vn_진단기록_<시각>.txt`로 같은 항목을 가린 뒤 공유 화면을 띄웁니다.
 - 새 휴대폰 설치 앱이 나오면(레포 `main`의 `Flow.java` `VERSION`이 더 새것) 위쪽 주황 띠의 [업데이트]가 최신 릴리스의 `vn-installer-android.apk`를 받아 폰의 설치 화면을 띄웁니다. 받은 APK의 versionCode가 더 크지 않으면 설치하지 않습니다. 릴리스마다 `VERSION`을 올립니다.
 
+## 업데이트
+
+- **창 설치기(Windows·맥)**: 창이 열리면 최신 정식 릴리스(`releases/latest`)의 버전을 확인합니다. 이 설치기보다 새것이면 **[업데이트 x.y.z]** 단추가 나타나고, 누르면 새 설치기 ZIP과 `SHA256SUMS.txt`를 받아 해시를 확인한 뒤 풀어서 새 설치기를 열고 지금 창은 닫힙니다. 해시가 다르면 아무것도 바꾸지 않습니다. 차에는 아무것도 하지 않습니다.
+- **콘솔 설치기**: 새 버전이 있으면 알리고 받을지 묻습니다. `설치.command --update` / `install.ps1 -Update`로 바로 받을 수도 있습니다.
+- **받은 곳**: Windows `%LOCALAPPDATA%\vn-installer\update\<버전>`, 맥 `~/Library/Application Support/vn-installer/update/<버전>`, 리눅스 `~/vn-installer-<버전>`. 예전 설치기 폴더는 지워도 됩니다.
+- **휴대폰 설치 앱**: 새 버전이 있으면 위쪽 [업데이트] 띠로 새 APK를 받습니다.
+
 ## 동작
 
 - **동봉 APK**: 설치기 옆(맥 창 설치기는 앱 안 `Contents/Resources/kit/`, 폰은 `assets/bundle/`)의 `N-Dashboard-API17.apk` · `My-Apps-API17.apk`만 설치합니다. 함께 든 `bundle.txt`(파일·패키지·versionCode·versionName·SHA-256, `scripts/apk_info.py`가 만듦)와 패키지나 SHA-256이 다르면 차에 아무것도 하지 않고 멈춥니다.
@@ -82,12 +89,14 @@ python3 scripts/package_installer.py --apks DIR --out DIR/assets [--android-apk 
 ## 시험 (차 없이)
 
 ```sh
-bash installer/test/run.sh mac            # 또는 linux. 콘솔과 --gui 상태 줄
+bash installer/test/run.sh mac            # 또는 linux. 콘솔과 --gui 상태 줄, 업데이트
+powershell -File installer\test\windows.ps1   # Windows(Python 필요). GitHub Actions가 push마다 돌린다
 bash installer/android/test/test.sh       # 휴대폰 설치 앱(JDK 17)
 python3 -m unittest tests/test_installer_packaging.py
 ```
 
-- `run.sh`: 가짜 adb(`test/fakeadb.py`)로 설치, 같은 버전 건너뛰기, 새 버전 설치, 검증되지 않은 빌드 거부, 진단 기록(가림·읽기만), 연결 끊김 중 삭제, 삭제, 바뀐 동봉 APK·`bundle.txt` 없음 거부, `--gui`(차 기다림 `@@WAIT`, `@@ASK`에 아니오/예, `@@DONE`)를 확인합니다.
+- `run.sh`: 가짜 adb(`test/fakeadb.py`)로 설치, 같은 버전 건너뛰기, 새 버전 설치, 검증되지 않은 빌드 거부, 진단 기록(가림·읽기만), 연결 끊김 중 삭제, 삭제, 바뀐 동봉 APK·`bundle.txt` 없음 거부, `--gui`(차 기다림 `@@WAIT`, `@@ASK`에 아니오/예, `@@DONE`), 업데이트(가짜 릴리스 서버 `test/fakerelease.py`: 최신이면 조용함, 새 버전 `@@UPDATE`, 받기·확인·풀기 후 `@@OPEN`, 해시가 다르면 거부)를 확인합니다.
+- `windows.ps1`: 같은 시나리오를 Windows PowerShell 5.1에서 `install.ps1`로 확인하고 `install.ps1`·`gui.ps1` 구문을 검사합니다.
 - `android/test/test.sh`: 가짜 adbd로 새 키 설치, 서명 충돌 재설치, 삭제, `jsn_kr`이 아닌 기기·다른 빌드에서 멈춤, 같은 버전 건너뛰기, 가린 진단 기록, 바뀐 동봉 APK·`bundle.txt` 없음 거부를 확인합니다.
 - `test_installer_packaging.py`: APK 없이는 포장하지 않음, 패키지가 다른 APK 거부, `bundle.txt` 내용, (맥에서) `.app` 구조·서명·`plutil`과 창을 띄웠다 닫는 시험.
 - 2026-11-24 macOS에서 위 시험이 통과했고, 맥 창 설치기는 가짜 adb로 설치·건너뛰기·진단 기록·서명 충돌(아니오/예)·삭제를 끝까지 확인했습니다. `install.ps1 -Gui`와 `gui.ps1`(Windows)은 이 환경에 PowerShell이 없어 실행·구문 검사를 하지 못했습니다. 실제 차·폰·Windows에서는 아직 이 설치기로 설치해 보지 않았습니다.

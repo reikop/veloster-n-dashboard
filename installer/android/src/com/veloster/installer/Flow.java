@@ -45,7 +45,7 @@ final class Flow {
     /** A failure the user should read as is (no stack trace). */
     static final class Stop extends Exception { Stop(String m) { super(m); } }
 
-    static final String VERSION = "2026-11-24";   // shown on screen and compared with the published source; raise on every change
+    static final String VERSION = "1.11.0";   // the release version (MAJOR.MINOR.PATCH), shown on screen and compared with the published source; raise on every change
     static final String RELEASES = "https://github.com/reikop/veloster-n-dashboard/releases";
     static final String RAW = "https://raw.githubusercontent.com/reikop/veloster-n-dashboard/";
     static final String APK_NAME = "vn-installer-android.apk";
@@ -332,7 +332,13 @@ final class Flow {
         } catch (IOException e) { return null; }   // offline: everything else still works, the APKs are bundled
     }
     /** True when the published version is newer than mine. */
-    static boolean isNewer(String published, String mine) { return published != null && published.compareTo(mine) > 0; }
+    static boolean isNewer(String published, String mine) { return published != null && cmp(published, mine) > 0; }
+    /** MAJOR.MINOR.PATCH compared as numbers (1.11.0 > 1.9.0); the old date names (2026-11-24) sort below every release. */
+    static int cmp(String a, String b) { long x = ver(a), y = ver(b); return x < y ? -1 : x > y ? 1 : 0; }
+    private static long ver(String v) {
+        Matcher m = Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+)$").matcher(v.trim());
+        return m.matches() ? Long.parseLong(m.group(1)) * 1_000_000L + Long.parseLong(m.group(2)) * 1_000L + Long.parseLong(m.group(3)) : -1;
+    }
     /** The latest release's phone installer APK (the [업데이트] band downloads it; versionCode is checked before installing). */
     static String apkUrl() { return RELEASES + "/latest/download/" + APK_NAME; }
 

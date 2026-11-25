@@ -30,11 +30,13 @@ export KS_PASS
 OUT="${OUT:-$REPO/build/vn-installer-android.apk}"
 APKS="${APKS:?set APKS to the folder with N-Dashboard-API17.apk and My-Apps-API17.apk (bundled into the app)}"
 APKS="$(cd "$APKS" && pwd)"
-# versionName = Flow.VERSION (one place). versionCode comes from it too: YYYY-MM-DD[.N] -> YYYYMMDD*100+N, so the
-# [업데이트] band (compares VERSION) and the newer-APK check (compares versionCode) cannot disagree.
+# versionName = Flow.VERSION (one place, MAJOR.MINOR.PATCH). versionCode comes from it too, so the [업데이트] band
+# (compares VERSION) and the newer-APK check (compares versionCode) cannot disagree:
+# 2100000000 + MAJOR*1000000 + MINOR*1000 + PATCH — above the old date codes (2026112400) so 1.11.0 installs over them.
 VER_NAME="$(grep -o 'VERSION = "[^"]*"' "$HERE/src/com/veloster/installer/Flow.java" | head -1 | cut -d'"' -f2)"
-VER_DAY="${VER_NAME%%.*}"; VER_N="${VER_NAME#"$VER_DAY"}"; VER_N="${VER_N#.}"
-VER_CODE="${VER_CODE:-$(( ${VER_DAY//-/} * 100 + ${VER_N:-0} ))}"
+IFS=. read -r V_MA V_MI V_PA <<<"$VER_NAME"
+case "$V_MA.$V_MI.$V_PA" in *[!0-9.]*|.*|*..*|*.) echo "Flow.VERSION must be MAJOR.MINOR.PATCH: $VER_NAME" >&2; exit 1 ;; esac
+VER_CODE="${VER_CODE:-$(( 2100000000 + V_MA * 1000000 + V_MI * 1000 + V_PA ))}"
 cd "$HERE"
 rm -rf build && mkdir -p build/classes
 python3 -I "$REPO/scripts/apk_info.py" --bundle "$APKS" build/bundle.txt >/dev/null   # refuses missing or wrong APKs

@@ -6,7 +6,8 @@
 # Adapted from sung9155/i30-pd-dashboard (i30pd_port/installer/android/test/test.sh, MIT).
 set -euo pipefail
 cd "$(dirname "$0")"
-T=$(mktemp -d); FAKE=''; trap '[ -n "$FAKE" ] && { kill $FAKE; wait $FAKE; } 2>/dev/null; rm -rf "$T"' EXIT
+T=$(mktemp -d); FAKE=''; # keep the script's own exit status: the stopped fake adbd's 143 must not become the result
+trap 'rc=$?; [ -n "$FAKE" ] && { kill $FAKE; wait $FAKE || true; } 2>/dev/null; rm -rf "$T"; exit $rc' EXIT
 mkdir -p "$T/server" "$T/key" "$T/cls"
 # the bundle dir (what MainActivity extracts from assets/bundle): two APKs + bundle.txt naming their SHA-256
 apks(){ python3 -I -c "

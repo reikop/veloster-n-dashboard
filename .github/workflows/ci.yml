@@ -1,0 +1,48 @@
+# Every push and pull request: host tests, then both API17 apps built (unsigned) from the pinned inputs.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+        with: { packages: 'build-tools;34.0.0' }
+      - name: Versions agree
+        run: python3 scripts/check_versions.py
+      - name: Translations
+        run: python3 scripts/generate_translations.py --check
+      - name: Host tests
+        run: |
+          python3 scripts/test.py
+          python3 -m unittest discover -s tests -p 'test_*.py'
+          bash installer/test/run.sh linux
+          bash installer/android/test/test.sh
+      - name: Build both apps (unsigned)
+        run: |
+          bash scripts/ci_tools.sh build/ci-tools
+          for app in dashboard hub; do
+            python3 scripts/build.py "$app" --android-jar build/ci-tools/android.jar --r8-jar build/ci-tools/r8.jar \
+              --aapt2 "$ANDROID_HOME/build-tools/34.0.0/aapt2" --java "$JAVA_HOME/bin/java" --out "build/ci-$app"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-apks
+          path: build/ci-*/*-UNSIGNED.apk
+  windows-installer:
+    # install.ps1 / gui.ps1 on real Windows PowerShell 5.1 against the fake adb and a fake release server
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Windows installer
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File installer\test\windows.ps1

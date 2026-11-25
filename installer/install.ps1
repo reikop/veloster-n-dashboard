@@ -13,8 +13,11 @@
               -Diag(설치하지 않고 진단 기록 파일만 만든다)
   창 설치기(gui.ps1)용: -Gui  묻지 않고(Enter 대기 없음) 차를 스스로 기다리며, 줄 단위로 찍고 아래 상태 줄을 낸다.
                  @@STEP <제목>  @@WAIT <초> <안내>  @@ASK <질문>(표준 입력에서 y/n 한 줄을 읽음)  @@FILE <경로>  @@DONE ok|fail <내용>
+  업데이트: -CheckUpdate  최신 릴리스가 이 설치기보다 새것이면 '@@UPDATE <버전>' 한 줄만 찍는다(인터넷이 없으면 아무것도 안 찍음).
+            -Update  최신 릴리스의 vn-installer-windows.zip을 받아 SHA256SUMS.txt로 확인하고 %LOCALAPPDATA%\vn-installer\update\<버전>에
+                     푼다. -Gui면 '@@OPEN <새 N계기판설치.cmd>'를 찍고, 콘솔이면 새 설치.cmd를 연다. 시험용: VN_RELEASES(릴리스 주소)
 #>
-param([string]$AdbPath, [switch]$Yes, [switch]$Uninstall, [switch]$Diag, [switch]$Gui)
+param([string]$AdbPath, [switch]$Yes, [switch]$Uninstall, [switch]$Diag, [switch]$Gui, [switch]$CheckUpdate, [switch]$Update)
 
 # 'Continue' (not 'Stop'): adb writes its progress to stderr, and under 'Stop' a native
 # command's stderr turns into a terminating error (NativeCommandError) that aborts the
@@ -64,14 +67,14 @@ function Write-Host {
   foreach($part in ([string]$Object -split "`r?`n")){ foreach($l in (Fit $part)){ Microsoft.PowerShell.Utility\Write-Host $l @p } }
 }
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
-$InstallerVersion = '2026-11-24'   # 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+$InstallerVersion = '1.11.0'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 $Product = 'jsn_kr'                              # 벨로스터 N 국내 사양 내비
 $VerifiedBuild = 'eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 유일한 빌드(docs/INSTALL.md). 다르면 설치하지 않는다.
 $PT_URL = 'https://dl.google.com/android/repository/platform-tools-latest-windows.zip'
 $USB_URL = 'https://dl.google.com/android/repository/usb_driver_r13-windows.zip'
 # APK를 폴더에서 못 찾으면 공개 배포 레포에서 받는다: 안정화 = 최신 정식 릴리스, 테스트 = 'test' 사전 배포(덮어쓰며 갱신).
 $Releases = 'https://github.com/reikop/veloster-n-dashboard/releases'
-$Raw = 'https://raw.githubusercontent.com/reikop/veloster-n-dashboard'   # 새 설치기 확인용(main = 안정화, beta = 테스트)
+if($env:VN_RELEASES){ $Releases = $env:VN_RELEASES.TrimEnd('/') }   # 시험용: 가짜 릴리스 서버
 $Apps = @(
   [pscustomobject]@{ apk='N-Dashboard-API17.apk'; pkg='com.veloster.dashboard'; name='N 계기판' },
   [pscustomobject]@{ apk='My-Apps-API17.apk';     pkg='com.veloster.carplayhub'; name="'내 앱'" }
@@ -88,7 +91,7 @@ $LogDir = Join-Path $env:LOCALAPPDATA 'vn-installer'
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 $Log = Join-Path $LogDir ("install_{0}.log" -f (Get-Date -Format yyyyMMdd_HHmmss))
 
-function Log($m){ Add-Content -LiteralPath $Log -Value $m }   # 기록 파일에만 (문제 제보용)
+function Log($m){ Add-Content -LiteralPath $Log -Value $m -Encoding UTF8 }   # 기록 파일에만 (문제 제보용)
 function Note($m,[string]$c='Gray'){ Write-Host $m -ForegroundColor $c; Log $m }
 function Head($m){ $t = Get-Date -Format HH:mm:ss; Write-Host ''; if($Gui){ Write-Host "@@STEP $m" }; Write-Host "$m   [$t]" -ForegroundColor Cyan; Log "== $m == $t" }
 function Die($m,$code){
@@ -115,11 +118,13 @@ function Mask([string]$t){
 }
 # -Gui: 창 설치기가 예/아니오 창을 띄우고 답 한 줄(y/n)을 표준 입력으로 보낸다. 답이 없으면(창이 닫힘) 아니오.
 function Ask($m){
-  if($Gui){ Write-Host "@@ASK $m"; $r = [Console]::In.ReadLine(); Log "$m → $r"; return ("$r" -match '^[Yy]') }
+  # 답 앞에 BOM이 붙어 올 수 있다: 콘솔 입력 인코딩이 UTF-8인 Windows("UTF-8 사용" 설정, GitHub Actions)에서 예전 gui.ps1의 첫 쓰기에
+  # BOM이 붙고, 이쪽은 OEM 코드 페이지로 읽어 '∩╗┐y'가 된다. 답은 y/n뿐이니 앞의 ASCII 아닌 글자를 뗀다(2026-11-25 windows-latest에서 발견).
+  if($Gui){ Write-Host "@@ASK $m"; $r = (([string][Console]::In.ReadLine()) -replace '^[^\x21-\x7E]+', '').Trim(); Log "$m → $r"; return ($r -match '^[Yy]') }
   if($Yes){ return $true }; $r = Read-Host "$m [Y/n]"; return ($r -eq '' -or $r -match '^[Yy]') }
 function Adb([Parameter(ValueFromRemainingArguments=$true)]$a){
   $o = & $script:adbExe @a 2>&1 | Out-String
-  Add-Content -LiteralPath $Log -Value ("> adb " + ($a -join ' ') + "`n" + $o)
+  Add-Content -LiteralPath $Log -Value ("> adb " + ($a -join ' ') + "`n" + $o) -Encoding UTF8
   return $o
 }
 # 오래 걸릴 수 있는 adb(전송·설치)는 제한 시간 안에서 돌리고, 기다리는 동안 경과 초를 같은 줄에 찍는다:
@@ -153,6 +158,52 @@ function Stuck($where,$hint){
   $lc = AdbWait 15 '내비 설치 로그 읽는 중' @('-s',$serial,'logcat','-d','-t','300','-s','PackageManager:*','PackageParser:*','installd:*','DefContainerService:*','dalvikvm:E')
   if($lc){ Note '  설치 로그(마지막 줄):' DarkGray; ($lc -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -Last 12) | ForEach-Object { Note "    $_" DarkGray } }
   Die "$where 단계에서 멈췄습니다. 이 화면을 찍어 보내 주시면 원인을 볼 수 있습니다." 1
+}
+
+# --- 업데이트: 최신 정식 릴리스(releases/latest가 가리키는 태그 vX.Y.Z)와 비교하고, 새 설치기를 받아 확인 후 푼다 -------------
+function LatestVersion(){
+  try {
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
+    $r = [Net.HttpWebRequest]::Create("$Releases/latest"); $r.AllowAutoRedirect = $false; $r.Timeout = 8000; $r.UserAgent = 'vn-installer'
+    $resp = $r.GetResponse(); $loc = [string]$resp.Headers['Location']; $resp.Close()
+    if($loc -match '/tag/v(\d+\.\d+\.\d+)$'){ return $Matches[1] }
+    Log "최신 릴리스 주소를 읽지 못함: $loc"
+  } catch { Log "최신 릴리스 확인 실패: $($_.Exception.Message)" }
+  return $null
+}
+# 숫자로 비교한다(1.11.0 > 1.9.0).
+function Newer([string]$v){ $a = $null; $b = $null; return ([version]::TryParse($v, [ref]$a) -and [version]::TryParse($InstallerVersion, [ref]$b) -and $a -gt $b) }
+function DoUpdate([string]$v){
+  Head "새 설치기 $v 받기"
+  try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
+  $up = Join-Path $LogDir 'update'; New-Item -ItemType Directory -Force -Path $up | Out-Null
+  $zip = Join-Path $up "vn-installer-windows-$v.zip"; $sums = Join-Path $up "SHA256SUMS-$v.txt"; $dir = Join-Path $up $v
+  Note "받는 중: $Releases/download/v$v/vn-installer-windows.zip" Gray
+  try {
+    Invoke-WebRequest -Uri "$Releases/download/v$v/vn-installer-windows.zip" -OutFile $zip -UseBasicParsing -TimeoutSec 120 -ErrorAction Stop
+    Invoke-WebRequest -Uri "$Releases/download/v$v/SHA256SUMS.txt" -OutFile $sums -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+  } catch { Die "새 설치기를 받지 못했습니다: $($_.Exception.Message)" 2 }
+  $want = (Get-Content -LiteralPath $sums | Where-Object { $_ -match '^([0-9a-f]{64})\s+vn-installer-windows\.zip$' } | Select-Object -First 1) -replace '\s.*$',''
+  $got = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower()
+  if(-not $want -or $got -ne $want){ Remove-Item -LiteralPath $zip -ErrorAction SilentlyContinue; Die "받은 파일의 SHA-256이 릴리스 목록과 다릅니다(받은 것 $got). 설치기를 바꾸지 않았습니다." 2 }
+  Note "SHA-256 확인: $got" DarkGray
+  if(Test-Path -LiteralPath $dir){ Remove-Item -LiteralPath $dir -Recurse -Force }
+  try { Expand-Archive -LiteralPath $zip -DestinationPath $dir -Force -ErrorAction Stop } catch { Die "압축 해제 실패: $($_.Exception.Message)" 2 }
+  $gui = Join-Path $dir 'N계기판설치.cmd'
+  if(-not (Test-Path -LiteralPath $gui)){ Die "받은 설치기에 N계기판설치.cmd가 없습니다: $dir" 2 }
+  Note "새 설치기: $dir" Green
+  Note '이제 새 설치기를 엽니다. 예전 설치기 폴더는 지워도 됩니다.' Gray
+  if($Gui){ Write-Host "@@OPEN $gui"; Done }
+  try { Start-Process -FilePath (Join-Path $dir '설치.cmd') -WorkingDirectory $dir } catch { try { Start-Process explorer.exe "`"$dir`"" } catch {} }
+  exit 0
+}
+if($CheckUpdate){ $v = LatestVersion; if($v -and (Newer $v)){ Write-Host "@@UPDATE $v" }; exit 0 }
+if($Update){
+  Note "Windows 설치기 $InstallerVersion — 업데이트 확인" White
+  $v = LatestVersion
+  if(-not $v){ Die "최신 버전을 확인하지 못했습니다. 인터넷 연결을 확인하세요($Releases/latest)." 2 }
+  if(-not (Newer $v)){ Note "이미 최신 설치기입니다($InstallerVersion)." Green; Done }
+  DoUpdate $v
 }
 
 Write-Host ''
@@ -189,14 +240,12 @@ Note "adb: $script:adbExe" DarkGray
 Log ("환경: Windows $([Environment]::OSVersion.Version) / PowerShell $($PSVersionTable.PSVersion) / " + ((& $script:adbExe version 2>&1 | Select-Object -First 1) -join ''))
 
 # --- 새 설치기 확인 (막지는 않는다, 인터넷이 없으면 조용히 넘어간다) -----------------
-# 레포 main에 올라간 install.ps1의 $InstallerVersion과 비교해 더 새것이면 릴리스 주소만 알린다.
-try {
-  $c = (Invoke-WebRequest -Uri "$Raw/main/installer/install.ps1" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content
-  if($c -is [byte[]]){ $c = [Text.Encoding]::UTF8.GetString($c) }
-  if($c -match "InstallerVersion = '([^']+)'" -and [string]::CompareOrdinal($Matches[1], $InstallerVersion) -gt 0){
-    Note "새 설치기가 있습니다($($Matches[1]) — $Releases/latest). 이번에는 그대로 계속합니다." Yellow
-  }
-} catch { Log "설치기 버전 확인 실패: $($_.Exception.Message)" }
+# 최신 정식 릴리스가 더 새것이면 알리고, 콘솔에서는 지금 받을지 묻는다(창 설치기는 [업데이트] 단추가 따로 있다).
+$latest = LatestVersion
+if($latest -and (Newer $latest)){
+  Note "새 설치기 $latest 가 있습니다(지금 $InstallerVersion)." Yellow
+  if(-not $Gui -and -not $Yes -and (Ask "새 설치기 $latest 를 받아 쓸까요? (아니오: 이번에는 그대로 계속)")){ DoUpdate $latest }
+}
 
 # --- 동봉 APK 확인: bundle.txt에 적힌 패키지·SHA-256과 같은 파일만 설치한다 ------------
 $Bundle = Join-Path $ROOT 'bundle.txt'   # 파일 패키지 versionCode versionName sha256 (탭 구분)
@@ -282,7 +331,7 @@ function Wait($m,[string]$c='Gray'){
 function WaitEnd(){ if($script:waitMsg){ if(-not $Gui){ Write-Host '' }; $script:waitMsg = $null } }
 while(-not $serial){
   $dl = & $script:adbExe devices -l 2>&1 | Out-String
-  Add-Content -LiteralPath $Log -Value $dl
+  Add-Content -LiteralPath $Log -Value $dl -Encoding UTF8
   $pd = @(); $others = @()
   foreach($line in ($dl -split "`r?`n")){
     if($line -match '^(\S+)\s+device\b'){
@@ -374,7 +423,7 @@ if($Diag){
   $tags = @('VehicleDash:V','VNCarPlayHub:V','VNQuickEntry:V','NDashboard:V','AndroidRuntime:E','PackageManager:I')
   $lc = & $script:adbExe -s $serial shell logcat -d -v time -s @tags 2>&1 | Out-String   # 설치기 기록에는 안 남긴다(아래에 그 기록을 붙임)
   [void]$sb.AppendLine().AppendLine("[기록: $($tags -join ' ')]").AppendLine(((($lc -split "`r?`n") | Select-Object -Last 3000) -join "`r`n"))
-  [void]$sb.AppendLine().AppendLine('[이 PC 설치기 기록]').Append((Get-Content -Raw -LiteralPath $Log))
+  [void]$sb.AppendLine().AppendLine('[이 PC 설치기 기록]').Append((Get-Content -Raw -LiteralPath $Log -Encoding UTF8))
   $desk = [Environment]::GetFolderPath('Desktop'); if(-not $desk -or -not (Test-Path $desk)){ $desk = $LogDir }
   $out = Join-Path $desk ("vn_진단기록_{0}.txt" -f (Get-Date -Format yyyyMMdd_HHmmss))
   [IO.File]::WriteAllText($out, (Mask $sb.ToString()), (New-Object Text.UTF8Encoding $true))

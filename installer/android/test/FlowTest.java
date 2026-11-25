@@ -41,9 +41,10 @@ public class FlowTest {
 
     /** The self-update decision, the release URL and the masking, without a car. */
     static void unit() {
-        check(Flow.isNewer("2026-11-25", "2026-11-24"), "newer");
-        check(!Flow.isNewer("2026-11-24", "2026-11-24") && !Flow.isNewer("2026-11-20", "2026-11-24"), "not newer");
-        check(!Flow.isNewer(null, "2026-11-24"), "offline");
+        check(Flow.isNewer("1.11.1", "1.11.0") && Flow.isNewer("1.12.0", "1.11.9") && Flow.isNewer("1.11.0", "1.9.0"), "newer");
+        check(!Flow.isNewer("1.11.0", "1.11.0") && !Flow.isNewer("1.9.0", "1.11.0"), "not newer");
+        check(Flow.isNewer("1.11.0", "2026-11-24") && !Flow.isNewer("2026-11-25", "1.11.0"), "old date names are older");
+        check(!Flow.isNewer(null, "1.11.0"), "offline");
         check(Flow.apkUrl().equals("https://github.com/reikop/veloster-n-dashboard/releases/latest/download/vn-installer-android.apk"), "apkUrl");
         check(Flow.PRODUCT.equals("jsn_kr") && Flow.VERIFIED_BUILD.equals("eng.vmadmin.20250902.081552"), "target");
         Flow.serial = "SER123";

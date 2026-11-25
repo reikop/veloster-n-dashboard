@@ -6,7 +6,7 @@ See [Language settings](LANGUAGES.md) for Korean/English selection. Button label
 
 **English** | [한국어](MY_APPS_ko.md) | [Project](../README.md)
 
-**My Apps (내 앱)** is a separate companion app for opening N Dashboard, other installed apps, and selected head-unit settings. It is not required for telemetry decoding, and it does not replace the factory home screen. The current release is **v11 / `1.10-star`**, package `com.veloster.carplayhub`. The historical package name does not mean that wireless CarPlay is implemented.
+**My Apps (내 앱)** is a separate companion app for opening N Dashboard, other installed apps, and selected head-unit settings. It is not required for telemetry decoding, and it does not replace the factory home screen. The current release is **`1.11.0`** (versionCode 12), package `com.veloster.carplayhub`. The historical package name does not mean that wireless CarPlay is implemented.
 
 [Download My Apps v10](../apks/My-Apps-v10-API17.apk) · [Installation guide](INSTALL_EN.md) · [Quick-entry setup](QUICK_ENTRY.md) · [Reopening after reboot](INSTALL_EN.md#after-reboot)
 

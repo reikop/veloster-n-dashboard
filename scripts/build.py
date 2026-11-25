@@ -63,7 +63,7 @@ def main():
                             "-classpath", sdk, "-d", abi, *stubs])
         classpath = os.pathsep.join((str(sdk), str(abi)))
         if args.app == "dashboard":
-            sources += sorted(p for p in shared.rglob("*.java") if p.name != "UsbDebugControl.java")
+            sources += sorted(shared.rglob("*.java"))   # with UsbDebugControl: 설정 → 정보 → USB 디버깅
             # Neon Drive runs as a dashboard page too (NeonDrivePage); its standalone activity stays in its own app.
             sources += sorted(p for p in (ROOT / "apps/neondrive/src").rglob("*.java") if p.name != "NeonDriveActivity.java")
         else:

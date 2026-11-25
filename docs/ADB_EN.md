@@ -40,7 +40,7 @@ Each entry is **two hexadecimal bytes separated by one space**. Do not enter `65
 
 To request normal USB mode through the same path, use `0A 01` SEND → `65 00` SEND → `0A 02` SEND. This guide does not suggest probing other command numbers.
 
-If My Apps is already installed **and you can open it**, **USB 디버깅 → ON** offers the existing OEM request. A displayed ON state still does not prove physical connectivity. This button cannot supply initial access before the app is installed.
+If My Apps or N Dashboard 1.11.0+ is already installed **and you can open it**, **My Apps → USB 디버깅 → ON** or **N Dashboard settings → 정보 (Info) → USB 디버깅 ON** offers the existing OEM request. A displayed ON state still does not prove physical connectivity. This button cannot supply initial access before the app is installed.
 
 ## 3. Check USB enumeration separately from ADB
 
