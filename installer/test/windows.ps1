@@ -39,7 +39,7 @@ $env:VN_RELEASES = "http://127.0.0.1:$port"
 
 function Run([string[]]$a, [string]$stdin = '', [hashtable]$envs = @{}, [string]$kit = $Kit){
   Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $Fake 'calls.log')
-  foreach($k in 'FAKE_ABSENT','FAKE_BUILD','FAKE_GONE','FAKE_CLASH'){ Remove-Item "env:$k" -ErrorAction SilentlyContinue }
+  foreach($k in 'FAKE_ABSENT','FAKE_BUILD','FAKE_SDK','FAKE_GONE','FAKE_CLASH'){ Remove-Item "env:$k" -ErrorAction SilentlyContinue }
   foreach($k in $envs.Keys){ Set-Item "env:$k" $envs[$k] }
   $psi = New-Object System.Diagnostics.ProcessStartInfo
   $psi.FileName = $PS
@@ -70,7 +70,7 @@ foreach($f in "$Kit\install.ps1", "$Kit\gui.ps1"){
 Reset
 Run @('-Yes'); Ok '1 install' ($rc -eq 0 -and (Count (Calls) 'pm install') -eq 2)
 Run @('-Yes'); Ok '2 same install skipped' ($rc -eq 0 -and (Count (Calls) 'pm install') -eq 0 -and ([regex]::Matches($out, '건너뜀').Count -eq 2))
-Run @('-Yes') -envs @{FAKE_BUILD='eng.vmadmin.20260114.000000'}; Ok '3 another build warns, goes on' ($rc -eq 0 -and $out -match '다른 빌드입니다\(eng\.vmadmin\.20260114\.000000\)' -and ([regex]::Matches($out, '건너뜀').Count -eq 2))
+Run @('-Yes') -envs @{FAKE_BUILD='eng.vmadmin.20260114.000000'}; Ok '3 another build warns, goes on' ($rc -eq 0 -and $out -match '빌드입니다\(eng\.vmadmin\.20260114\.000000\)' -and ([regex]::Matches($out, '건너뜀').Count -eq 2))
 Run @('-Yes') -envs @{FAKE_SDK='19'}; Ok '3b API 19 refused' ($rc -ne 0 -and (Count (Calls) 'pm install') -eq 0 -and $out -match '지원하지 않는 내비입니다\(API 19')
 Run @('-Yes','-Diag'); $d = ([regex]::Match($out, '만든 파일: (.+)')).Groups[1].Value.Trim()
 Ok '4 diag file, read only' ($rc -eq 0 -and $d -and (Test-Path -LiteralPath $d) -and (Count (Calls) 'pm install|uninstall|service call|push') -eq 0)
