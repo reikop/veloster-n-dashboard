@@ -13,6 +13,10 @@
 #              --diag(설치하지 않고 진단 기록 파일만 만든다)
 # 창 설치기(N 계기판 설치.app)용: --gui  묻지 않고(Enter 대기 없음) 차를 스스로 기다리며, 줄 단위로 찍고 아래 상태 줄을 낸다.
 #              @@STEP <제목>  @@WAIT <초> <안내>  @@ASK <질문>(표준 입력에서 y/n 한 줄을 읽음)  @@FILE <경로>  @@DONE ok|fail <내용>
+# 업데이트: --check-update  최신 릴리스가 이 설치기보다 새것이면 '@@UPDATE <버전>' 한 줄만 찍는다(인터넷이 없으면 아무것도 안 찍음).
+#           --update  최신 릴리스의 설치기 ZIP(맥 vn-installer-mac.zip, 리눅스 vn-installer-linux.zip)을 받아 SHA256SUMS.txt로 확인하고
+#                     맥은 ~/Library/Application Support/vn-installer/update/<버전>, 리눅스는 ~/vn-installer-<버전>에 푼다.
+#                     --gui면 '@@OPEN <새 설치기>'를 찍는다. 시험용: VN_RELEASES(릴리스 주소)
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"; ME="$(basename "$0")"
 # OS: Darwin(맥) / Linux. VN_OS로 바꿀 수 있다(시험 도구가 Windows Git Bash에서 리눅스 경로를 돌릴 때).
@@ -24,11 +28,10 @@ VERIFIED_BUILD='eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 �
 PT_URL=''
 if [ "$OS" = Darwin ]; then PT_URL='https://dl.google.com/android/repository/platform-tools-latest-darwin.zip'
 else case "$(uname -m)" in x86_64|amd64) PT_URL='https://dl.google.com/android/repository/platform-tools-latest-linux.zip' ;; esac; fi
-RELEASES='https://github.com/reikop/veloster-n-dashboard/releases'
-RAW='https://raw.githubusercontent.com/reikop/veloster-n-dashboard'   # 새 설치기 확인용(main)
+RELEASES="${VN_RELEASES:-https://github.com/reikop/veloster-n-dashboard/releases}"; RELEASES="${RELEASES%/}"   # VN_RELEASES: 시험용 가짜 릴리스 서버
 APKS='N-Dashboard-API17.apk My-Apps-API17.apk'   # 동봉 APK 이름(installer/README.md)
 BUNDLE="$ROOT/bundle.txt"
-ADB=''; YES=''; UNINSTALL=''; DIAG=''; GUI=''
+ADB=''; YES=''; UNINSTALL=''; DIAG=''; GUI=''; CHECK_UPDATE=''; UPDATE=''
 while [ $# -gt 0 ]; do
   case "$1" in
     --adb) ADB="$2"; shift ;;
@@ -36,6 +39,8 @@ while [ $# -gt 0 ]; do
     --uninstall) UNINSTALL=1 ;;
     --diag) DIAG=1 ;;
     --gui) GUI=1 ;;
+    --check-update) CHECK_UPDATE=1 ;;
+    --update) UPDATE=1 ;;
   esac
   shift
 done
@@ -100,6 +105,49 @@ stuck() {
 }
 PM_HINT='내비가 설치를 끝내지 않았습니다. 차 화면에 확인 창이 떠 있으면 누르고, 없으면 시동을 껐다 켠 뒤 다시 실행하세요.'
 
+# --- 업데이트: 최신 정식 릴리스(releases/latest가 가리키는 태그 vX.Y.Z)와 비교하고, 새 설치기를 받아 확인 후 푼다 -------------
+sha256_() { if command -v shasum >/dev/null; then shasum -a 256 "$1" | cut -d' ' -f1; else sha256sum "$1" | cut -d' ' -f1; fi; }
+# 숫자로 비교한다(1.11.0 > 1.9.0). MAJOR.MINOR.PATCH가 아닌 값은 -1.
+vnum() { case "$1" in *[!0-9.]*|'') echo -1 ;; *) echo "$1" | awk -F. 'NF==3{printf "%d\n", $1*1000000+$2*1000+$3; next}{print -1}' ;; esac; }
+latest_version() {
+  command -v curl >/dev/null || return 0
+  local u; u="$(curl -fsS --max-time 8 -o /dev/null -w '%{redirect_url}' "$RELEASES/latest" 2>>"$LOG")"
+  case "$u" in */tag/v[0-9]*) u="${u##*/tag/v}"; [ "$(vnum "$u")" -ge 0 ] && echo "$u" ;; *) log "최신 릴리스 주소를 읽지 못함: $u" ;; esac
+}
+newer() { [ "$(vnum "$1")" -gt "$(vnum "$INSTALLER_VERSION")" ]; }
+do_update() {
+  local v="$1" asset dir z s want got target
+  head_ "새 설치기 $v 받기"
+  if [ "$OS" = Darwin ]; then asset=vn-installer-mac.zip; dir="$HOME/Library/Application Support/vn-installer/update/$v"
+  else asset=vn-installer-linux.zip; dir="$HOME/vn-installer-$v"; fi
+  z="$LOGDIR/update-$v.zip"; s="$LOGDIR/SHA256SUMS-$v.txt"
+  note "받는 중: $RELEASES/download/v$v/$asset"
+  curl -fsSL --max-time 300 -o "$z" "$RELEASES/download/v$v/$asset" 2>>"$LOG" && curl -fsSL --max-time 30 -o "$s" "$RELEASES/download/v$v/SHA256SUMS.txt" 2>>"$LOG" \
+    || die '새 설치기를 받지 못했습니다. 인터넷 연결을 확인하세요.' 2
+  want="$(awk -v f="$asset" '$2==f{print $1; exit}' "$s")"; got="$(sha256_ "$z")"
+  if [ -z "$want" ] || [ "$got" != "$want" ]; then rm -f "$z"; die "받은 파일의 SHA-256이 릴리스 목록과 다릅니다(받은 것 $got). 설치기를 바꾸지 않았습니다." 2; fi
+  note "SHA-256 확인: $got"
+  rm -rf "$dir"; mkdir -p "$dir"
+  if [ "$OS" = Darwin ]; then ditto -x -k "$z" "$dir" 2>>"$LOG"
+  elif command -v unzip >/dev/null; then unzip -q -o "$z" -d "$dir" 2>>"$LOG"
+  else python3 -c 'import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$z" "$dir" 2>>"$LOG"; fi || die "압축 해제 실패: $z" 2
+  if [ "$OS" = Darwin ]; then target="$dir/N 계기판 설치.app"; else target="$dir/install.sh"; chmod +x "$dir"/*.sh 2>/dev/null; fi
+  [ -e "$target" ] || die "받은 설치기에서 $(basename "$target")을 찾지 못했습니다: $dir" 2
+  ok "새 설치기: $target"
+  note '예전 설치기는 지워도 됩니다.'
+  if [ -n "$GUI" ]; then printf '@@OPEN %s\n' "$target"; finish 0; fi
+  if [ "$OS" = Darwin ]; then open "$target"; else note "새 설치기 실행:  bash \"$target\""; fi
+  exit 0
+}
+if [ -n "$CHECK_UPDATE" ]; then v="$(latest_version)"; [ -n "$v" ] && newer "$v" && printf '@@UPDATE %s\n' "$v"; exit 0; fi
+if [ -n "$UPDATE" ]; then
+  note "설치기 $INSTALLER_VERSION — 업데이트 확인"
+  v="$(latest_version)"
+  [ -n "$v" ] || die "최신 버전을 확인하지 못했습니다. 인터넷 연결을 확인하세요($RELEASES/latest)." 2
+  if ! newer "$v"; then ok "이미 최신 설치기입니다($INSTALLER_VERSION)."; finish 0; fi
+  do_update "$v"
+fi
+
 echo
 if [ -n "$UNINSTALL" ]; then echo "  벨로스터 N 계기판 삭제   (설치기 $INSTALLER_VERSION)"
 elif [ -n "$DIAG" ]; then echo "  벨로스터 N 계기판 진단 기록   (설치기 $INSTALLER_VERSION)"
@@ -142,16 +190,14 @@ note "adb: $ADB"
 log "환경: $(os_name) / $(uname -m) / $("$ADB" version 2>&1 | head -1)"
 
 # --- 새 설치기 확인 (막지는 않는다, 인터넷이 없으면 조용히 넘어간다) -----------------
-# 레포 main에 올라간 설치.command의 INSTALLER_VERSION과 비교해 더 새것이면 릴리스 주소만 알린다.
-v=""; command -v curl >/dev/null && v="$(curl -fsS --max-time 5 "$RAW/main/installer/%EC%84%A4%EC%B9%98.command" 2>>"$LOG" | sed -n "s/^INSTALLER_VERSION='\([^']*\)'.*/\1/p" | head -1)"
-# 숫자로 비교한다(1.11.0 > 1.9.0). MAJOR.MINOR.PATCH가 아닌 값(예전 날짜 이름)은 알리지 않는다.
-vnum() { case "$1" in *[!0-9.]*|'') echo -1 ;; *) echo "$1" | awk -F. 'NF==3{printf "%d\n", $1*1000000+$2*1000+$3; next}{print -1}' ;; esac; }
-if [ -n "$v" ] && [ "$(vnum "$v")" -gt "$(vnum "$INSTALLER_VERSION")" ]; then
-  warn "새 설치기가 있습니다($v — $RELEASES/latest). 이번에는 그대로 계속합니다."
+# 최신 정식 릴리스가 더 새것이면 알리고, 터미널에서는 지금 받을지 묻는다(창 설치기는 [업데이트] 단추가 따로 있다).
+v="$(latest_version)"
+if [ -n "$v" ] && newer "$v"; then
+  warn "새 설치기 $v 가 있습니다(지금 $INSTALLER_VERSION)."
+  if [ -z "$GUI" ] && [ -z "$YES" ] && ask "새 설치기 $v 를 받아 쓸까요? (아니오: 이번에는 그대로 계속)"; then do_update "$v"; fi
 fi
 
 # --- 동봉 APK 확인: bundle.txt에 적힌 패키지·SHA-256과 같은 파일만 설치한다 ------------
-sha256_() { if command -v shasum >/dev/null; then shasum -a 256 "$1" | cut -d' ' -f1; else sha256sum "$1" | cut -d' ' -f1; fi; }
 field_() { awk -F'\t' -v f="$1" -v n="$2" '$1==f {print $n; exit}' "$BUNDLE" 2>/dev/null; }   # bundle.txt: 파일 패키지 versionCode versionName sha256
 if [ -z "$UNINSTALL$DIAG" ]; then
   head_ '0) 앱 파일 확인'

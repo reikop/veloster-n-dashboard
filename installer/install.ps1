@@ -13,8 +13,11 @@
               -Diag(설치하지 않고 진단 기록 파일만 만든다)
   창 설치기(gui.ps1)용: -Gui  묻지 않고(Enter 대기 없음) 차를 스스로 기다리며, 줄 단위로 찍고 아래 상태 줄을 낸다.
                  @@STEP <제목>  @@WAIT <초> <안내>  @@ASK <질문>(표준 입력에서 y/n 한 줄을 읽음)  @@FILE <경로>  @@DONE ok|fail <내용>
+  업데이트: -CheckUpdate  최신 릴리스가 이 설치기보다 새것이면 '@@UPDATE <버전>' 한 줄만 찍는다(인터넷이 없으면 아무것도 안 찍음).
+            -Update  최신 릴리스의 vn-installer-windows.zip을 받아 SHA256SUMS.txt로 확인하고 %LOCALAPPDATA%\vn-installer\update\<버전>에
+                     푼다. -Gui면 '@@OPEN <새 N계기판설치.cmd>'를 찍고, 콘솔이면 새 설치.cmd를 연다. 시험용: VN_RELEASES(릴리스 주소)
 #>
-param([string]$AdbPath, [switch]$Yes, [switch]$Uninstall, [switch]$Diag, [switch]$Gui)
+param([string]$AdbPath, [switch]$Yes, [switch]$Uninstall, [switch]$Diag, [switch]$Gui, [switch]$CheckUpdate, [switch]$Update)
 
 # 'Continue' (not 'Stop'): adb writes its progress to stderr, and under 'Stop' a native
 # command's stderr turns into a terminating error (NativeCommandError) that aborts the
@@ -71,7 +74,7 @@ $PT_URL = 'https://dl.google.com/android/repository/platform-tools-latest-window
 $USB_URL = 'https://dl.google.com/android/repository/usb_driver_r13-windows.zip'
 # APK를 폴더에서 못 찾으면 공개 배포 레포에서 받는다: 안정화 = 최신 정식 릴리스, 테스트 = 'test' 사전 배포(덮어쓰며 갱신).
 $Releases = 'https://github.com/reikop/veloster-n-dashboard/releases'
-$Raw = 'https://raw.githubusercontent.com/reikop/veloster-n-dashboard'   # 새 설치기 확인용(main = 안정화, beta = 테스트)
+if($env:VN_RELEASES){ $Releases = $env:VN_RELEASES.TrimEnd('/') }   # 시험용: 가짜 릴리스 서버
 $Apps = @(
   [pscustomobject]@{ apk='N-Dashboard-API17.apk'; pkg='com.veloster.dashboard'; name='N 계기판' },
   [pscustomobject]@{ apk='My-Apps-API17.apk';     pkg='com.veloster.carplayhub'; name="'내 앱'" }
@@ -155,6 +158,52 @@ function Stuck($where,$hint){
   Die "$where 단계에서 멈췄습니다. 이 화면을 찍어 보내 주시면 원인을 볼 수 있습니다." 1
 }
 
+# --- 업데이트: 최신 정식 릴리스(releases/latest가 가리키는 태그 vX.Y.Z)와 비교하고, 새 설치기를 받아 확인 후 푼다 -------------
+function LatestVersion(){
+  try {
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
+    $r = [Net.HttpWebRequest]::Create("$Releases/latest"); $r.AllowAutoRedirect = $false; $r.Timeout = 8000; $r.UserAgent = 'vn-installer'
+    $resp = $r.GetResponse(); $loc = [string]$resp.Headers['Location']; $resp.Close()
+    if($loc -match '/tag/v(\d+\.\d+\.\d+)$'){ return $Matches[1] }
+    Log "최신 릴리스 주소를 읽지 못함: $loc"
+  } catch { Log "최신 릴리스 확인 실패: $($_.Exception.Message)" }
+  return $null
+}
+# 숫자로 비교한다(1.11.0 > 1.9.0).
+function Newer([string]$v){ $a = $null; $b = $null; return ([version]::TryParse($v, [ref]$a) -and [version]::TryParse($InstallerVersion, [ref]$b) -and $a -gt $b) }
+function DoUpdate([string]$v){
+  Head "새 설치기 $v 받기"
+  try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
+  $up = Join-Path $LogDir 'update'; New-Item -ItemType Directory -Force -Path $up | Out-Null
+  $zip = Join-Path $up "vn-installer-windows-$v.zip"; $sums = Join-Path $up "SHA256SUMS-$v.txt"; $dir = Join-Path $up $v
+  Note "받는 중: $Releases/download/v$v/vn-installer-windows.zip" Gray
+  try {
+    Invoke-WebRequest -Uri "$Releases/download/v$v/vn-installer-windows.zip" -OutFile $zip -UseBasicParsing -TimeoutSec 120 -ErrorAction Stop
+    Invoke-WebRequest -Uri "$Releases/download/v$v/SHA256SUMS.txt" -OutFile $sums -UseBasicParsing -TimeoutSec 30 -ErrorAction Stop
+  } catch { Die "새 설치기를 받지 못했습니다: $($_.Exception.Message)" 2 }
+  $want = (Get-Content -LiteralPath $sums | Where-Object { $_ -match '^([0-9a-f]{64})\s+vn-installer-windows\.zip$' } | Select-Object -First 1) -replace '\s.*$',''
+  $got = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLower()
+  if(-not $want -or $got -ne $want){ Remove-Item -LiteralPath $zip -ErrorAction SilentlyContinue; Die "받은 파일의 SHA-256이 릴리스 목록과 다릅니다(받은 것 $got). 설치기를 바꾸지 않았습니다." 2 }
+  Note "SHA-256 확인: $got" DarkGray
+  if(Test-Path -LiteralPath $dir){ Remove-Item -LiteralPath $dir -Recurse -Force }
+  try { Expand-Archive -LiteralPath $zip -DestinationPath $dir -Force -ErrorAction Stop } catch { Die "압축 해제 실패: $($_.Exception.Message)" 2 }
+  $gui = Join-Path $dir 'N계기판설치.cmd'
+  if(-not (Test-Path -LiteralPath $gui)){ Die "받은 설치기에 N계기판설치.cmd가 없습니다: $dir" 2 }
+  Note "새 설치기: $dir" Green
+  Note '이제 새 설치기를 엽니다. 예전 설치기 폴더는 지워도 됩니다.' Gray
+  if($Gui){ Write-Host "@@OPEN $gui"; Done }
+  try { Start-Process -FilePath (Join-Path $dir '설치.cmd') -WorkingDirectory $dir } catch { try { Start-Process explorer.exe "`"$dir`"" } catch {} }
+  exit 0
+}
+if($CheckUpdate){ $v = LatestVersion; if($v -and (Newer $v)){ Write-Host "@@UPDATE $v" }; exit 0 }
+if($Update){
+  Note "Windows 설치기 $InstallerVersion — 업데이트 확인" White
+  $v = LatestVersion
+  if(-not $v){ Die "최신 버전을 확인하지 못했습니다. 인터넷 연결을 확인하세요($Releases/latest)." 2 }
+  if(-not (Newer $v)){ Note "이미 최신 설치기입니다($InstallerVersion)." Green; Done }
+  DoUpdate $v
+}
+
 Write-Host ''
 try { $Host.UI.RawUI.WindowTitle = "벨로스터 N 계기판 — Windows 설치기 $InstallerVersion" } catch {}   # 창 제목이 cmd 경로 대신 이 이름으로
 Write-Host $(if($Uninstall){ "  벨로스터 N 계기판 삭제   (Windows 설치기 $InstallerVersion)" } elseif($Diag){ "  벨로스터 N 계기판 진단 기록   (Windows 설치기 $InstallerVersion)" } else { "  벨로스터 N 계기판 설치   (Windows 설치기 $InstallerVersion)" }) -ForegroundColor White
@@ -189,16 +238,12 @@ Note "adb: $script:adbExe" DarkGray
 Log ("환경: Windows $([Environment]::OSVersion.Version) / PowerShell $($PSVersionTable.PSVersion) / " + ((& $script:adbExe version 2>&1 | Select-Object -First 1) -join ''))
 
 # --- 새 설치기 확인 (막지는 않는다, 인터넷이 없으면 조용히 넘어간다) -----------------
-# 레포 main에 올라간 install.ps1의 $InstallerVersion과 비교해 더 새것이면 릴리스 주소만 알린다.
-try {
-  $c = (Invoke-WebRequest -Uri "$Raw/main/installer/install.ps1" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content
-  if($c -is [byte[]]){ $c = [Text.Encoding]::UTF8.GetString($c) }
-  # 숫자로 비교한다(1.11.0 > 1.9.0). 예전 날짜 이름(2026-11-24)은 버전으로 읽히지 않아 알리지 않는다.
-  $pv = $null; $mv = $null
-  if($c -match "InstallerVersion = '([^']+)'" -and [version]::TryParse($Matches[1], [ref]$pv) -and [version]::TryParse($InstallerVersion, [ref]$mv) -and $pv -gt $mv){
-    Note "새 설치기가 있습니다($($Matches[1]) — $Releases/latest). 이번에는 그대로 계속합니다." Yellow
-  }
-} catch { Log "설치기 버전 확인 실패: $($_.Exception.Message)" }
+# 최신 정식 릴리스가 더 새것이면 알리고, 콘솔에서는 지금 받을지 묻는다(창 설치기는 [업데이트] 단추가 따로 있다).
+$latest = LatestVersion
+if($latest -and (Newer $latest)){
+  Note "새 설치기 $latest 가 있습니다(지금 $InstallerVersion)." Yellow
+  if(-not $Gui -and -not $Yes -and (Ask "새 설치기 $latest 를 받아 쓸까요? (아니오: 이번에는 그대로 계속)")){ DoUpdate $latest }
+}
 
 # --- 동봉 APK 확인: bundle.txt에 적힌 패키지·SHA-256과 같은 파일만 설치한다 ------------
 $Bundle = Join-Path $ROOT 'bundle.txt'   # 파일 패키지 versionCode versionName sha256 (탭 구분)

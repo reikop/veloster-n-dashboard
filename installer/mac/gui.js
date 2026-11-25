@@ -4,6 +4,8 @@
 // 복사해(앱 번들은 읽기 전용일 수 있다: Gatekeeper 격리 실행) 그곳의 설치.command를 --gui로 돌리고 출력을 줄 단위로 보여 준다.
 // 설치 규칙은 모두 설치.command에 있고 이 파일은 화면만 맡는다.
 // 설치.command --gui 상태 줄: @@STEP <제목>  @@WAIT <초> <안내>  @@ASK <질문>(NSAlert → y/n을 표준 입력으로)  @@FILE <경로>  @@DONE ok|fail <내용>
+// 업데이트: 창이 뜨면 설치.command --check-update를 뒤에서 돌려 '@@UPDATE <버전>'이 오면 [업데이트] 단추를 보인다. 누르면 --gui --update가
+// 새 설치기를 받아 확인하고 '@@OPEN <새 .app>'을 알리며, 이 앱은 그것을 열고 끝난다.
 // 시험용 환경 변수: VN_GUI_SMOKE=<파일>  창을 띄운 뒤 그 파일에 창 제목·버전 줄을 쓰고 끝낸다.
 //                  VN_GUI_AUTORUN=install|uninstall|diag  창이 뜨면 바로 그 단추를 누른다(대답은 VN_GUI_ANSWER=y|n, 없으면 n).
 //                  VN_GUI_ADB=<adb 경로>  설치.command --adb 로 넘긴다(가짜 adb).  끝나면 VN_GUI_SMOKE 파일에 기록 칸 전체를 쓰고 끝낸다.
@@ -16,7 +18,8 @@ var fm = $.NSFileManager.defaultManager;
 var KIT_SRC = ObjC.unwrap($.NSBundle.mainBundle.resourcePath) + '/kit';
 var WORK = getenv('VN_GUI_WORK') || (ObjC.unwrap($.NSHomeDirectory()) + '/Library/Application Support/vn-installer/kit');   // VN_GUI_WORK: 시험용
 
-var win, logView, statusLabel, bannerLabel, versionLabel, buttons = {}, fileBtn, copyBtn, target, timer;
+var win, logView, statusLabel, bannerLabel, versionLabel, buttons = {}, fileBtn, copyBtn, updateBtn, target, timer;
+var checkTask = null, checkOut = '', newVersion = '', openPath = '';
 var task = null, stdinPipe = null, outPath = '', outPos = 0, pending = '', done = false, mode = '', resultFile = '';
 var waitMsg = null, waitBase = 0, waitAt = 0, logText = '';
 
@@ -50,6 +53,7 @@ function say(m) {
 }
 function idle(on) {
   ['install', 'uninstall', 'diag'].forEach(function (k) { buttons[k].enabled = on; });
+  if (updateBtn) updateBtn.enabled = on;
   buttons.cancel.enabled = !on;
 }
 function finish(ok, msg) {
@@ -58,6 +62,11 @@ function finish(ok, msg) {
   bannerLabel.textColor = ok ? $.NSColor.systemGreenColor : $.NSColor.systemRedColor;
   bannerLabel.stringValue = (ok ? '완료했습니다. ' + msg : '중단했습니다: ' + msg + '\n기록 칸 내용과 기록 파일을 함께 보내 주시면 원인을 볼 수 있습니다.') + '\n' + USB_OFF;
   idle(true);
+  // 업데이트를 받았으면 새 설치기를 열고 이 앱은 끝낸다.
+  if (ok && mode === 'update' && openPath && !getenv('VN_GUI_AUTORUN')) {
+    $.NSWorkspace.sharedWorkspace.openURL($.NSURL.fileURLWithPath(openPath));
+    $.NSApp.terminate(null);
+  }
   var smoke = getenv('VN_GUI_SMOKE');
   if (smoke && getenv('VN_GUI_AUTORUN')) {
     $(logText + '\nBANNER ' + (ok ? 'ok' : 'fail') + ' ' + msg + '\n').writeToFileAtomicallyEncodingError(smoke, true, $.NSUTF8StringEncoding, null);
@@ -83,8 +92,10 @@ function line(l) {
     return;
   }
   if ((m = /^@@FILE (.*)$/.exec(l))) { resultFile = m[1]; fileBtn.hidden = false; return; }
+  if ((m = /^@@OPEN (.*)$/.exec(l))) { openPath = m[1]; say('새 설치기: ' + openPath); return; }
   if (/^@@DONE ok/.test(l)) {
-    finish(true, mode === 'diag' ? '진단 기록 파일을 만들었습니다([파일 보기]).' : mode === 'uninstall' ? '두 앱을 지웠습니다.' : "차 화면에 '내 앱'이 열립니다.");
+    finish(true, mode === 'diag' ? '진단 기록 파일을 만들었습니다([파일 보기]).' : mode === 'uninstall' ? '두 앱을 지웠습니다.' :
+      mode === 'update' ? (openPath ? '새 설치기를 엽니다.' : '이미 최신 설치기입니다.') : "차 화면에 '내 앱'이 열립니다.");
     return;
   }
   if ((m = /^@@DONE fail ?(.*)$/.exec(l))) { finish(false, m[1]); return; }
@@ -124,7 +135,7 @@ function copyKit() {
 
 function start(m) {
   if (task && task.running) return;
-  mode = m; done = false; resultFile = ''; fileBtn.hidden = true; bannerLabel.stringValue = ''; logText = '';
+  mode = m; done = false; resultFile = ''; openPath = ''; fileBtn.hidden = true; bannerLabel.stringValue = ''; logText = '';
   logView.string = ''; idle(false); copyBtn.title = '복사';
   if (!copyKit()) { say('앱 안의 설치 파일(kit)을 찾지 못했습니다: ' + KIT_SRC); finish(false, '설치 파일 없음'); return; }
   outPath = WORK + '/../gui_out.txt'; outPos = 0;
@@ -132,6 +143,7 @@ function start(m) {
   var args = [WORK + '/설치.command', '--gui'];
   if (m === 'uninstall') args.push('--uninstall');
   if (m === 'diag') args.push('--diag');
+  if (m === 'update') args.push('--update');
   if (getenv('VN_GUI_ADB')) args.push('--adb', getenv('VN_GUI_ADB'));
   var e = env.mutableCopy;
   e.setObjectForKey('/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:' + getenv('PATH'), 'PATH');   // Finder로 연 앱은 PATH가 짧다
@@ -155,7 +167,33 @@ function cancel() {
   finish(false, '취소');
 }
 
+// 창이 뜰 때 한 번: 설치.command --check-update를 뒤에서 돌린다(인터넷이 없으면 아무 일도 없다).
+function startCheck() {
+  try {
+    fm.createDirectoryAtPathWithIntermediateDirectoriesAttributesError(WORK + '/..', true, $(), null);
+    checkOut = WORK + '/../check_out.txt';
+    fm.createFileAtPathContentsAttributes(checkOut, $.NSData.data, $());
+    checkTask = $.NSTask.alloc.init;
+    checkTask.launchPath = '/bin/bash';
+    checkTask.arguments = $([KIT_SRC + '/설치.command', '--check-update']);
+    var out = $.NSFileHandle.fileHandleForWritingAtPath(checkOut);
+    checkTask.standardOutput = out; checkTask.standardError = $.NSFileHandle.fileHandleWithNullDevice;
+    checkTask.launch;
+  } catch (e) { checkTask = null; }
+}
+function checkDone() {
+  if (!checkTask || checkTask.running) return;
+  checkTask = null;
+  var s = $.NSString.stringWithContentsOfFileEncodingError(checkOut, $.NSUTF8StringEncoding, null);
+  var m = s.isNil() ? null : /@@UPDATE (\S+)/.exec(ObjC.unwrap(s));
+  if (!m) return;
+  newVersion = m[1];
+  updateBtn.title = '업데이트 ' + newVersion; updateBtn.hidden = false;
+  say('새 설치기 ' + newVersion + '이(가) 있습니다. [업데이트 ' + newVersion + ']를 누르면 받아서 확인한 뒤 새 설치기를 엽니다.');
+}
+
 function tick() {
+  checkDone();
   drain();
   if (task && !task.running) {
     drain();
@@ -181,6 +219,13 @@ ObjC.registerSubclass({
       if (getenv('VN_GUI_AUTORUN') || a.runModal === $.NSAlertFirstButtonReturn) start('uninstall');
     } },
     'doCancel:': { types: ['void', ['id']], implementation: function () { cancel(); } },
+    'doUpdate:': { types: ['void', ['id']], implementation: function () {
+      var a = $.NSAlert.alloc.init;
+      a.messageText = '새 설치기 ' + newVersion + '을(를) 받을까요?';
+      a.informativeText = '릴리스 목록(SHA256SUMS.txt)으로 파일을 확인한 뒤 새 설치기를 열고 이 창은 닫습니다. 차에는 아무것도 하지 않습니다.';
+      a.addButtonWithTitle('받기'); a.addButtonWithTitle('취소');
+      if (a.runModal === $.NSAlertFirstButtonReturn) start('update');
+    } },
     'doCopy:': { types: ['void', ['id']], implementation: function () {
       var pb = $.NSPasteboard.generalPasteboard; pb.clearContents; pb.setStringForType('0A 01\n65 01\n0A 02', $.NSPasteboardTypeString);
       copyBtn.title = '복사됨';
@@ -191,7 +236,7 @@ ObjC.registerSubclass({
     'tick:': { types: ['void', ['id']], implementation: function () { tick(); } },
     'autorun:': { types: ['void', ['id']], implementation: function () {
       var a = getenv('VN_GUI_AUTORUN'), s = getenv('VN_GUI_SMOKE');
-      if (a) { if (a === 'uninstall') start('uninstall'); else start(a); return; }
+      if (a) { if (a === 'uninstall') start('uninstall'); else start(a); return; }   // update: VN_GUI_AUTORUN=update
       if (s) {
         $(ObjC.unwrap(win.title) + '\n' + ObjC.unwrap(versionLabel.stringValue) + '\n').writeToFileAtomicallyEncodingError(s, true, $.NSUTF8StringEncoding, null);
         $.NSApp.terminate(null);
@@ -232,6 +277,8 @@ function build() {
   buttons.cancel = button('취소', 'doCancel:', x + 390, 480, 120);
   fileBtn = button('파일 보기', 'doFile:', x + 520, 480, 120);
   fileBtn.hidden = true;
+  updateBtn = button('업데이트', 'doUpdate:', x + w - 170, 732, 170);
+  updateBtn.hidden = true;
   statusLabel = label('', x, 452, w, 22, 13, true, $.NSColor.systemOrangeColor);
   bannerLabel = label('', x, 395, w, 55, 12, true);
   var sv = $.NSTextView.scrollableTextView;
@@ -247,6 +294,7 @@ function build() {
   win.makeKeyAndOrderFront(null);
   $.NSApp.activateIgnoringOtherApps(true);
   timer = $.NSTimer.scheduledTimerWithTimeIntervalTargetSelectorUserInfoRepeats(0.2, target, 'tick:', null, true);
+  if (!getenv('VN_GUI_AUTORUN')) startCheck();
   if (getenv('VN_GUI_SMOKE') || getenv('VN_GUI_AUTORUN'))
     $.NSTimer.scheduledTimerWithTimeIntervalTargetSelectorUserInfoRepeats(1.0, target, 'autorun:', null, false);
 }

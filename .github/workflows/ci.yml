@@ -36,3 +36,13 @@ jobs:
         with:
           name: unsigned-apks
           path: build/ci-*/*-UNSIGNED.apk
+  windows-installer:
+    # install.ps1 / gui.ps1 on real Windows PowerShell 5.1 against the fake adb and a fake release server
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Windows installer
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File installer\test\windows.ps1

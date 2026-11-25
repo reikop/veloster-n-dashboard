@@ -5,3 +5,4 @@ installer/test/* text eol=lf
 installer/*.cmd text eol=crlf
 installer/install.ps1 -text
 installer/gui.ps1 -text
+installer/test/windows.ps1 -text

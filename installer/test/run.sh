@@ -22,6 +22,12 @@ run(){ rm -f "$F/calls.log"; HOME="$F/home" VN_OS=$OSV bash "$K/설치.command" 
 gui(){ rm -f "$F/calls.log"; printf '%s' "${ANSWER:-}" | HOME="$F/home" VN_OS=$OSV bash "$K/설치.command" --adb "$F/adb" --gui "$@" > "$F/out.txt" 2>&1; echo $? > "$F/rc"; }
 fail(){ echo "FAIL[$WHO]: $1"; cat "$F/out.txt"; exit 1; }
 chmod +x "$F/adb"
+# fake GitHub releases: by default the latest release is this installer's own version (no update offered)
+CUR="$(sed -n "s/^INSTALLER_VERSION='\([^']*\)'.*/\1/p" "$I/설치.command")"
+R="$F/rel"; rm -rf "$R"; mkdir -p "$R"; echo "$CUR" > "$R/latest.txt"
+RPORT=$((20000 + RANDOM % 20000)); python3 -I "$F/fakerelease.py" $RPORT "$R" & RPID=$!; trap 'kill $RPID 2>/dev/null' EXIT
+for _ in $(seq 50); do [ -f "$R/server.log" ] && break; sleep 0.1; done
+export VN_RELEASES="http://127.0.0.1:$RPORT"
 reset; apks
 run; [ "$(cat $F/rc)" = 0 ] && [ "$(grep -c 'pm install' $F/calls.log)" = 2 ] && grep -q "이 설치기에 든 버전: N 계기판 1.5-test · '내 앱' 1.9-test" $F/out.txt || fail "1 install"
 run; [ "$(cat $F/rc)" = 0 ] && ! grep -q 'pm install' $F/calls.log && [ "$(grep -c '건너뜀' $F/out.txt)" = 2 ] || fail "2 same install skipped"
@@ -57,5 +63,21 @@ rm -f "$F/clash.done"; FAKE_CLASH=1 ANSWER=$'y\n' gui
 apks; FAKE_BUILD=eng.vmadmin.20260114.000000 gui
 [ "$(cat $F/rc)" != 0 ] && grep -q '^@@DONE fail 확인된 내비 빌드가 아닙니다' $F/out.txt && grep -q '^@@FILE ' $F/out.txt && ! grep -q 'pm install' $F/calls.log || fail "12 gui refusal"
 FAKE_GONE=1 gui --uninstall; grep -q '^@@DONE fail ' $F/out.txt || fail "13 gui uninstall failure"
-reset; rm -rf "$K" "$F/home" "$F/out.txt" "$F/rc"
-echo "OK[$WHO]: install, skip identical, new bundle, unverified build refused, diag (masked, read only), uninstall, tampered/missing bundle refused, --gui wait/ask/done"
+# update: --check-update is silent when the latest release is this version, names a newer one
+gui --check-update; [ "$(cat $F/rc)" = 0 ] && [ ! -s $F/out.txt ] || fail "14 no update when current"
+echo 9.9.9 > "$R/latest.txt"; gui --check-update; [ "$(cat $F/out.txt)" = '@@UPDATE 9.9.9' ] || fail "15 newer release named"
+# --update: the release ZIP is fetched, checked against SHA256SUMS.txt and unpacked; the new installer is named by @@OPEN
+[ "$OSV" = Darwin ] && { ASSET=vn-installer-mac.zip; NEW='N 계기판 설치.app/Contents/Info.plist'; } || { ASSET=vn-installer-linux.zip; NEW=install.sh; }
+python3 -I -c "
+import sys,zipfile
+z=zipfile.ZipFile(sys.argv[1],'w'); z.writestr(sys.argv[2],'new installer 9.9.9\n'); z.close()" "$R/$ASSET" "$NEW"
+printf '%s  %s\n' "$(sha "$R/$ASSET")" "$ASSET" > "$R/SHA256SUMS.txt"
+gui --update; O="$(sed -n 's/^@@OPEN //p' $F/out.txt)"
+[ "$(cat $F/rc)" = 0 ] && [ -n "$O" ] && [ -e "$O" ] && [ "$(tail -1 $F/out.txt)" = '@@DONE ok' ] || fail "16 update fetched and opened"
+# a release ZIP whose hash is not the listed one is refused and nothing is unpacked
+printf '%064d  %s\n' 0 "$ASSET" > "$R/SHA256SUMS.txt"; rm -rf "$F/home"; mkdir -p "$F/home"
+gui --update; [ "$(cat $F/rc)" != 0 ] && grep -q '^@@DONE fail 받은 파일의 SHA-256' $F/out.txt && ! grep -q '^@@OPEN' $F/out.txt \
+  && [ -z "$(ls "$F/home/Library/Application Support/vn-installer/update" "$F/home"/vn-installer-* 2>/dev/null)" ] || fail "17 tampered update refused"
+echo "$CUR" > "$R/latest.txt"
+reset; rm -rf "$K" "$F/home" "$F/out.txt" "$F/rc" "$R"
+echo "OK[$WHO]: install, skip identical, new bundle, unverified build refused, diag (masked, read only), uninstall, tampered/missing bundle refused, --gui wait/ask/done, update check/fetch/tampered"
