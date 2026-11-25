@@ -64,7 +64,7 @@ function Write-Host {
   foreach($part in ([string]$Object -split "`r?`n")){ foreach($l in (Fit $part)){ Microsoft.PowerShell.Utility\Write-Host $l @p } }
 }
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
-$InstallerVersion = '2026-11-24'   # 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+$InstallerVersion = '1.11.0'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 $Product = 'jsn_kr'                              # 벨로스터 N 국내 사양 내비
 $VerifiedBuild = 'eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 유일한 빌드(docs/INSTALL.md). 다르면 설치하지 않는다.
 $PT_URL = 'https://dl.google.com/android/repository/platform-tools-latest-windows.zip'
@@ -193,7 +193,9 @@ Log ("환경: Windows $([Environment]::OSVersion.Version) / PowerShell $($PSVers
 try {
   $c = (Invoke-WebRequest -Uri "$Raw/main/installer/install.ps1" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content
   if($c -is [byte[]]){ $c = [Text.Encoding]::UTF8.GetString($c) }
-  if($c -match "InstallerVersion = '([^']+)'" -and [string]::CompareOrdinal($Matches[1], $InstallerVersion) -gt 0){
+  # 숫자로 비교한다(1.11.0 > 1.9.0). 예전 날짜 이름(2026-11-24)은 버전으로 읽히지 않아 알리지 않는다.
+  $pv = $null; $mv = $null
+  if($c -match "InstallerVersion = '([^']+)'" -and [version]::TryParse($Matches[1], [ref]$pv) -and [version]::TryParse($InstallerVersion, [ref]$mv) -and $pv -gt $mv){
     Note "새 설치기가 있습니다($($Matches[1]) — $Releases/latest). 이번에는 그대로 계속합니다." Yellow
   }
 } catch { Log "설치기 버전 확인 실패: $($_.Exception.Message)" }

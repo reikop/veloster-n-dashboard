@@ -17,7 +17,7 @@
 ROOT="$(cd "$(dirname "$0")" && pwd)"; ME="$(basename "$0")"
 # OS: Darwin(맥) / Linux. VN_OS로 바꿀 수 있다(시험 도구가 Windows Git Bash에서 리눅스 경로를 돌릴 때).
 OS="${VN_OS:-$(uname -s)}"; [ "$OS" = Darwin ] || OS=Linux
-INSTALLER_VERSION='2026-11-24'   # 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+INSTALLER_VERSION='1.11.0'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 PRODUCT='jsn_kr'                               # 벨로스터 N 국내 사양 내비
 VERIFIED_BUILD='eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 유일한 빌드(docs/INSTALL.md). 다르면 설치하지 않는다.
 # Google platform-tools: 맥, 리눅스 x86_64만 있다. 라즈베리파이 같은 ARM 리눅스는 배포판 adb 패키지(apt)를 쓴다.
@@ -144,7 +144,9 @@ log "환경: $(os_name) / $(uname -m) / $("$ADB" version 2>&1 | head -1)"
 # --- 새 설치기 확인 (막지는 않는다, 인터넷이 없으면 조용히 넘어간다) -----------------
 # 레포 main에 올라간 설치.command의 INSTALLER_VERSION과 비교해 더 새것이면 릴리스 주소만 알린다.
 v=""; command -v curl >/dev/null && v="$(curl -fsS --max-time 5 "$RAW/main/installer/%EC%84%A4%EC%B9%98.command" 2>>"$LOG" | sed -n "s/^INSTALLER_VERSION='\([^']*\)'.*/\1/p" | head -1)"
-if [ -n "$v" ] && [ "$(printf '%s\n%s\n' "$v" "$INSTALLER_VERSION" | LC_ALL=C sort | tail -1)" != "$INSTALLER_VERSION" ]; then
+# 숫자로 비교한다(1.11.0 > 1.9.0). MAJOR.MINOR.PATCH가 아닌 값(예전 날짜 이름)은 알리지 않는다.
+vnum() { case "$1" in *[!0-9.]*|'') echo -1 ;; *) echo "$1" | awk -F. 'NF==3{printf "%d\n", $1*1000000+$2*1000+$3; next}{print -1}' ;; esac; }
+if [ -n "$v" ] && [ "$(vnum "$v")" -gt "$(vnum "$INSTALLER_VERSION")" ]; then
   warn "새 설치기가 있습니다($v — $RELEASES/latest). 이번에는 그대로 계속합니다."
 fi
 

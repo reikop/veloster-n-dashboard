@@ -6,7 +6,7 @@
 
 [English](MY_APPS.md) | **한국어** | [프로젝트](../README_ko.md)
 
-**내 앱**은 N 계기판·설치 앱·일부 내비 설정을 한곳에서 여는 별도 보조 앱입니다. 차량 값 수신 자체에 필요한 앱은 아니며 순정 홈을 교체하지 않습니다. 현재 배포 버전은 **v11 / `1.10-star`**, 패키지는 `com.veloster.carplayhub`입니다. 초기 실험에서 남은 패키지 이름이며 무선 CarPlay 구현을 뜻하지 않습니다.
+**내 앱**은 N 계기판·설치 앱·일부 내비 설정을 한곳에서 여는 별도 보조 앱입니다. 차량 값 수신 자체에 필요한 앱은 아니며 순정 홈을 교체하지 않습니다. 현재 배포 버전은 **`1.11.0`**(versionCode 12), 패키지는 `com.veloster.carplayhub`입니다. 초기 실험에서 남은 패키지 이름이며 무선 CarPlay 구현을 뜻하지 않습니다.
 
 [내 앱 v10 다운로드](../apks/My-Apps-v10-API17.apk) · [설치 안내](INSTALL.md) · [실행 바로가기](QUICK_ENTRY_ko.md) · [재부팅 후 실행](INSTALL.md#after-reboot)
 

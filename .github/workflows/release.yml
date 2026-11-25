@@ -1,0 +1,52 @@
+# Push a tag vMAJOR.MINOR.PATCH (it must equal the version in the sources, scripts/check_versions.py) to build and
+# publish a release with the one-click installers only. "Run workflow" by hand refreshes the 'test' pre-release
+# from the chosen branch instead. Secrets: INSTALLER_KEYSTORE_B64 (the phone installer's PKCS#12, base64) and
+# INSTALLER_KEYSTORE_PASS.
+name: Release
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+        with: { packages: 'build-tools;34.0.0 platforms;android-34' }
+      - name: Tests
+        run: |
+          python3 scripts/check_versions.py ${{ github.ref_type == 'tag' && format('--tag {0}', github.ref_name) || '' }}
+          python3 scripts/test.py
+          python3 -m unittest discover -s tests -p 'test_*.py'
+          bash installer/test/run.sh mac
+          bash installer/android/test/test.sh
+      - name: Build
+        env:
+          KS_B64: ${{ secrets.INSTALLER_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.INSTALLER_KEYSTORE_PASS }}
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          [ -n "$KS_B64" ] && [ -n "$KS_PASS" ] || { echo "INSTALLER_KEYSTORE_B64 / INSTALLER_KEYSTORE_PASS secrets are missing" >&2; exit 1; }
+          export KS="$RUNNER_TEMP/installer.p12"; printf '%s' "$KS_B64" | base64 -d > "$KS"
+          bash scripts/build_release.sh
+          rm -f "$KS"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="$(python3 scripts/check_versions.py)"; A=build/release/assets
+          FILES=("$A"/vn-installer-windows.zip "$A"/vn-installer-mac.zip "$A"/vn-installer-linux.zip "$A"/vn-installer-android.apk "$A"/SHA256SUMS.txt)
+          NOTES="docs/releases/v$V.md"; [ -f "$NOTES" ] || { printf 'N 계기판 %s\n\n설치: [설치 방법](https://github.com/%s/blob/main/docs/INSTALL.md)\n' "$V" "$GITHUB_REPOSITORY" > "$RUNNER_TEMP/notes.md"; NOTES="$RUNNER_TEMP/notes.md"; }
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            gh release create "$GITHUB_REF_NAME" "${FILES[@]}" --title "v$V" --notes-file "$NOTES" --latest
+          else
+            git tag -f test "$GITHUB_SHA"; git push -f origin refs/tags/test
+            gh release view test >/dev/null 2>&1 || gh release create test --prerelease --title "테스트 빌드" --notes-file "$NOTES"
+            gh release upload test "${FILES[@]}" --clobber
+            gh release edit test --prerelease --title "테스트 빌드 v$V ($(git rev-parse --short HEAD))" --notes-file "$NOTES"
+          fi

@@ -12,7 +12,7 @@ import java.util.Locale;
  * 설정 (header gear): categories on the left, the chosen pane on the right, over the dashboard body. Draws and
  * hit-tests only; VehicleDash applies the returned action codes, saves them and opens the dialogs. Panes:
  * 화면 (show, hide and order the screens), 테마, 플로팅 (the floating window), 기록 (기록실), 백업 (settings backup) and
- * 정보. The features follow the i30 PD build's settings (sung9155/i30-pd-dashboard, MIT); the layout is this build's.
+ * 정보 (version, credits and the USB debugging switch from My Apps). The features follow the i30 PD build's settings (sung9155/i30-pd-dashboard, MIT); the layout is this build's.
  */
 public final class SettingsPanel {
     public static final int SCREENS=0,THEME=1,FLOAT=2,DRIVE=3,SOUND=4,RECORDS=5,BACKUP=6,INFO=7,CATS=8;
@@ -26,7 +26,8 @@ public final class SettingsPanel {
         F_SKIN_DAY=770,F_SKIN_NIGHT=771,F_CELLS=772,F_MUSIC=780,F_HIDE=781,R_LIST=800,R_CLEAR=801,B_SAVE=900,B_RESTORE=901,
         D_COLOR_ON=1000,D_COLOR_OFF=1001,D_SCREEN_ON=1002,D_SCREEN_OFF=1003,D_TARGET=1010,
         S_ENGINE_ON=1100,S_ENGINE_OFF=1101,S_ENGINE=1102,S_EXHAUST=1103,S_VOL=1110,S_BEEP_ON=1120,S_BEEP_OFF=1121,S_BEEP_SOUND=1122,S_BEEP_VOL=1130,
-        S_CHIME_KMH=1140,S_CHIME_SOUND=1141,S_FX_VOL=1150,S_FLOAT_ENGINE=1160,S_FLOAT_BEEP=1161,S_TEST_BEEP=1170,S_TEST_CHIME=1171;
+        S_CHIME_KMH=1140,S_CHIME_SOUND=1141,S_FX_VOL=1150,S_FLOAT_ENGINE=1160,S_FLOAT_BEEP=1161,S_TEST_BEEP=1170,S_TEST_CHIME=1171,
+        U_ON=1200,U_OFF=1201;
     /** Engine sound voices (EngineSynth.ENGINES / EXHAUSTS order) and shift beeps (ShiftBeep.SOUNDS order), from the i30 PD build. */
     public static final String[] SOUND_ENGINES={"직렬 4기통 터보","직렬 6기통 터보","V6 트윈터보","V8 크로스플레인","V8 플랫플레인"};
     public static final String[] SOUND_EXHAUSTS={"순정","스포츠 머플러","중통 제거","풀 배기 · 팝앤뱅"};
@@ -46,6 +47,8 @@ public final class SettingsPanel {
     static final float TILE_W=(PANE_R-PANE_L-(THEME_COLS-1)*8)/THEME_COLS,TILE_H=94;
     static final float F_ROW_T=62,F_ROW_H=36,F_ROW_STEP=41,F_LABEL_W=88,F_CTRL_L=PANE_L+F_LABEL_W,F_CTRL_R=560,PREVIEW_L=572,PREVIEW_T=62,PREVIEW_B=378;
     static final float TOGGLE_T1=386,TOGGLE_T2=430,TOGGLE_H=38;
+    /** 정보: the USB debugging ON / OFF buttons (the same OEM request as My Apps → USB 디버깅). */
+    static final float USB_T=402,USB_H=44,USB_W=170,USB_OFF_L=PANE_R-USB_W,USB_ON_L=USB_OFF_L-8-USB_W;
 
     static boolean in(float x,float y,float l,float t,float r,float b){return x>=l&&x<=r&&y>=t&&y<=b;}
     static float catTop(int i){return CAT_T+i*CAT_STEP;}
@@ -100,6 +103,10 @@ public final class SettingsPanel {
                 if(in(x,y,PANE_L,250,PANE_L+290,294))return B_SAVE;
                 if(in(x,y,PANE_R-290,250,PANE_R,294))return B_RESTORE;
                 return NONE;
+            case INFO:
+                if(in(x,y,USB_ON_L,USB_T,USB_ON_L+USB_W,USB_T+USB_H))return U_ON;
+                if(in(x,y,USB_OFF_L,USB_T,USB_OFF_L+USB_W,USB_T+USB_H))return U_OFF;
+                return NONE;
             default:return NONE;
         }
     }
@@ -131,7 +138,7 @@ public final class SettingsPanel {
     private final Path path=new Path();
     private final RectF rect=new RectF();
     /** What the panes show that the dashboard keeps: the page on screen, the backup file, the app version. */
-    public static final class State{public int cat,page;public String backupPath="",backupTime="",version="";
+    public static final class State{public int cat,page;public String backupPath="",backupTime="",version="",usbStatus="";
         /** 주행 모드: accent follows the mode, the mode opens its screen, the screen per mode (-1 원래 화면), the mode now (-1 none). */
         public boolean modeColor,modeScreen;
         /** 사운드: switches, voices and volumes (percent). */
@@ -275,7 +282,7 @@ public final class SettingsPanel {
         button(c,UiText.t("백업에서 되돌리기"),PANE_R-290,250,290,44,false,15);
     }
     private void info(Canvas c,State s){
-        panel(c,PANE_L,TOP+2,PANE_R-PANE_L,404,PANEL,LINE);
+        panel(c,PANE_L,TOP+2,PANE_R-PANE_L,328,PANEL,LINE);
         float y=TOP+34;
         text(c,UiText.t("N 계기판")+"  "+s.version,PANE_L+16,y,18,WHITE,true,Paint.Align.LEFT);y+=34;
         String[] lines={
@@ -289,6 +296,12 @@ public final class SettingsPanel {
             UiText.t("오류가 나면 앱 내부 진단 기록에 남습니다 (차량 값·음원 정보 제외)."),
         };
         for(String l:lines){if(l.length()>0)fitted(c,l,PANE_L+16,y,13,PANE_R-PANE_L-32,MUTED);y+=24;}
+        // USB 디버깅 (from My Apps): the requested OEM USB mode, and ON / OFF
+        text(c,UiText.t("USB 디버깅"),PANE_L+4,USB_T+19,15,WHITE,true,Paint.Align.LEFT);
+        fitted(c,s.usbStatus,PANE_L+4,USB_T+39,12,USB_ON_L-PANE_L-12,BLUE);
+        button(c,"ON",USB_ON_L,USB_T,USB_W,USB_H,false,15);
+        button(c,"OFF",USB_OFF_L,USB_T,USB_W,USB_H,false,15);
+        text(c,UiText.t("OFF는 PC 연결을 끊을 수 있습니다 · 시동을 껐다 켜면 저절로 꺼집니다"),PANE_R,470,12,MUTED,false,Paint.Align.RIGHT);
     }
 
     // ---- primitives ----------------------------------------------------------------------------------------------

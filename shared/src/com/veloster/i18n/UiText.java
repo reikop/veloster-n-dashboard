@@ -59,6 +59,8 @@ public final class UiText {
         EN.put("GR86 삐삐삐","GR86 beep-beep-beep");
         EN.put("N 계기판","N Dashboard");
         EN.put("N 퍼포먼스 화면","N Performance screen");
+        EN.put("OFF: 일반 USB 모드로 복귀하며 PC 연결이 끊길 수 있습니다.","OFF: returns to normal USB mode and can drop the PC connection.");
+        EN.put("OFF는 PC 연결을 끊을 수 있습니다 · 시동을 껐다 켜면 저절로 꺼집니다","OFF can drop the PC connection · it switches off by itself when the engine restarts");
         EN.put("RPM 막대","RPM bar");
         EN.put("USB 디버깅","USB debugging");
         EN.put("USB 디버깅 ","USB debugging ");

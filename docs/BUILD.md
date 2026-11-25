@@ -56,7 +56,7 @@ python3 scripts/build.py hub \
 
 ## 실행 바로가기와 선택형 메뉴 도구
 
-현재 소스는 배포 APK와 같습니다: N 계기판 v25(`1.24-ncustom-purple`), 내 앱 v11(`1.10-star`). 무선 CarPlay·USB Wi-Fi·앱 자동 업데이트·HTTPS 모듈 미리보기 코드는 2026-11-24에 저장소에서 삭제했습니다(배포된 적 없음).
+현재 소스는 배포 APK와 같습니다: N 계기판 `1.11.0`(versionCode 26), 내 앱 `1.11.0`(versionCode 12). 릴리스 버전은 MAJOR.MINOR.PATCH 하나로 두 앱과 모든 설치기에 같이 씁니다. 무선 CarPlay·USB Wi-Fi·앱 자동 업데이트·HTTPS 모듈 미리보기 코드는 2026-11-24에 저장소에서 삭제했습니다(배포된 적 없음).
 
 [단일 설치 명령](INSTALL.md)은 Python 표준 라이브러리와 ADB만 사용합니다. 빌드 도구나 키가 필요하지 않습니다. [선택형 OEM 메뉴 재구성](MENU_ENTRY_ko.md)에만 별도 JDK·Androguard·smali·개인 원본이 필요합니다. 관련 소스는 `menu-entry/`와 `scripts/build_menu_entry.py`이며, 외부 키를 받아 해당 로컬 메뉴 APK를 서명하는 경로입니다. OEM 코드가 포함된 생성물을 공개하지 않습니다.
 
@@ -72,3 +72,12 @@ The AVRCP Cover Art and SystemUI experiment sources, and the wireless CarPlay, U
 <a id="native-transport-and-private-trial-apks--native-전송부와-비공개-시험-apk"></a>
 
 `SOURCE_SHA256SUMS`, `SHA256SUMS` and `VALIDATION.json` remain earlier build/distribution snapshots.
+
+## 릴리스 빌드 (GitHub Actions)
+
+릴리스는 GitHub Actions가 소스에서 만듭니다. 손으로 APK를 빌드해 올리지 않습니다.
+
+- **CI (`.github/workflows/ci.yml`)**: main에 올리거나 PR을 열 때마다 버전 일치(`scripts/check_versions.py`), 번역, 호스트 시험, 두 앱 빌드(서명 전)를 돌립니다.
+- **릴리스 (`.github/workflows/release.yml`)**: 소스의 버전과 같은 태그 `vMAJOR.MINOR.PATCH`를 올리면 두 앱을 AOSP 플랫폼 테스트 키로 서명하고, 폰 설치 앱과 설치기 4종을 만들어 릴리스를 만듭니다. 수동 실행은 `test` 사전 배포를 갱신합니다. 비밀값: `INSTALLER_KEYSTORE_B64`, `INSTALLER_KEYSTORE_PASS`(폰 설치 앱 서명 키).
+- **도구**: `scripts/ci_tools.sh`가 SDK 플랫폼 16 `android.jar`, R8 8.3.37, AOSP 플랫폼 테스트 키를 SHA-256으로 고정해 받습니다. 같은 일을 맥에서는 `scripts/build_release.sh`로 할 수 있습니다.
+- **버전**: 두 앱 매니페스트의 versionName, `Flow.VERSION`, `install.ps1`, `설치.command`가 같은 MAJOR.MINOR.PATCH여야 합니다. 올릴 때는 이 다섯 곳과 두 앱의 versionCode를 함께 올립니다.

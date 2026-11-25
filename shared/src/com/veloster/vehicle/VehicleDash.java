@@ -481,7 +481,7 @@ public final class VehicleDash extends View implements Runnable {
         Telemetry.Sample m=DATA.sample(Telemetry.DRIVE_MODE,SystemClock.elapsedRealtime());settingsState.modeNow=m.valid?(int)m.value:-1;}
     private void syncSoundState(){SettingsPanel.State st=settingsState;st.engineOn=soundOn;st.beepOn=beepOn;st.floatEngine=floatSound;st.floatBeep=floatBeep;
         st.engine=soundEngine;st.exhaust=soundExhaust;st.engineVol=soundVol;st.beep=beepSound;st.beepVol=beepVol;st.chimeKmh=SpeedChime.kmh;st.chime=SpeedChime.sound;st.fxVol=fxVol;}
-    private void openSettings(int cat){syncModeState();syncSoundState();settings=true;settingsState.cat=cat<0||cat>=SettingsPanel.CATS?0:cat;gaugeEditor.dismiss();graphEditor.dismiss();refreshBackupTime();invalidate();}
+    private void openSettings(int cat){syncModeState();syncSoundState();settings=true;settingsState.cat=cat<0||cat>=SettingsPanel.CATS?0:cat;gaugeEditor.dismiss();graphEditor.dismiss();refreshBackupTime();refreshUsb();invalidate();}
     private void closeSettings(){settings=false;cellPicker.dismiss();invalidate();}
     /** The back key: true when it closed the open settings. */
     public static boolean closeSettings(Activity a){VehicleDash d=current.get();if(d==null||d.activity!=a||!d.settings)return false;d.closeSettings();return true;}
@@ -489,7 +489,7 @@ public final class VehicleDash extends View implements Runnable {
     private void saveScreens(){ui().edit().putString("dashboard_order",DashboardPage.csv(DashboardPage.order())).putInt("dashboard_hidden",DashboardPage.hidden()).apply();}
     private void settingsAction(int a){
         if(a==SettingsPanel.DONE){closeSettings();return;}
-        if(a>=SettingsPanel.CAT&&a<SettingsPanel.CAT+SettingsPanel.CATS){settingsState.cat=a-SettingsPanel.CAT;cellPicker.dismiss();refreshBackupTime();return;}
+        if(a>=SettingsPanel.CAT&&a<SettingsPanel.CAT+SettingsPanel.CATS){settingsState.cat=a-SettingsPanel.CAT;cellPicker.dismiss();refreshBackupTime();refreshUsb();return;}
         if(a>=SettingsPanel.SCREEN_TOGGLE&&a<SettingsPanel.SCREEN_TOGGLE+DashboardPage.COUNT){
             int[] o=DashboardPage.order();int pg=o[a-SettingsPanel.SCREEN_TOGGLE];int h=DashboardPage.toggle(DashboardPage.hidden(),pg);
             if(h==DashboardPage.hidden()){Toast.makeText(activity,UiText.t("화면을 하나 이상 남겨야 합니다"),Toast.LENGTH_SHORT).show();return;}
@@ -515,11 +515,36 @@ public final class VehicleDash extends View implements Runnable {
         if(a==SettingsPanel.B_SAVE){activity.getSharedPreferences(SettingsBackup.PREFS,0).edit().putBoolean(SettingsBackup.ASKED,true).commit();backupWritten=null;
             backupSave(activity,new Runnable(){public void run(){activity.runOnUiThread(new Runnable(){public void run(){refreshBackupTime();invalidate();
                 Toast.makeText(activity,UiText.t(backupFile().isFile()?"설정을 저장했습니다":"설정을 저장하지 못했습니다"),Toast.LENGTH_SHORT).show();}});}});return;}
+        if(a==SettingsPanel.U_ON||a==SettingsPanel.U_OFF){usbRequest(a==SettingsPanel.U_ON);return;}
         if(a==SettingsPanel.B_RESTORE){
             if(!backupFile().isFile()){Toast.makeText(activity,UiText.t("저장해 둔 설정이 없습니다"),Toast.LENGTH_SHORT).show();return;}
             new android.app.AlertDialog.Builder(activity).setMessage(UiText.t("저장해 둔 설정으로 되돌리고 계기판을 다시 시작할까요?"))
                 .setPositiveButton(UiText.t("설정 되돌리기"),new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int w){restoreAndRestart();}})
                 .setNegativeButton(UiText.t("취소"),null).show();}
+    }
+    /** 정보 → USB 디버깅: My Apps' OEM request (UsbDebugControl: MiscManager.setSystem 5 / 6), OFF asked first. */
+    private boolean usbBusy;
+    private void refreshUsb(){settingsState.usbStatus=UsbDebugControl.status();}
+    private void usbRequest(final boolean on){
+        if(usbBusy)return;
+        if(!on){
+            new android.app.AlertDialog.Builder(activity).setTitle(UiText.t("USB 디버깅"))
+                .setMessage(UiText.t("OFF: 일반 USB 모드로 복귀하며 PC 연결이 끊길 수 있습니다."))
+                .setPositiveButton("OFF",new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int w){usbSend(false);}})
+                .setNegativeButton(UiText.t("취소"),null).show();
+            return;}
+        usbSend(true);
+    }
+    private void usbSend(final boolean on){
+        usbBusy=true;
+        new Thread(new Runnable(){public void run(){String r;
+            try{r=UsbDebugControl.request(activity,on)?UiText.t("USB 디버깅 ")+(on?"ON":"OFF")+UiText.t(" 전환 요청 완료. 실제 PC 연결은 별도로 확인하세요."):UiText.t("USB 모드 전환 요청이 거부되었습니다.");}
+            catch(Exception e){r=UiText.t("USB 모드 전환 실패: ")+e.getClass().getSimpleName();}
+            catch(LinkageError e){r=UiText.t("USB 모드 전환 실패: ")+e.getClass().getSimpleName();}
+            final String answer=r;
+            activity.runOnUiThread(new Runnable(){public void run(){usbBusy=false;refreshUsb();invalidate();
+                if(!activity.isFinishing())new android.app.AlertDialog.Builder(activity).setMessage(answer).setPositiveButton(UiText.t("확인"),null).show();}});
+        }},"vn-usb-mode").start();
     }
     private void soundAction(int a){
         if(a==SettingsPanel.S_ENGINE_ON||a==SettingsPanel.S_ENGINE_OFF)soundOn=a==SettingsPanel.S_ENGINE_ON;
