@@ -43,6 +43,8 @@ def build(apks, out):
                              ("CFBundleShortVersionString", "string", version), ("LSMinimumSystemVersion", "string", "11.0")):
         subprocess.run(["plutil", "-replace", key, "-" + kind, value, str(plist)], check=True)
     subprocess.run(["plutil", "-lint", str(plist)], check=True, stdout=subprocess.DEVNULL)
+    # the installers' one icon (scripts/IconMaker.java); osacompile's applet names applet.icns as CFBundleIconFile
+    shutil.copy2(I / "icon" / "installer.icns", app / "Contents" / "Resources" / "applet.icns")
     subprocess.run(["xattr", "-cr", str(app)], check=False)
     subprocess.run(["codesign", "--force", "--deep", "--sign", "-", str(app)], check=True, stderr=subprocess.DEVNULL)
     subprocess.run(["codesign", "--verify", "--deep", "--strict", str(app)], check=True)

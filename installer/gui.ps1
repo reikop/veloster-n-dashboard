@@ -32,6 +32,9 @@ $form.Font = $font
 $form.ClientSize = New-Object System.Drawing.Size(720, 760)
 $form.MinimumSize = New-Object System.Drawing.Size(600, 600)
 $form.StartPosition = 'CenterScreen'
+# the installers' one icon (scripts/IconMaker.java): window and taskbar
+$ico = Join-Path $ROOT 'installer.ico'
+if(Test-Path -LiteralPath $ico){ try { $form.Icon = New-Object System.Drawing.Icon($ico) } catch {} }
 
 $layout = New-Object System.Windows.Forms.TableLayoutPanel
 $layout.Dock = 'Fill'; $layout.Padding = New-Object System.Windows.Forms.Padding(12); $layout.ColumnCount = 1

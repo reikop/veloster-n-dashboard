@@ -105,7 +105,8 @@ class PackagingTest(unittest.TestCase):
                 self.assertEqual(z.read("My-Apps-API17.apk"), HUB.read_bytes(), os_name)
         with zipfile.ZipFile(self.out / "vn-installer-windows.zip") as z:
             names = set(z.namelist())
-            self.assertTrue({"N계기판설치.cmd", "gui.ps1", "install.ps1", "설치.cmd"} <= names)
+            self.assertTrue({"N계기판설치.cmd", "gui.ps1", "install.ps1", "설치.cmd", "installer.ico"} <= names)
+            self.assertEqual(z.read("installer.ico"), (ROOT / "installer/icon/installer.ico").read_bytes(), "the installers' one icon")
             self.assertTrue(z.read("gui.ps1").startswith(b"\xef\xbb\xbf") and b"\r\n" in z.read("gui.ps1"))
         with zipfile.ZipFile(self.out / "vn-installer-linux.zip") as z:
             self.assertEqual(z.getinfo("install.sh").external_attr >> 16 & 0o777, 0o755)
@@ -119,6 +120,7 @@ class PackagingTest(unittest.TestCase):
                 self.assertIn(app + n, names)
             self.assertEqual(z.getinfo(app + "MacOS/applet").external_attr >> 16 & 0o111, 0o111)
             self.assertIn("설치.command", names)
+            self.assertEqual(z.read(app + "Resources/applet.icns"), (ROOT / "installer/icon/installer.icns").read_bytes(), "the installers' one icon")
             with tempfile.TemporaryDirectory() as t:
                 z.extractall(t)
                 for info in z.infolist():   # zipfile drops modes; put them back as unzip/Finder would
