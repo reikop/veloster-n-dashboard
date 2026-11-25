@@ -7,37 +7,31 @@ import java.util.*;
 import javax.imageio.ImageIO;
 
 /**
- * The installers' one icon: a Veloster N side silhouette (pale body, dark glass, red rocker stripe, two wheels) on a
- * dark blue tile. One drawing, written out as
- *   installer/icon/veloster-n.svg            the master (108 x 108, the Android adaptive canvas)
+ * The installers' one icon: Neon Drive's pixel Veloster N on Neon Drive's dusk road (sky, striped sun, sea, neon road) (apps/neondrive/res/drawable-nodpi/car_sprites.png, the
+ * same car the dashboard drives) on a dark tile, its pixels scaled up whole so the dot look stays crisp.
+ * Frame FRAME of the sheet (CarSprite.ANGLE: 3 straight, 5 = 20 deg showing the left side) is drawn as Neon Drive draws it:
+ * the body row, the first wheel phase and the tail-lamp row. Written out as
  *   installer/icon/installer.ico             Windows (16..256 px, PNG entries): the window installer's window icon
  *   installer/icon/installer.icns            macOS (iconutil): the "N 계기판 설치.app" icon
+ *   installer/icon/installer.png             1024 px master
+ *   installer/android/res/drawable-nodpi/ic_launcher_bg.png / ic_launcher_fg.png / ic_launcher_mono.png   the phone installer's
+ *                                            launcher icon (the scene, the car, the themed mask)
  *   build/icon-preview.png                   a contact sheet of the sizes (not kept)
- *   installer/android/res/drawable/ic_launcher_fg.xml / ic_launcher_mono.xml   the phone installer's launcher icon
- * Paths use M L Q C Z only (absolute), so Java2D, SVG and Android vector drawables read the same strings.
  * usage (repo root, JDK 11+, macOS for the .icns):  java scripts/IconMaker.java
  */
 public class IconMaker {
-    // 108 x 108 canvas; the adaptive icon's safe circle is 66 across around (54, 54).
-    static final String BODY = "M87,66 L89.6,62.2 Q89.8,59.4 88,58.6 L70.5,55.4 Q64.5,49.2 58.4,47.9 L47.4,47.1 Q40,47.3 34.2,48.5 "
-        + "L30.4,48.7 L31.4,51.2 Q27,53 25.2,55.4 L24.2,61.2 Q24.2,64.6 25.6,66 "
-        + "C25.6,61.4 29.4,57.6 34,57.6 C38.6,57.6 42.4,61.4 42.4,66 L66.6,66 C66.6,61.4 70.4,57.6 75,57.6 C79.6,57.6 83.4,61.4 83.4,66 Z";
-    static final String GLASS = "M68.4,55.2 Q63.4,50.1 58,49.3 L47.6,48.7 Q41.2,48.9 37.2,50.1 L39.6,54.5 Z";
-    static final String PILLAR = "M53.8,48.9 L55.2,49 L55.6,54.9 L54.2,54.9 Z";
-    static final String STRIPE = "M44,63.2 L65,63.2 L65,64.8 L44,64.8 Z";
-    static final String LAMP = "M24.6,56.2 L27.6,55.6 L27.3,57.9 L24.4,58.4 Z";
-    static final double[][] WHEELS = {{34, 66}, {75, 66}};
-    static final double TYRE = 6.2, RIM = 3.5;
-    static final int BG_TOP = 0xff15325a, BG_BOTTOM = 0xff0a1424, BG_FLAT = 0xff0e1a2b;
-    static final int CAR = 0xffe9eef4, GLASS_C = 0xff0e1a2b, RED = 0xffe5332a, TYRE_C = 0xff1d232b, RIM_C = 0xffa9b4c2, LAMP_C = 0xffe5332a;
+    static final int CELL_W = 89, CELL_H = 74, FRAME = 5, WHEEL_ROW = 4, TAIL_ROW = 7;   // CarSprite
+    static final int BG_TOP = 0xff2a1450, BG_BOTTOM = 0xff0b0a1e, GLOW = 0xffff3fb4;      // Neon Drive's dusk
 
     public static void main(String[] args) throws Exception {
         Path root = Paths.get(args.length > 0 ? args[0] : ".").toAbsolutePath();
-        Path icon = root.resolve("installer/icon"), res = root.resolve("installer/android/res/drawable");
+        Path icon = root.resolve("installer/icon"), res = root.resolve("installer/android/res/drawable-nodpi");
         Files.createDirectories(icon); Files.createDirectories(res);
+        BufferedImage car = car(ImageIO.read(root.resolve("apps/neondrive/res/drawable-nodpi/car_sprites.png").toFile()), FRAME);
         int[] sizes = {16, 24, 32, 48, 64, 128, 256, 512, 1024};
         Map<Integer, BufferedImage> img = new TreeMap<>();
-        for (int s : sizes) img.put(s, render(s, true));
+        for (int s : sizes) img.put(s, tile(car, s));
+        ImageIO.write(img.get(1024), "png", icon.resolve("installer.png").toFile());
         writeIco(icon.resolve("installer.ico"), img, new int[]{16, 24, 32, 48, 64, 128, 256});
         Path set = Files.createTempDirectory("vn-icon").resolve("installer.iconset"); Files.createDirectories(set);
         int[][] mac = {{16, 1}, {16, 2}, {32, 1}, {32, 2}, {128, 1}, {128, 2}, {256, 1}, {256, 2}, {512, 1}, {512, 2}};
@@ -46,95 +40,128 @@ public class IconMaker {
             Process p = new ProcessBuilder("iconutil", "-c", "icns", set.toString(), "-o", icon.resolve("installer.icns").toString()).inheritIO().start();
             if (p.waitFor() != 0) System.err.println("iconutil failed; installer.icns not written");
         } catch (IOException e) { System.err.println("no iconutil (not macOS); installer.icns not written"); }
-        Files.write(icon.resolve("veloster-n.svg"), svg().getBytes("UTF-8"));
-        Files.write(res.resolve("ic_launcher_fg.xml"), vector(false).getBytes("UTF-8"));
-        Files.write(res.resolve("ic_launcher_mono.xml"), vector(true).getBytes("UTF-8"));
-        // preview: every size side by side, and the launcher's circle mask at 192
-        BufferedImage sheet = new BufferedImage(1200, 300, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = sheet.createGraphics(); g.setColor(new Color(0xf2f2f2)); g.fillRect(0, 0, 1200, 300);
+        // Android adaptive icon: 108 dp canvas at xxxhdpi (432 px); the car inside the 66 dp safe circle.
+        ImageIO.write(adaptive(car, 432, false), "png", res.resolve("ic_launcher_fg.png").toFile());
+        { BufferedImage bg = new BufferedImage(432, 432, BufferedImage.TYPE_INT_ARGB); Graphics2D bg2 = bg.createGraphics();
+          bg2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+          bg2.drawImage(scene(), -54, -54, 540, 540, null); bg2.dispose();   // 64 px scene over the 108 dp canvas, the horizon a little high in the circle
+          ImageIO.write(bg, "png", res.resolve("ic_launcher_bg.png").toFile()); }
+        ImageIO.write(adaptive(car, 432, true), "png", res.resolve("ic_launcher_mono.png").toFile());
+        // preview: every size, and the launcher's circle mask
+        BufferedImage sheet = new BufferedImage(1100, 300, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = sheet.createGraphics(); g.setColor(new Color(0xf2f2f2)); g.fillRect(0, 0, 1100, 300);
         int x = 10; for (int s : new int[]{16, 24, 32, 48, 64, 128, 256}) { g.drawImage(img.get(s), x, 280 - s, null); x += s + 14; }
-        BufferedImage round = render(192, false); BufferedImage m = new BufferedImage(192, 192, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D mg = m.createGraphics(); mg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        mg.fill(new Ellipse2D.Double(0, 0, 192, 192)); mg.setComposite(AlphaComposite.SrcIn); mg.drawImage(round, 0, 0, null); mg.dispose();
-        g.drawImage(m, x + 10, 88, null); g.dispose();
+        BufferedImage round = new BufferedImage(192, 192, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D rg = round.createGraphics(); rg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        rg.fill(new Ellipse2D.Double(0, 0, 192, 192)); rg.setComposite(AlphaComposite.SrcIn);
+        rg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR); rg.drawImage(scene(), -24, -24, 240, 240, null);
+        rg.setComposite(AlphaComposite.SrcAtop); rg.drawImage(adaptive(car, 192, false), 0, 0, null); rg.dispose();
+        g.drawImage(round, x + 10, 88, null); g.dispose();
         Files.createDirectories(root.resolve("build")); ImageIO.write(sheet, "png", root.resolve("build/icon-preview.png").toFile());
         System.out.println("icons written to " + icon + " and " + res);
     }
 
-    /** The icon at s px. tile: the rounded dark-blue square (desktop icons); else the full adaptive background. */
-    static BufferedImage render(int s, boolean tile) {
-        BufferedImage b = new BufferedImage(s, s, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = b.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        double k = s / 108.0;
-        Shape bg = tile ? new RoundRectangle2D.Double(s * 0.06, s * 0.06, s * 0.88, s * 0.88, s * 0.2, s * 0.2) : new Rectangle2D.Double(0, 0, s, s);
-        g.setPaint(new GradientPaint(0, 0, new Color(BG_TOP, true), 0, s, new Color(BG_BOTTOM, true))); g.fill(bg);
-        g.transform(AffineTransform.getScaleInstance(k, k));
-        if (tile) { g.translate(54, 54); g.scale(1.26, 1.26); g.translate(-56.5, -60); }   // the tile has no safe-zone mask: a bigger car
-        fill(g, BODY, CAR); fill(g, GLASS, GLASS_C); fill(g, PILLAR, CAR); fill(g, STRIPE, RED); fill(g, LAMP, LAMP_C);
-        for (double[] w : WHEELS) { fill(g, circle(w[0], w[1], TYRE), TYRE_C); fill(g, circle(w[0], w[1], RIM), RIM_C); fill(g, circle(w[0], w[1], 1.2), TYRE_C); }
+    /** One sprite frame as Neon Drive draws it (body, wheels, tail lamps), cropped to its pixels. */
+    static BufferedImage car(BufferedImage sheet, int frame) {
+        BufferedImage c = new BufferedImage(CELL_W, CELL_H, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = c.createGraphics();
+        for (int row : new int[]{0, WHEEL_ROW, TAIL_ROW})
+            g.drawImage(sheet.getSubimage(frame * CELL_W, row * CELL_H, CELL_W, CELL_H), 0, 0, null);
         g.dispose();
-        return b;
-    }
-    static void fill(Graphics2D g, String d, int argb) { g.setColor(new Color(argb, true)); g.fill(path(d)); }
-
-    /** A circle as four cubic arcs (M C C C C Z). */
-    static String circle(double cx, double cy, double r) {
-        double c = r * 0.5523;
-        return String.format(Locale.US, "M%.2f,%.2f C%.2f,%.2f %.2f,%.2f %.2f,%.2f C%.2f,%.2f %.2f,%.2f %.2f,%.2f C%.2f,%.2f %.2f,%.2f %.2f,%.2f C%.2f,%.2f %.2f,%.2f %.2f,%.2f Z",
-            cx + r, cy, cx + r, cy + c, cx + c, cy + r, cx, cy + r, cx - c, cy + r, cx - r, cy + c, cx - r, cy,
-            cx - r, cy - c, cx - c, cy - r, cx, cy - r, cx + c, cy - r, cx + r, cy - c, cx + r, cy);
+        int x0 = CELL_W, y0 = CELL_H, x1 = -1, y1 = -1;
+        for (int y = 0; y < CELL_H; y++) for (int x = 0; x < CELL_W; x++) if ((c.getRGB(x, y) >>> 24) > 16) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+        return c.getSubimage(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
     }
 
-    static Path2D path(String d) {
-        Path2D.Double p = new Path2D.Double();
-        Scanner sc = new Scanner(d.replace(",", " ").replaceAll("([MLQCZ])", " $1 ")).useLocale(Locale.US);
-        while (sc.hasNext()) {
-            String cmd = sc.next();
-            switch (cmd) {
-                case "M": p.moveTo(sc.nextDouble(), sc.nextDouble()); break;
-                case "L": p.lineTo(sc.nextDouble(), sc.nextDouble()); break;
-                case "Q": p.quadTo(sc.nextDouble(), sc.nextDouble(), sc.nextDouble(), sc.nextDouble()); break;
-                case "C": p.curveTo(sc.nextDouble(), sc.nextDouble(), sc.nextDouble(), sc.nextDouble(), sc.nextDouble(), sc.nextDouble()); break;
-                case "Z": p.closePath(); break;
-                default: throw new IllegalArgumentException("path command " + cmd);
+    /** The car scaled by a whole number (nearest neighbour) to fit `box`, or smoothly when the box is smaller than the sprite. */
+    static void put(Graphics2D g, BufferedImage car, double cx, double cy, double box) {
+        double k = box / Math.max(car.getWidth(), car.getHeight());
+        if (k >= 1) k = Math.floor(k);
+        int w = (int) Math.round(car.getWidth() * k), h = (int) Math.round(car.getHeight() * k);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, k >= 1 ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR : RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.drawImage(car, (int) Math.round(cx - w / 2.0), (int) Math.round(cy - h / 2.0), w, h, null);
+    }
+
+    /** Neon Drive at dusk in fat pixels (64 x 64, each pixel 4 x 4 at 256): banded sky, a striped sun, the sea, the road
+     *  running to the horizon with its neon edges and centre dashes. */
+    static BufferedImage scene() {
+        int n = 64, hz = 36;   // horizon row
+        BufferedImage p = new BufferedImage(n, n, BufferedImage.TYPE_INT_ARGB);
+        int[] sky = {0xff1a0b3a, 0xff2b0f52, 0xff45145f, 0xff6a1a6b, 0xff962673, 0xffc23a74, 0xffe85d6e, 0xfff58a5c};
+        for (int y = 0; y < hz; y++) { int band = Math.min(sky.length - 1, y * sky.length / hz); for (int x = 0; x < n; x++) p.setRGB(x, y, sky[band]); }
+        for (int y = 0; y < 3; y++) for (int x = (y * 7) % 11; x < n; x += 13 + y) p.setRGB(x, y * 4 + 2, 0xffffe9f6);   // a few stars
+        // sun: a disc on the horizon with the synthwave cuts in its lower half
+        double cx = 32, cy = hz - 2, r = 13;
+        for (int y = (int) (cy - r); y < hz; y++) for (int x = 0; x < n; x++) {
+            double d = Math.hypot(x + .5 - cx, y + .5 - cy); if (d > r) continue;
+            int rel = (int) (cy - y); boolean cut = y > cy - 6 && ((y - (int) (cy - 6)) % 3 == 2);
+            if (!cut) p.setRGB(x, y, rel > 7 ? 0xffffe066 : rel > 2 ? 0xffffa94d : 0xffff6f61);
+        }
+        // sea
+        int[] sea = {0xff2a1f6b, 0xff23185a, 0xff1c1349};
+        for (int y = hz; y < hz + 6; y++) for (int x = 0; x < n; x++) p.setRGB(x, y, sea[Math.min(2, (y - hz) / 2)]);
+        for (int x = 20; x < 44; x += 3) p.setRGB(x, hz + 1, 0xffff9f80);   // the sun on the water
+        // ground and road (perspective from the vanishing point at the horizon centre)
+        for (int y = hz + 6; y < n; y++) {
+            double t = (y - hz) / (double) (n - hz);   // 0 at the horizon .. 1 at the bottom
+            double half = 3 + t * 34, edge = Math.max(1, t * 2.2);
+            for (int x = 0; x < n; x++) {
+                double dx = Math.abs(x + .5 - 32);
+                int c = 0xff120a2a;                                                 // dark ground
+                if (dx < half) c = 0xff2a2440;                                      // asphalt
+                if (dx >= half - edge && dx < half) c = 0xffff3fb4;                 // neon edge lines
+                if (dx < Math.max(.6, t * 1.2) && ((int) (Math.pow(t, .55) * 14)) % 2 == 0) c = 0xfff4f0ff;   // centre dashes
+                p.setRGB(x, y, c);
             }
         }
         return p;
     }
 
-    static String hex(int argb) { return String.format("#%08X", argb); }
-    static String svgHex(int argb) { return String.format("#%06X", argb & 0xffffff); }
-
-    static String svg() {
-        StringBuilder s = new StringBuilder("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 108 108\" width=\"108\" height=\"108\">\n");
-        s.append("<defs><linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"" + svgHex(BG_TOP) + "\"/><stop offset=\"1\" stop-color=\"" + svgHex(BG_BOTTOM) + "\"/></linearGradient></defs>\n");
-        s.append("<rect width=\"108\" height=\"108\" fill=\"url(#bg)\"/>\n");
-        for (String[] p : parts(false)) s.append("<path fill=\"" + svgHex((int) Long.parseLong(p[1].substring(1), 16)) + "\" d=\"" + p[0] + "\"/>\n");
-        return s.append("</svg>\n").toString();
+    /** The 256 px picture: the scene scaled x4 nearest, the car on the road scaled by a whole number. */
+    static BufferedImage picture(BufferedImage car, boolean withCar) {
+        BufferedImage b = new BufferedImage(256, 256, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = b.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.drawImage(scene(), 0, 0, 256, 256, null);
+        if (withCar) {
+            int k = 2, w = car.getWidth() * k, h = car.getHeight() * k;   // small enough that the sun and the road show
+            g.setColor(new Color(0x88000000, true)); g.fill(new Ellipse2D.Double(128 - w * 0.48, 226, w * 0.96, 14));   // shadow
+            g.drawImage(car, 128 - w / 2, 236 - h, w, h, null);
+        }
+        g.dispose();
+        return b;
     }
 
-    /** (path, colour) in drawing order; mono: one colour, glass and hubs cut out with evenOdd in the caller. */
-    static java.util.List<String[]> parts(boolean mono) {
-        java.util.List<String[]> l = new ArrayList<>();
-        l.add(new String[]{BODY, hex(CAR)}); l.add(new String[]{GLASS, hex(GLASS_C)}); l.add(new String[]{PILLAR, hex(CAR)});
-        l.add(new String[]{STRIPE, hex(RED)}); l.add(new String[]{LAMP, hex(LAMP_C)});
-        for (double[] w : WHEELS) { l.add(new String[]{circle(w[0], w[1], TYRE), hex(TYRE_C)}); l.add(new String[]{circle(w[0], w[1], RIM), hex(RIM_C)}); l.add(new String[]{circle(w[0], w[1], 1.2), hex(TYRE_C)}); }
-        return l;
+    /** Desktop icon: the picture in a rounded tile (nearest above 256 px so the pixels stay square, smooth below). */
+    static BufferedImage tile(BufferedImage car, int s) {
+        BufferedImage pic = picture(car, true);
+        BufferedImage b = new BufferedImage(s, s, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = b.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        Shape bg = new RoundRectangle2D.Double(s * 0.06, s * 0.06, s * 0.88, s * 0.88, s * 0.2, s * 0.2);
+        g.setClip(bg);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, s >= 256 ? RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR : RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        double in = s * 0.88; g.drawImage(s >= 256 ? pic : shrink(pic, (int) Math.round(in)), (int) Math.round(s * 0.06), (int) Math.round(s * 0.06), (int) Math.round(in), (int) Math.round(in), null);
+        g.dispose();
+        return b;
+    }
+    /** Smooth downscale in halving steps (Java2D's single-step bicubic aliases at small sizes). */
+    static BufferedImage shrink(BufferedImage src, int to) {
+        BufferedImage cur = src;
+        while (cur.getWidth() / 2 >= to) { BufferedImage h = new BufferedImage(cur.getWidth() / 2, cur.getHeight() / 2, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = h.createGraphics(); g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR); g.drawImage(cur, 0, 0, h.getWidth(), h.getHeight(), null); g.dispose(); cur = h; }
+        return cur;
     }
 
-    static String vector(boolean mono) {
-        StringBuilder s = new StringBuilder("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- Generated by scripts/IconMaker.java: "
-            + (mono ? "the themed (monochrome) launcher icon, the car with its glass and hubs cut out." : "the launcher foreground, a Veloster N side silhouette (108 dp adaptive canvas).")
-            + " Do not edit; change the drawing there. -->\n"
-            + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    android:width=\"108dp\" android:height=\"108dp\" android:viewportWidth=\"108\" android:viewportHeight=\"108\">\n");
-        if (mono) {
-            StringBuilder d = new StringBuilder(BODY).append(' ').append(GLASS);
-            for (double[] w : WHEELS) d.append(' ').append(circle(w[0], w[1], TYRE)).append(' ').append(circle(w[0], w[1], RIM));
-            s.append("    <path android:fillColor=\"#FFFFFFFF\" android:fillType=\"evenOdd\" android:pathData=\"" + d + "\"/>\n");
-        } else for (String[] p : parts(false)) s.append("    <path android:fillColor=\"" + p[1] + "\" android:pathData=\"" + p[0] + "\"/>\n");
-        return s.append("</vector>\n").toString();
+    /** Android foreground (transparent; the adaptive background is the colour resource) or the monochrome mask. */
+    static BufferedImage adaptive(BufferedImage car, int s, boolean mono) {
+        BufferedImage b = new BufferedImage(s, s, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = b.createGraphics();
+        put(g, car, s * 0.5, s * 0.58, s * 66 / 108.0 * 0.9);
+        g.dispose();
+        if (mono) for (int y = 0; y < s; y++) for (int x = 0; x < s; x++) { int a = b.getRGB(x, y) >>> 24; b.setRGB(x, y, a << 24 | 0xffffff); }
+        return b;
     }
 
     /** ICO with PNG entries (Windows Vista and later read them at every size). */
