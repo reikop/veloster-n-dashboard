@@ -187,12 +187,16 @@ class Adb:
 
 def check_identity(adb, profile):
     require(adb.run("get-state").strip() == "device", "ADB target is not in device state")
-    props = {"ro.product.name": profile["product"], "ro.build.version.incremental": profile["incremental"],
-             "ro.build.version.sdk": str(profile["sdk"])}
+    props = {"ro.product.name": profile["product"], "ro.build.version.sdk": str(profile["sdk"])}
     observed = {}
     for prop, expected in props.items():
         observed[prop] = adb.shell("getprop", prop).strip()
         require(observed[prop] == expected, "Unsupported target: " + prop + " = " + observed[prop])
+    # Another build number only warns: the factory APK/ODEX/framework hashes below still have to match exactly.
+    build = observed["ro.build.version.incremental"] = adb.shell("getprop", "ro.build.version.incremental").strip()
+    if build != profile["incremental"]:
+        print("WARNING: build " + build + " is not the verified " + profile["incremental"]
+              + "; continuing (the factory file hashes are still checked).", file=sys.stderr)
     require(adb.shell("getprop", "ro.kernel.qemu").strip() != "1", "Emulator target is not supported")
     return observed
 

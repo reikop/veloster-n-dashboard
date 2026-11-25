@@ -2,7 +2,7 @@
 header magic, byte-sum checksum, 4 KB payloads, the RSA token signature and the public key struct.
 Connection n plays scenario n: 1 new key (pubkey + prompt), 2 known key (signature) and a signature
 clash on the dashboard, 3 uninstall (☆ points at '내 앱': read only, never changed), 4 a navi that is
-not jsn_kr, 5 jsn_kr on another build (no install), 6 install, 7 the same install again (pm path + RECV
+not jsn_kr, 5 jsn_kr on API 19 (no install), 6 install on another build number (warned), 7 the same install again (pm path + RECV
 return what is installed), 8 diagnostics (log lines with a MAC, a phone number, a mail address, the
 serial), 9 install from a cached APK. Installed packages carry over between connections.
 Adapted from sung9155/i30-pd-dashboard (i30pd_port/installer/android/test, MIT).
@@ -90,9 +90,9 @@ def session(s, no):
             out = ''
             if c == 'getprop ro.product.name': out = 'jsn_kr2' if no == 4 else 'jsn_kr'
             elif c == 'getprop ro.product.device': out = 'jsn_kr'
-            elif c == 'getprop ro.build.version.sdk': out = '17'
+            elif c == 'getprop ro.build.version.sdk': out = '19' if no == 5 else '17'
             elif c == 'getprop ro.serialno': out = SERIAL
-            elif c == 'getprop ro.build.version.incremental': out = 'eng.vmadmin.20260114.084130' if no == 5 else VERIFIED
+            elif c == 'getprop ro.build.version.incremental': out = 'eng.vmadmin.20260114.084130' if no in (5, 6) else VERIFIED
             elif c == 'getprop persist.sys.key.custom': out = star
             elif c.startswith('pm install -r '):
                 p = c[14:]

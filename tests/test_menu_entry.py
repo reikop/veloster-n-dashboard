@@ -1,4 +1,5 @@
 """Failure-path tests for menu deployment. Synthetic APKs and fake ADB only."""
+import contextlib
 import hashlib
 import importlib.util
 import io
@@ -190,8 +191,15 @@ class DeployTests(unittest.TestCase):
         self.no_mutations()
         self.assertEqual(json.loads((self.backup / "receipt.json").read_text())["status"], "stopped")
 
-    def test_wrong_build_stops_before_backup_or_mutation(self):
+    def test_other_build_number_only_warns(self):
         self.adb.props["ro.build.version.incremental"] = "other-build"
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(m.check_identity(self.adb, self.profile)["ro.build.version.incremental"], "other-build")
+        self.assertIn("WARNING: build other-build", err.getvalue())
+
+    def test_wrong_sdk_stops_before_backup_or_mutation(self):
+        self.adb.props["ro.build.version.sdk"] = "19"
         with self.assertRaisesRegex(m.Stopped, "Unsupported target"):
             self.deploy()
         self.no_mutations()

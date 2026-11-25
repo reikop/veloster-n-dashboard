@@ -17,8 +17,8 @@ final class HscanDataClient {
     HscanDataClient(Gate gate) { this.gate = gate; }
 
     synchronized void start() {
-        if (session != null || !"jsn_kr".equals(android.os.Build.PRODUCT)
-            || !"eng.vmadmin.20250902.081552".equals(android.os.Build.VERSION.INCREMENTAL)) return;
+        // Any jsn_kr build: the decoder takes only exact captured-250902 frames, so other framing is simply ignored.
+        if (session != null || !"jsn_kr".equals(android.os.Build.PRODUCT)) return;
         session = new Session();
         session.decoder.start();
         session.reader.start();

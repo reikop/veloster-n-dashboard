@@ -11,7 +11,7 @@ The menu route was checked on the car on 2026-10-20. The public reconstruction a
 ## Requirements
 
 - The [app installation](INSTALL_EN.md) must succeed first: current N Dashboard and My Apps installed, with My Apps opening through ADB.
-- Product `jsn_kr`, API 17, incremental `eng.vmadmin.20250902.081552`; exact factory APK, ODEX and framework identities in [profile.json](../menu-entry/profile.json). A mismatched build stops the procedure. Never edit the hashes to force compatibility.
+- Product `jsn_kr`, API 17, incremental `eng.vmadmin.20250902.081552`; exact factory APK, ODEX and framework identities in [profile.json](../menu-entry/profile.json). Another build number only prints a warning; a different product, API level or any factory hash mismatch stops the procedure. Never edit the hashes to force compatibility.
 - Python 3.9+, JDK 17 and ADB on the computer. New output/backup directories at every step. Keep all captured originals, keys and generated OEM APKs private.
 - The generated updates use the same public AOSP platform test certificate as these exact factory APKs. This does not establish signing compatibility for other vehicles or OTA updates.
 
