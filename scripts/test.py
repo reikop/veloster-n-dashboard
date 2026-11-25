@@ -34,6 +34,8 @@ def main():
                 ("VehicleProfile", "ShiftGuide", "Theme", "Records", "SettingsBackup", "DriveStats", "GearRatios", "ShiftCoach", "RevMatch", "DayNight", "DayPhase", "Tiles", "TaxiTariff", "TaxiZones", "TaxiZoneData", "DriveModes", "SpeedChime")]
     # 설정 → 글꼴: the font reader and the system font change (FontManager runs it on the head unit).
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("FontFile", "SystemFonts", "BundledFonts")]
+    # Circuit screen: the circuits (OpenStreetMap, ODbL), lap detection and the lap clock (i30 PD build v1.17.7).
+    sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("Circuits", "CircuitData", "CircuitLap", "LapTimer", "TrackPath")]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,

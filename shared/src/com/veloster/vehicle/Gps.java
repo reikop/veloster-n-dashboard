@@ -25,7 +25,7 @@ final class Gps implements LocationListener {
         // The taxi areas (23,000 points) and circuits decode on first use, a few hundred ms on the head unit: do it now, off
         // the UI thread, rather than at the first fix inside a frame. Their decode is synchronized, so a frame that needs
         // them sooner waits for this one instead of decoding twice.
-        new Thread("gps-areas"){public void run(){TaxiZones.at(0,0);}}.start();
+        new Thread("gps-areas"){public void run(){TaxiZones.at(0,0);Circuits.pick(0,0,-1);}}.start();
         Gps g=new Gps();g.startAt=g.logAt=SystemClock.elapsedRealtime();
         try{
             g.lm=(LocationManager)c.getSystemService(Context.LOCATION_SERVICE);

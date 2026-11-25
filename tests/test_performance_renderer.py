@@ -54,12 +54,13 @@ def render(folder):
             sources.append(p)
         for rel, body in (('android/content/Context.java','package android.content; public class Context {}'),
                           ('android/util/Log.java','package android.util; public class Log {public static int w(String a,String b){return 0;}public static int w(String a,String b,Throwable t){return 0;}public static int i(String a,String b){return 0;}}'),
-                          ('com/veloster/vehicle/Fonts.java','package com.veloster.vehicle; public final class Fonts {public static volatile android.graphics.Typeface MEDIUM,BOLD;}')):
+                          ('com/veloster/vehicle/Fonts.java','package com.veloster.vehicle; public final class Fonts {public static volatile android.graphics.Typeface MEDIUM,BOLD;}'),
+                          ('com/veloster/vehicle/ShiftBeep.java','package com.veloster.vehicle; final class ShiftBeep {static final int LATCH=1,UP=2,TAP=3;}')):   # the cassette keys' sound ids only
             q = root / rel; q.parent.mkdir(parents=True, exist_ok=True); q.write_text(body); sources.append(q)
         p = root / 'PerformancePreview.java'
         p.write_text(HARNESS)
         sources.append(p)
-        sources += [ROOT / 'shared/src/com/veloster/vehicle' / (name + '.java') for name in ('Telemetry','PitRenderer','PerformanceRenderer','DashboardPage','ShiftGuide','MediaState','GaugeLayout','GaugeRenderer','OverviewLayout','GraphLayout','GraphRenderer','VehicleProfile','Theme','ThemedPaint','ThemeShapes','DriveStats','Records','RecordsRenderer','TaxiMeter','TaxiRenderer','TaxiTariff','TaxiZones','TaxiZoneData','DriveModes','RaceRenderer','LambdaCluster','TachoCluster','ClusterKit','RevMatch','ShiftCoach','GearRatios','MilLamp','Tiles')]
+        sources += [ROOT / 'shared/src/com/veloster/vehicle' / (name + '.java') for name in ('Telemetry','PitRenderer','PerformanceRenderer','DashboardPage','ShiftGuide','MediaState','GaugeLayout','GaugeRenderer','OverviewLayout','GraphLayout','GraphRenderer','VehicleProfile','Theme','ThemedPaint','ThemeShapes','DriveStats','Records','RecordsRenderer','TaxiMeter','TaxiRenderer','TaxiTariff','TaxiZones','TaxiZoneData','DriveModes','RaceRenderer','LambdaCluster','TachoCluster','ClusterKit','RevMatch','ShiftCoach','GearRatios','MilLamp','Tiles','NightCluster','VfdCluster','HudCluster','GCircleCluster','WarpCluster','DragCluster','CassetteCluster','ShowRenderer','CircuitCluster','Circuits','CircuitData','CircuitLap','LapTimer','TrackPath','GpsFix')]
         sources.append(ROOT / 'shared/src/com/veloster/i18n/UiText.java')
         result = subprocess.run([javac,'-encoding','UTF-8','-d',str(root),*map(str,sources)],capture_output=True,text=True)
         if result.returncode: raise AssertionError(result.stderr)

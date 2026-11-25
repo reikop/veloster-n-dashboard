@@ -34,6 +34,28 @@ public final class PitRenderer {
     private final RaceRenderer raceRenderer=new RaceRenderer();
     private final LambdaCluster lambda=new LambdaCluster();
     private final TachoCluster tacho=new TachoCluster();
+    // More screens from the i30 PD build (sung9155/i30-pd-dashboard v1.17.7, MIT): unchanged, on the shared ClusterKit.
+    private final NightCluster night=new NightCluster();
+    private final VfdCluster vfd=new VfdCluster();
+    private final HudCluster hud=new HudCluster();
+    private final GCircleCluster gcircle=new GCircleCluster();
+    private final WarpCluster warp=new WarpCluster();
+    private final DragCluster drag=new DragCluster();
+    private final CassetteCluster cassette=new CassetteCluster();
+    private final CircuitCluster circuit=new CircuitCluster();
+    private final ShowRenderer showRenderer=new ShowRenderer();
+    /** The ported ClusterKit screen on a page, or null. */
+    private ClusterKit kit(int p){
+        switch(p){
+            case DashboardPage.NIGHT:return night;case DashboardPage.VFD:return vfd;case DashboardPage.HUD:return hud;
+            case DashboardPage.GCIRCLE:return gcircle;case DashboardPage.WARP:return warp;case DashboardPage.DRAG:return drag;
+            case DashboardPage.CASSETTE:return cassette;case DashboardPage.CIRCUIT:return circuit;default:return null;
+        }
+    }
+    /** A tap on the body of a ported screen (드래그 준비 key, cassette, circuit list); true when it used the tap. */
+    public boolean screenTap(int p,float x,float y){ClusterKit k=kit(p);return k!=null&&k.tap(x,y);}
+    /** Ported screens that animate (needles, stars, the G tail): redraw about 20 times a second. */
+    public static boolean animated(int p){return p==DashboardPage.HUD||p==DashboardPage.GCIRCLE||p==DashboardPage.WARP||p==DashboardPage.DRAG||p==DashboardPage.CASSETTE||p==DashboardPage.SHOW||p==DashboardPage.VFD||p==DashboardPage.CIRCUIT;}
     private final RecordsRenderer recordsRenderer=new RecordsRenderer();
     public void setRecords(DriveStats value){stats=value;}
     /** Settings open: the gear button is lit. */
@@ -119,12 +141,14 @@ public final class PitRenderer {
         button(c,UiText.language().toUpperCase(Locale.US),LANGUAGE_X,8,48,38,false,BLUE);
         centered(c,clock(),628,33,22,WHITE,true);
         button(c,UiText.t("돌아가기"),666,8,116,38,false,BLUE);
-        boolean own=page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO||page==DashboardPage.NEON;   // ported screens with their own media handling
+        boolean own=page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO||page==DashboardPage.NEON||kit(page)!=null||page==DashboardPage.SHOW;   // ported screens with their own media handling
         if(page==DashboardPage.NEON)centered(c,UiText.t("네온 드라이브"),400,270,22,MUTED,true);   // the Neon Drive view covers this while it runs
         else if(page==DashboardPage.RECORDS)recordsRenderer.draw(c,stats,now);
         else if(page==DashboardPage.RACE)raceRenderer.draw(c,samples,cue,now,stats,model.profile(),false,music,artwork);
         else if(page==DashboardPage.LAMBDA)lambda.frame(c,samples,model,stats,model.profile(),now,null);
         else if(page==DashboardPage.TACHO){tacho.shiftTarget=shiftTarget;tacho.frame(c,samples,model,stats,model.profile(),now,null);}
+        else if(page==DashboardPage.SHOW)showRenderer.draw(c,samples,now,model.profile());
+        else if(kit(page)!=null)kit(page).frame(c,samples,model,stats,model.profile(),now,page==DashboardPage.CASSETTE?music:null);
         else if(taxiPage)taxiRenderer.draw(c,taxi,taxiSpeed,taxiHour,now,taxiReceipt);
         else if(performancePage)performanceRenderer.draw(c,model,now);
         else if(graphLayout!=null)graphRenderer.draw(c,model,now,graphLayout);
@@ -152,6 +176,8 @@ public final class PitRenderer {
             case DashboardPage.LAMBDA:return UiText.t("람다");
             case DashboardPage.TACHO:return UiText.t("타코");
             case DashboardPage.NEON:return UiText.t("네온 드라이브");
+            case DashboardPage.NIGHT:case DashboardPage.VFD:case DashboardPage.HUD:case DashboardPage.GCIRCLE:case DashboardPage.WARP:
+            case DashboardPage.DRAG:case DashboardPage.CASSETTE:case DashboardPage.SHOW:case DashboardPage.CIRCUIT:return UiText.t(DashboardPage.NAMES[page]);
             default:return UiText.t("전체 조망");
         }
     }

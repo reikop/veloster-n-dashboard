@@ -18,6 +18,10 @@ N 계기판의 플로팅 창(`FloatPanel`·`FloatSkin`·`FloatLayouts`·`FloatMu
 
 안드로이드 휴대폰 설치 앱(`installer/android/`: `Adb`·`Flow`·`MainActivity`·`DiagProvider`, 가짜 adbd 시험)도 같은 포크의 `i30pd_port/installer/android/`(MIT)에서 가져와 벨로스터 N(`jsn_kr`·검증 빌드·이 저장소 릴리스)에 맞게 고쳤습니다. 주행 기록과 ☆ 버튼 변경은 넣지 않았습니다.
 
+나이트·VFD·HUD·G 원·워프·드래그·카세트·쇼·서킷 화면(`NightCluster`·`VfdCluster`·`HudCluster`·`GCircleCluster`·`WarpCluster`·`DragCluster`·`CassetteCluster`·`ShowRenderer`·`CircuitCluster`·`Circuits`·`CircuitLap`·`LapTimer`·`TrackPath`, `scripts/circuits.py`)도 같은 포크 v1.17.7(MIT)에서 그대로 가져왔습니다.
+
+서킷 화면의 국내 서킷 6곳(인제 스피디움, 코리아 인터내셔널 서킷 풀코스·상설, 태백 스피드웨이, AMG 스피드웨이, 포천 레이스웨이) 트랙 선은 © [OpenStreetMap](https://www.openstreetmap.org/copyright) 기여자 자료이며 ODbL 1.0을 따릅니다. 이 자료로 만든 `shared/src/com/veloster/vehicle/CircuitData.java`(`scripts/circuits.py`로 생성, i30 PD 포크에서 가져옴)는 이 저장소의 다른 파일과 달리 ODbL로 배포합니다. 출발선 위치는 포크의 기록대로 인제·태백·AMG는 공식 서킷맵, KIC 풀코스는 OSM 결승선, 나머지는 피트 옆 직선 가운데로 추정한 것입니다. GPS 위치는 화면의 지도와 랩 계산에만 쓰고 앱 밖으로 보내지 않습니다.
+
 택시 미터기의 시·도별 중형 요금(`TaxiTariff`)은 i30 PD 포팅에서 가져왔고, 그 숫자는 전국개인택시운송사업조합연합회 [시, 도별 개인택시 요금현황](https://gntx.kr/information/information_02_1.php)(2026-11-04에 읽음)에서 옮긴 것입니다. 사업구역 경계(`TaxiZoneData`, `scripts/taxi_zones.py`로 생성)는 통계청 통계지리정보서비스(SGIS, https://sgis.kostat.go.kr)가 공공누리 제1유형으로 개방한 행정구역 경계를 [vuski/admdongkor](https://github.com/vuski/admdongkor)가 가공한 것(CC BY 4.0, `sgg_20261001`)을 시·군 단위로 합치고 200 m로 단순화한 것입니다. GPS 위치는 요금 지역 판정에만 쓰고 앱 밖으로 보내거나 기록하지 않습니다(로그에는 1분마다 수신 개수·정확도·요금표 이름만 남김). 참고용 표시이며 검정받은 미터기가 아닙니다.
 
 플로팅 창 글자는 Chakra Petch(Medium·Bold)로 그립니다. Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch), SIL Open Font License 1.1. 글꼴 파일은 고치지 않고 `apps/dashboard/res/raw/`에 넣었고, 라이선스 전문은 [`third_party/chakra-petch/OFL.txt`](third_party/chakra-petch/OFL.txt)에 있습니다.
