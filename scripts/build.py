@@ -76,6 +76,7 @@ def main():
         sources += sorted((shared / "com/veloster/diagnostics").rglob("*.java"))
     tracked = list(sources) + [app / 'AndroidManifest.xml', Path(__file__).resolve()]
     tracked += sorted((app / 'res').rglob('*')) if (app / 'res').is_dir() else []
+    tracked += sorted((app / 'assets').rglob('*')) if (app / 'assets').is_dir() else []
     source_hashes = {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
                      for path in tracked if path.is_file()}
     run("javac", [javac, "-encoding", "UTF-8", "-source", "7", "-target", "7",
@@ -92,6 +93,8 @@ def main():
     if (app / "res").is_dir():
         run("resources", [aapt2, "compile", "--dir", app / "res", "-o", out / "resources.zip"])
         resources = ["--auto-add-overlay", "-R", out / "resources.zip"]
+    if (app / "assets").is_dir():   # dashboard: the fonts offered in 설정 → 글꼴 (BundledFonts)
+        resources += ["-A", app / "assets"]
     run("manifest", [aapt2, "link", "-I", sdk, "--manifest", app / "AndroidManifest.xml", *resources,
                      "--min-sdk-version", "17", "--target-sdk-version", "17", "-o", out / "base.apk"])
     target = out / (args.app + "-UNSIGNED.apk")

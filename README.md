@@ -16,7 +16,7 @@ Owner-provided in-car photo. Missing readings display a dash. Location/camera me
 | --- | --- |
 | 11 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive | Dashboard and installed-app launcher |
 | Screen list (show/hide/order), 20 themes, hold-to-change tiles, drive-mode colours and screens | Opt-in edge button and notification shortcut |
-| Floating window over other apps, settings backup, records room (best runs kept) | Engineering mode, USB debugging and Android utilities |
+| Floating window over other apps, settings backup, records room (best runs kept), [system font changer](docs/FONTS.md) | Engineering mode, USB debugging and Android utilities |
 | Taxi meter with 17 regional fares picked from GPS; engine sound, shift beep, speed chime | Bluetooth pairing and restart confirmation |
 | RPM, speed, temperatures, TPMS, TCS/ESC/ABS; media controls and artwork | Editable app list and Korean/English selection |
 

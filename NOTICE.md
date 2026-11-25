@@ -22,5 +22,7 @@ N 계기판의 플로팅 창(`FloatPanel`·`FloatSkin`·`FloatLayouts`·`FloatMu
 
 플로팅 창 글자는 Chakra Petch(Medium·Bold)로 그립니다. Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch), SIL Open Font License 1.1. 글꼴 파일은 고치지 않고 `apps/dashboard/res/raw/`에 넣었고, 라이선스 전문은 [`third_party/chakra-petch/OFL.txt`](third_party/chakra-petch/OFL.txt)에 있습니다.
 
+설정 → 글꼴의 앱 포함 글꼴(`apps/dashboard/assets/fonts/`, 고치지 않은 원본, SIL Open Font License 1.1, 라이선스 전문은 같은 폴더의 `OFL-*.txt`): Asta Sans — Copyright 2024 The Asta Sans Project Authors([42dot/Asta-Sans](https://github.com/42dot/Asta-Sans) `fonts/ttf/`, 커밋 `69ecccd`), 나눔고딕·나눔손글씨 펜·나눔손글씨 붓 — Copyright (c) 2010 NHN Corporation, Reserved Font Name Nanum 외([google/fonts](https://github.com/google/fonts) `ofl/`), 나눔스퀘어·나눔스퀘어라운드 — Copyright 2016/2017 NAVER Corporation([네이버 글꼴 모음](https://hangeul.naver.com/font) 배포 zip과 같은 파일), 서툰이야기(Poor Story) — Copyright (c) YoonDesign Inc.(google/fonts `ofl/poorstory`). 차주가 직접 넣는 글꼴의 라이선스는 차주가 확인합니다.
+
 ## Optional native HTTPS build
 

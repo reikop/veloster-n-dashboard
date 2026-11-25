@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- taxi meter: the head unit GPS picks the fare area (TaxiZones); the position never leaves the app -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 설정 → 글꼴: the reboot a system font change needs (the same request as My Apps → 강제 재시작) -->
+    <uses-permission android:name="android.permission.REBOOT" />
     <application android:name="com.veloster.diagnostics.DiagnosticApplication" android:label="@string/app_name" android:allowBackup="false" android:debuggable="true" android:theme="@android:style/Theme.Holo.NoActionBar">
         <uses-library android:name="automotive" android:required="true" />
         <activity android:name="com.veloster.dashboard.DashboardActivity" android:exported="true" android:screenOrientation="landscape" android:launchMode="singleTop">
