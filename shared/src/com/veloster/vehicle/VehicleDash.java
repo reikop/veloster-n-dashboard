@@ -95,6 +95,8 @@ public final class VehicleDash extends View implements Runnable {
     /** Every tick, dashboard or floating window: the engine sound on or off, the shift beep on the cue's edge, the speed chime. */
     private static void soundTick(boolean dashboardUp){
         if(sound==null)return;long now=SystemClock.elapsedRealtime();
+        {int ck=CassetteCluster.cue;if(ck!=0){CassetteCluster.cue=0;   // a key of the 카세트 screen: latched, released or tapped
+            if(dashboardUp&&CassetteCluster.clickSound)beep.playCassette(mix(),ck,fxVol/100f);}}
         sound.play(soundOn&&(dashboardUp||floatUp&&floatSound)?0:-1);
         if(!dashboardUp&&!(floatUp&&floatBeep))return;
         Telemetry.Sample[] s=DATA.snapshot(now);
@@ -318,7 +320,7 @@ public final class VehicleDash extends View implements Runnable {
             invalidate();long now=SystemClock.elapsedRealtime();
             if(graphs)delay=250;
             else if((page==DashboardPage.OVERVIEW||page==DashboardPage.F1&&!media||page==DashboardPage.GAUGES)&&!settings&&mediaState.snapshot(now).notice)delay=16;
-            else if(page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO)delay=50;   // shift lights blink, needles glide
+            else if(page==DashboardPage.RACE||page==DashboardPage.LAMBDA||page==DashboardPage.TACHO||PitRenderer.animated(page))delay=50;   // shift lights blink, needles glide
             if(introStart>0&&now-introStart<INTRO_MS)delay=16;
             if(now-lastDiagnostic>=5000) { lastDiagnostic=now;android.util.Log.i("VehicleDash",DATA.diagnostics(now)); }
         }
@@ -419,6 +421,9 @@ public final class VehicleDash extends View implements Runnable {
         }
         if(settings&&y>52)return true;
         if(tap&&!blocked&&DashboardPage.gear(x,y)&&DashboardPage.gear(downX,downY)){if(settings)closeSettings();else openSettings(settingsState.cat);return true;}
+        if(tap&&!blocked&&y>=DashboardPage.BOTTOM+6&&renderer.screenTap(page,x,y)){   // 드래그 준비 key, cassette keys, circuit list
+            int kc=CassetteCluster.consumeKeyCmd();if(kc==-1||kc==1)requestMedia(kc);else if(kc!=0)requestMedia(0);   // ▶ / ■ / ❚❚: play-pause (no stop or mute here)
+            invalidate();return true;}
         if(tap&&!blocked&&records&&y>=RecordsRenderer.RUN_TOP&&y<=RecordsRenderer.RUN_BOTTOM&&downY>=RecordsRenderer.RUN_TOP&&downY<=RecordsRenderer.RUN_BOTTOM){RecordsDialog.show(activity);return true;}
         if(standalone&&tap&&x>=666&&x<=782&&downX>=666&&downX<=782&&y>=8&&y<=46&&downY>=8&&downY<=46){activity.finish();return true;}
         if(tap&&!blocked&&page==DashboardPage.OVERVIEW&&overviewDown>=0&&overviewLayout.hit(x,y)==overviewDown&&!overviewCovered(y)){
