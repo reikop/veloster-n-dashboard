@@ -4,7 +4,7 @@
 
 A standalone dashboard for the Veloster N factory head unit, with **My Apps** for opening your dashboard and installed apps. Korean and English included. Installs alongside factory N Mode.
 
-[Download](#download) · [Install](docs/INSTALL_EN.md) · [Compatibility & status](docs/STATUS.md) · [Documentation](docs/README.md)
+[Install](#install) · [Compatibility & status](docs/STATUS.md) · [Documentation](docs/README.md)
 
 <img src="docs/images/dashboard-overview-in-car.jpg" alt="N Dashboard overview on the Korean Veloster N factory head unit" width="480">
 
@@ -14,7 +14,7 @@ Owner-provided in-car photo. Missing readings display a dash. Location/camera me
 
 | N Dashboard | My Apps |
 | --- | --- |
-| 11 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive | Dashboard and installed-app launcher |
+| 20 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive, night, VFD, HUD, G circle, warp, drag, cassette, show, circuit (lap timer at six Korean tracks) | Dashboard and installed-app launcher |
 | Screen list (show/hide/order), 20 themes, hold-to-change tiles, drive-mode colours and screens | Opt-in edge button and notification shortcut |
 | Floating window over other apps, settings backup, records room (best runs kept), [system font changer](docs/FONTS.md) | Engineering mode, USB debugging and Android utilities |
 | Taxi meter with 17 regional fares picked from GPS; engine sound, shift beep, speed chime | Bluetooth pairing and restart confirmation |
@@ -28,38 +28,37 @@ Vehicle telemetry uses existing receive paths without adding ECU diagnostic requ
 
 The guarded installer supports **Korean Veloster N JSN**, product `jsn_kr`, **Android 4.2.2 / API 17**, incremental build `eng.vmadmin.20250902.081552` (`250902`, `STD_H`). The dashboard requires the factory `automotive` library. Other models, regions, firmware and ordinary Android devices are not validated.
 
-**2026-10-27:** N Dashboard v6 and My Apps v10 were installed and their APKs read back with matching hashes. The owner confirmed reopening My Apps from the HOME edge button. **Restoration after full power-off and extended operation remain unverified.** Later private experimental builds are separate from these releases. [Evidence and current status](docs/STATUS.md)
+**2026-11-25:** the Android installer on a tablet (USB OTG) installed N Dashboard v25 and My Apps v11 in the owner's car; the owner confirmed the ☆ button opening the dashboard and the purple N CUSTOM colour. Releases since (1.11.x: unified version, USB debugging in the dashboard, new screens) are tested on hosts and CI, not yet in the car. [Evidence and current status](docs/STATUS.md)
 
-## Download
+## Install
 
-**[Download the complete v2026.10.26-i18n ZIP](https://github.com/reikop/veloster-n-dashboard/releases/download/v2026.10.26-i18n/veloster-n-dashboard-v2026.10.26-i18n.zip)** — both signed apps, installer and guides. This remains a prerelease.
+You need the car parked with the engine running, and one of: a Windows or macOS computer, a Linux PC or Raspberry Pi, or an Android phone or tablet with a USB OTG adapter. Every installer carries both apps, so the car needs no internet.
 
-| Current APK | Version |
-| --- | --- |
-| [N Dashboard](apks/N-Dashboard-v6-API17.apk) | v6 · 1.5-i18n |
-| [My Apps](apks/My-Apps-v10-API17.apk) | v10 · 1.9-i18n |
+1. **Download** the installer for your device from the [latest release](https://github.com/reikop/veloster-n-dashboard/releases/latest):
 
-Use the complete ZIP or repository for installation. Copying an APK onto an SD card does not install it. The dated ZIP retains its original documentation; this repository records later verification. [Older versions and release history](docs/RELEASE.md) · [Hashes and package identities](release.json)
+   | Device | File | Run |
+   | --- | --- | --- |
+   | Windows | `vn-installer-windows.zip` | unzip, double-click `N계기판설치.cmd`, then **[설치]** in the window |
+   | macOS | `vn-installer-mac.zip` | unzip, open `N 계기판 설치.app` (first time: System Settings → Privacy & Security → Open Anyway) |
+   | Android phone or tablet | `vn-installer-android.apk` | install it, connect with a USB-C → USB-A OTG adapter and an A-A cable, tap **[설치]** |
+   | Linux / Raspberry Pi | `vn-installer-linux.zip` | `unzip vn-installer-linux.zip -d vn && cd vn && bash install.sh` |
 
-## Quick start
+2. **Engineering mode** on the car: Settings → **SW 정보/업데이트**, tap the hidden area left of the update buttons **5 times**, then the right one **once**, within 10 seconds. Password: `0567` in 2026, `1278` in 2027.
+3. **USB debugging**: Engineering mode → **Diagnosis → Factory Test**, send these three lines one at a time, pressing [SEND] after each:
 
-Install and operate the screen while parked. Initial installation requires Python 3.9+ and a working [ADB connection](docs/ADB_EN.md).
-
-1. Extract the complete download and open a terminal in its project directory.
-2. Verify the files, then install using the device serial shown by `adb devices -l`:
-
-   ```sh
-   python3 scripts/verify_release.py
-   python3 scripts/install.py --serial YOUR_DEVICE_SERIAL --parked
+   ```
+   0A 01
+   65 01
+   0A 02
    ```
 
-3. In My Apps, choose **Quick entry → Floating + notification → Save**.
-4. Return to HOME and check **edge button → My Apps → N Dashboard** before disconnecting.
-5. Separately verify reopening after a full shutdown/restart on your vehicle.
+   If My Apps or N Dashboard 1.11.0+ is already installed, **My Apps → USB 디버깅 → ON** or **N Dashboard settings → 정보 → USB 디버깅 ON** does the same.
+4. **Connect** the car's USB port to the computer (a data cable, not a charge-only one) and start the install. The installer checks it is a `jsn_kr` head unit on the verified build, installs both apps and opens My Apps on the car screen.
+5. **USB debugging turns off** by itself when you restart the engine.
 
-The installer makes fresh APK backups and verifies installed bytes. Use `--check` instead of `--parked` for inspection/backups without installing or launching. An accepted launch request does not confirm the screen appeared. The shortcut defaults to OFF; factory menus are not modified. [Installation and recovery](docs/INSTALL_EN.md) · [Quick-entry troubleshooting](docs/QUICK_ENTRY.md)
+**Updates:** run the installer again; an app already at the same version is skipped. When a newer release is out, the Windows and macOS installers show an **[업데이트]** button that fetches the new installer (hash-checked) and opens it, the phone installer shows an update band, and the console installers ask.
 
-Once installed, normal use does not require a PC. If neither the edge button nor notification is accessible, see the [optional, exact-build OEM menu procedure](docs/MENU_ENTRY.md).
+Removing, diagnostics files and troubleshooting: [owner install guide (Korean)](INSTALL.md) · [ADB connection](docs/ADB_EN.md) · [installer details](installer/README.md)
 
 ## Documentation
 
