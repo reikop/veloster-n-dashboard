@@ -134,6 +134,9 @@ final class FloatMusic {
             int f=FloatPanel.fmt(sig),lv=Tiles.level(f,v),col=FloatSkin.warn(lv,sInk,FloatSkin.light(FloatPanel.skinNow()));
             String val=FloatPanel.valText(q,sig,v),unit=Telemetry.UNITS[f]==null?"":Telemetry.UNITS[f];
             if(j==0){say(c,FloatPanel.label(sig),x,76*k,10*k,sMut,Paint.Align.LEFT,sFace);
+                float pk=FloatPanel.peak(first+j,sig);   // the peak (최고값) after the name, clear of the gear's column, where it fits
+                if(!Float.isNaN(pk)){String ps="▲ "+Tiles.text(f,pk);float lx=x+width(FloatPanel.label(sig),10*k,sFace)+8*k;
+                    if(lx+width(ps,9*k,sFace)<=right-side-8*k)say(c,ps,lx,76*k,9*k,sMut,Paint.Align.LEFT,sFace);}
                 // 26 down to 14 until value and unit end 8 short of the right column: -0.65 bar beside 1561 rpm ran into it
                 float uw=unit.isEmpty()?0:3*k+width(unit,10*k,sFace),room=right-side-8*k-x,size=26*k;
                 while(size>14*k&&width(val,size,sFace)+uw>room)size-=k;
