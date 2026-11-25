@@ -120,7 +120,8 @@ function Line([string]$l){
   if($l -match '^@@ASK (.*)$'){
     $r = [System.Windows.Forms.MessageBox]::Show($form, $Matches[1], '확인', 'YesNo', 'Question')
     $a = $(if($r -eq 'Yes'){ 'y' } else { 'n' }); Say "$($Matches[1]) → $(if($a -eq 'y'){ '예' } else { '아니오' })"
-    try { $script:proc.StandardInput.WriteLine($a); $script:proc.StandardInput.Flush() } catch {}
+    # ASCII 바이트로 직접 쓴다: StandardInput(StreamWriter)은 콘솔 입력 인코딩이 UTF-8이면 첫 쓰기에 BOM을 붙인다.
+    try { $b = [Text.Encoding]::ASCII.GetBytes("$a`r`n"); $script:proc.StandardInput.BaseStream.Write($b, 0, $b.Length); $script:proc.StandardInput.BaseStream.Flush() } catch {}
     return
   }
   if($l -match '^@@FILE (.*)$'){ $script:file = $Matches[1]; $fileBtn.Visible = $true; return }

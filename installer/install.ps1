@@ -118,9 +118,9 @@ function Mask([string]$t){
 }
 # -Gui: 창 설치기가 예/아니오 창을 띄우고 답 한 줄(y/n)을 표준 입력으로 보낸다. 답이 없으면(창이 닫힘) 아니오.
 function Ask($m){
-  # 답 앞에 BOM(U+FEFF)이 붙어 올 수 있다: 콘솔 입력 인코딩이 UTF-8인 Windows(“UTF-8 사용” 설정, GitHub Actions)에서 gui.ps1의
-  # 첫 쓰기에 BOM이 붙는다. 떼지 않으면 '예'가 '아니오'로 읽힌다(2026-11-25 windows-latest에서 발견).
-  if($Gui){ Write-Host "@@ASK $m"; $r = ([string][Console]::In.ReadLine()).TrimStart([char]0xFEFF).Trim(); Log "$m → $r"; return ($r -match '^[Yy]') }
+  # 답 앞에 BOM이 붙어 올 수 있다: 콘솔 입력 인코딩이 UTF-8인 Windows("UTF-8 사용" 설정, GitHub Actions)에서 예전 gui.ps1의 첫 쓰기에
+  # BOM이 붙고, 이쪽은 OEM 코드 페이지로 읽어 '∩╗┐y'가 된다. 답은 y/n뿐이니 앞의 ASCII 아닌 글자를 뗀다(2026-11-25 windows-latest에서 발견).
+  if($Gui){ Write-Host "@@ASK $m"; $r = (([string][Console]::In.ReadLine()) -replace '^[^\x21-\x7E]+', '').Trim(); Log "$m → $r"; return ($r -match '^[Yy]') }
   if($Yes){ return $true }; $r = Read-Host "$m [Y/n]"; return ($r -eq '' -or $r -match '^[Yy]') }
 function Adb([Parameter(ValueFromRemainingArguments=$true)]$a){
   $o = & $script:adbExe @a 2>&1 | Out-String
