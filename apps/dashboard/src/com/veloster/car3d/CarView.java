@@ -94,6 +94,14 @@ final class CarView extends FrameLayout implements Runnable {
 
     void setExit(Runnable exit) { onExit = exit; }
 
+    /** The 3D view draws at 80 % of the screen in each direction (64 % of the pixels) and the display scales it up; the
+     *  HUD on top stays sharp. The GPU's per-pixel work (the backdrop, the floor, the car's reflections) is most of a frame. */
+    static final float RENDER_SCALE = 0.8f;
+    @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        if (w > 0 && h > 0) gl.getHolder().setFixedSize(Math.round(w * RENDER_SCALE), Math.round(h * RENDER_SCALE));
+    }
+
     /** Shooting Star (T5R) is the matte factory colour. */
     private void applyPaint() { renderer.setPaint(paint == 0 ? 0 : CarPaint.RGB[paint], "T5R".equals(CarPaint.CODE[paint])); }
 
