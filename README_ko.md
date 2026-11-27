@@ -14,7 +14,7 @@
 
 | N 계기판 | 내 앱 |
 | --- | --- |
-| 화면 21개: 전체 조망·F1·게이지·그래프·퍼포먼스·택시 미터기·기록·레이스·람다·타코·네온 드라이브·나이트·VFD·HUD·G 원·워프·드래그·카세트·쇼·서킷(국내 6곳 랩 타이머)·내 차(깜빡이·라이트·핸들을 따라 움직이는 3D 벨로스터 N) | 계기판·설치 앱 실행 |
+| 화면 22개: 전체 조망·F1·게이지·그래프·퍼포먼스·택시 미터기·기록·레이스·람다·타코·네온 드라이브·나이트·VFD·HUD·G 원·워프·드래그·카세트·쇼·서킷(국내 6곳 랩 타이머)·내 차(깜빡이·라이트·핸들을 따라 움직이는 3D 벨로스터 N, 문·후드·트렁크 열림과 미러 접힘)·레트로(80년대 디지털 계기판 8종) | 계기판·설치 앱 실행 |
 | 화면 목록(보이기·숨기기·순서)·테마 20종·길게 눌러 칸 바꾸기·주행 모드 색/화면 | 선택형 가장자리 버튼·알림 바로가기 |
 | 다른 앱 위 플로팅 창·설정 백업·기록실(가속 측정 상위 기록 보관)·[내비 글꼴 바꾸기](docs/FONTS.md) | 엔지니어링 모드·USB 디버깅·Android 도구 |
 | GPS로 고르는 17개 시·도 택시 요금·엔진 사운드·변속 알림음·과속 차임 | Bluetooth 페어링·확인창을 거치는 재시작 |
@@ -26,7 +26,7 @@
 
 ## 화면
 
-탭 21개를 모두 보여 줍니다. 탭 줄을 길게 누르거나 설정 → 화면에서 보이기·숨기기·순서를 바꿀 수 있습니다. 아래 그림은 **안드로이드 에뮬레이터(800×480)에서 실제 계기판 앱을 실행해 찍은 화면**입니다. 에뮬레이터에는 차 데이터가 없어서, 촬영용 빌드에만 1분짜리 가상 주행 값(합성값)을 넣었습니다. 실차 사진이 아니며, 글꼴은 안드로이드 기본 글꼴이라 차와 다릅니다. 네온 드라이브는 차 신호가 없어 데모 모드로 나오고, 서킷 화면의 GPS 대기 표시는 현재 앱 동작 그대로이며, 내 차 화면의 전조등은 화면의 시험 버튼으로 켠 것입니다. 다시 찍기: `scripts/emulator_screens.py`
+탭 22개를 모두 보여 줍니다. 탭 줄을 길게 누르거나 설정 → 화면에서 보이기·숨기기·순서를 바꿀 수 있습니다. 아래 그림은 **안드로이드 에뮬레이터(800×480)에서 실제 계기판 앱을 실행해 찍은 화면**입니다. 에뮬레이터에는 차 데이터가 없어서, 촬영용 빌드에만 1분짜리 가상 주행 값(합성값)을 넣었습니다. 실차 사진이 아니며, 글꼴은 안드로이드 기본 글꼴이라 차와 다릅니다. 네온 드라이브는 차 신호가 없어 데모 모드로 나오고, 서킷 화면의 GPS 대기 표시는 현재 앱 동작 그대로이며, 내 차 화면의 전조등과 문·후드·트렁크는 화면의 시험 버튼으로 켜고 연 것입니다(문·트렁크 열림은 아직 차 신호와 연결되지 않았습니다). 레트로의 깜빡이 화살표는 에뮬레이터에 차 신호가 없어 꺼져 있습니다. 다시 찍기: `scripts/emulator_screens.py`
 
 <table>
 <tr><td width="50%" valign="top"><img src="docs/images/screens/ko/01-overview.png" alt="전체 조망" width="100%"><br><b>1. 전체 조망</b> · 모든 값 한눈에</td><td width="50%" valign="top"><img src="docs/images/screens/ko/02-f1.png" alt="F1" width="100%"><br><b>2. F1</b> · F1 스타일 계기판</td></tr>
@@ -39,7 +39,12 @@
 <tr><td width="50%" valign="top"><img src="docs/images/screens/ko/15-gcircle.png" alt="G 원" width="100%"><br><b>15. G 원</b> · 마찰원·G 꼬리</td><td width="50%" valign="top"><img src="docs/images/screens/ko/16-warp.png" alt="워프" width="100%"><br><b>16. 워프</b> · 우주선 워프</td></tr>
 <tr><td width="50%" valign="top"><img src="docs/images/screens/ko/17-drag.png" alt="드래그" width="100%"><br><b>17. 드래그</b> · 드래그 출발 신호·0-100</td><td width="50%" valign="top"><img src="docs/images/screens/ko/18-cassette.png" alt="카세트" width="100%"><br><b>18. 카세트</b> · 카세트 덱·VU 미터</td></tr>
 <tr><td width="50%" valign="top"><img src="docs/images/screens/ko/19-show.png" alt="쇼" width="100%"><br><b>19. 쇼</b> · 출력 곡선·부스트·G 원</td><td width="50%" valign="top"><img src="docs/images/screens/ko/20-circuit.png" alt="서킷" width="100%"><br><b>20. 서킷</b> · 서킷 지도·랩 타임</td></tr>
-<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/21-car3d.png" alt="내 차" width="100%"><br><b>21. 내 차</b> · 3D 모델·램프·핸들 연동</td><td width="50%" valign="top"></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/21-car3d.png" alt="내 차" width="100%"><br><b>21. 내 차</b> · 3D 모델·램프·핸들 연동</td><td width="50%" valign="top"><img src="docs/images/screens/ko/21-car3d-doors.png" alt="내 차" width="100%"><br><b>21. 내 차</b> · 문·후드 열림(시험 버튼)</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/21-car3d-hatch.png" alt="내 차" width="100%"><br><b>21. 내 차</b> · 오른쪽 문 2개·트렁크 열림(시험 버튼)</td><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-1.png" alt="트윈 포드" width="100%"><br><b>22. 레트로</b> · 트윈 포드 (화면을 누르면 다음 스타일)</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-2.png" alt="그린 아크" width="100%"><br><b>22. 레트로</b> · 그린 아크</td><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-3.png" alt="곡선 타코" width="100%"><br><b>22. 레트로</b> · 곡선 타코</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-4.png" alt="LED 매트릭스" width="100%"><br><b>22. 레트로</b> · LED 매트릭스</td><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-5.png" alt="레인보우" width="100%"><br><b>22. 레트로</b> · 레인보우</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-6.png" alt="원근 도로" width="100%"><br><b>22. 레트로</b> · 원근 도로</td><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-7.png" alt="앰버 트리플" width="100%"><br><b>22. 레트로</b> · 앰버 트리플</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/ko/22-retro-8.png" alt="트윈 서클" width="100%"><br><b>22. 레트로</b> · 트윈 서클</td><td width="50%" valign="top"></td></tr>
 </table>
 
 ## 호환성
