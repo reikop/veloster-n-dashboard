@@ -379,7 +379,7 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         for (CarModel.Spot s : m.spots) {
             float stretch = pass == 1 ? 2.6f : 1f;
             GLES20.glUniform3f(halo.u("uUp"), view[1] * stretch, view[5] * stretch, view[9] * stretch);
-            float k = s.group < g.length ? g[s.group] * HALO_GAIN[s.group] : 0;
+            float k = s.group < g.length ? g[s.group] * HALO_GAIN[s.group] * s.gain : 0;
             if (k < 0.02f) continue;
             float nx = s.nx, ny = s.ny, nz = s.nz;
             if (s.hinge >= 0 && s.hinge < CarState.OPENINGS) {   // a lamp on a door / hatch / mirror swings with it
@@ -485,7 +485,7 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         " vec3 c=shade(b*0.75,0.5,n,v)*(1.0-0.5*vK)+e*(0.05+vK*1.9);\n" +
         // number plates (uFlat 1): the film reads near its own colour, the rear plate's lamps (vK: its POSITION group,
         // on with the tail lamps) wash it a little brighter
-        " c=mix(c,b*(0.9+0.35*vK)+shade(vec3(0.0),0.4,n,v)*0.25,uFlat);\n" +
+        " c=mix(c,b*(0.9+0.1*vK)+shade(vec3(0.0),0.4,n,v)*0.25,uFlat);\n" +
         " gl_FragColor=vec4(c,1.0); }\n";
     private static final String FLOOR_VS =
         "uniform mat4 uMVP; uniform float uSize; attribute vec2 aCorner; varying vec2 vXZ;\n" +

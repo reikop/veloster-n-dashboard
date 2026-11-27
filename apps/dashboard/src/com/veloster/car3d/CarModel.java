@@ -34,6 +34,8 @@ public final class CarModel {
         public int group;
         /** The hinged part the lamp sits on (it moves with it), or -1 on the body. */
         public int hinge = -1;
+        /** Halo strength, 0..1 (the rear plate's small lamps are dimmer than the lamps of the same group). */
+        public float gain = 1f;
         public float x, y, z, nx, ny, nz, radius;
     }
 
@@ -82,7 +84,7 @@ public final class CarModel {
             Spot[] spots = new Spot[n];
             for (int i = 0; i < n; i++) {
                 Spot s = new Spot();
-                s.group = in.get() & 255; s.hinge = (in.get() & 255) - 1; in.get(); in.get();
+                s.group = in.get() & 255; s.hinge = (in.get() & 255) - 1; int k = in.get() & 255; s.gain = k == 0 ? 1f : Math.min(1f, k / 100f); in.get();
                 if (s.hinge >= HINGES) throw new IOException("spot hinge");
                 s.x = in.getFloat(); s.y = in.getFloat(); s.z = in.getFloat();
                 s.nx = in.getFloat(); s.ny = in.getFloat(); s.nz = in.getFloat(); s.radius = in.getFloat();

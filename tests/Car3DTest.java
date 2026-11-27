@@ -80,7 +80,8 @@ public class Car3DTest {
             if (s.group == CarState.TURN_R) check(s.x < 0, "right turn lamps on the car's right");
             if (s.group == CarState.HEAD) check(s.z > 1.5f && s.nz > 0, "headlamps at the front, facing forward");
             if (s.group == CarState.TAIL || s.group == CarState.STOP) check(s.z < -1.5f, "tail / stop lamps at the back");
-            if (s.group == CarState.POSITION && s.z < -2f && s.y < 0.6f) plateLamps++;
+            if (s.group == CarState.POSITION && s.z < -2f && s.y < 0.6f) { plateLamps++; check(s.gain > 0.1f && s.gain < 0.5f, "the plate lamps' halos are dim"); }
+            else check(s.gain == 1f, "other halos at full strength");
             if (s.group == CarState.TURN_L && s.z > 0.3f && s.z < 0.8f) check(s.hinge == CarModel.MIRROR_L, "the left mirror repeater folds with the mirror");
             check(s.hinge < CarState.OPENINGS, "lamp spots ride on the body or an opening part");
         }

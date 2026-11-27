@@ -32,7 +32,7 @@ File format (little endian), assets/car3d/veloster_n.bin:
             the part's vertices are relative to it), u32 vertices, u32 indices, vertices*28 bytes, indices*u16 (padded to 4)
   vertex (28 bytes): f32 x y z, s16 nx ny nz (/32767), u16 lamp group (8 = body paint), u8 r g b a (body: a = gloss, glass: a = opacity),
           u16 u v (/65535; number plates: 0..1 across the plate as seen from outside, u to the right, v down)
-  then u32 spots, per spot: u8 lamp group, u8 hinge + 1 (0: on the body), 2 x u8 0, f32 x y z, f32 normal x y z,
+  then u32 spots, per spot: u8 lamp group, u8 hinge + 1 (0: on the body), u8 halo strength % (0: 100), u8 0, f32 x y z, f32 normal x y z,
             f32 radius (glow halos)
 """
 import argparse
@@ -192,7 +192,7 @@ PLATE_W, PLATE_H, HOLDER_W, HOLDER_H = 0.520, 0.110, 0.540, 0.130
 PLATES = ((+1, 0.465, 0.012), (-1, 0.510, 0.004))   # (+1 front / -1 rear, centre y, gap off the surface)
 # The rear plate's two lamps (light with the tail lamps): on the bumper just above the plate, shining down onto it. The
 # rear plate's vertices carry the POSITION lamp group (lit with the tail lamps, not brighter when braking).
-PLATE_LAMP_X, PLATE_LAMP_UP = 0.12, 0.018
+PLATE_LAMP_X, PLATE_LAMP_UP, PLATE_LAMP_HALO = 0.12, 0.018, 30   # halo strength %: small lamps, much dimmer than the position lamps
 HOLDER_RGBA = (0.035, 0.035, 0.04, 0.3)
 
 
@@ -248,7 +248,7 @@ def plate_parts(prims):
         if side < 0:
             top = cy + PLATE_H / 2 + PLATE_LAMP_UP
             for lx in (-PLATE_LAMP_X, PLATE_LAMP_X):
-                lamps.append((POSITION, np.array([lx, top, a + b * top - 0.01]), np.array([0.0, -0.6, -0.8]), 0.025, -1))
+                lamps.append((POSITION, np.array([lx, top, a + b * top - 0.01]), np.array([0.0, -0.6, -0.8]), 0.02, -1, PLATE_LAMP_HALO))
         where.append({'side': 'front' if side > 0 else 'rear', 'centre': [0.0, cy, round(float(a + b * cy), 4)],
                       'lean_dz_dy': round(float(b), 3), 'right': right.tolist()})
     return out, lamps, where
@@ -435,7 +435,7 @@ def finish_spots(spots):
             continue
         centre = pc / w; nrm = pn / (np.linalg.norm(pn) + 1e-12)
         pts = np.vstack(pts); size = float(np.percentile(np.linalg.norm(pts - centre, axis=1), 80))
-        out.append((g, centre, nrm, max(size, 0.03), hinge))
+        out.append((g, centre, nrm, max(size, 0.03), hinge, 100))
     return out
 
 
@@ -478,7 +478,7 @@ def pack(parts, centres, pivots, spots, out):
             count += 1; total_tris += len(idx) // 3
             start = end
     trailer = struct.pack('<I', len(spots)) + b''.join(
-        struct.pack('<BBBB7f', g, hinge + 1, 0, 0, *c.astype(float), *n.astype(float), size) for g, c, n, size, hinge in spots)
+        struct.pack('<BBBB7f', g, hinge + 1, 0 if gain >= 100 else gain, 0, *c.astype(float), *n.astype(float), size) for g, c, n, size, hinge, gain in spots)
     data = b'VN3D' + struct.pack('<II', VERSION, count) + b''.join(blobs) + trailer
     out.write_bytes(data)
     return count, total_tris, len(data)
@@ -505,7 +505,7 @@ def main():
     print(json.dumps({'chunks': count, 'triangles': tris, 'bytes': size, 'tyre_radius_m': round(radius, 4),
                       'wheel_centres_m': {k: [round(float(x), 4) for x in v] for k, v in centres.items()},
                       'hinge_pivots_m': {k: [round(float(x), 4) for x in v] for k, v in pivots.items()},
-                      'lamp_spots': [[g, [round(float(x), 3) for x in c], round(sz, 3), h] for g, c, n, sz, h in spots],
+                      'lamp_spots': [[g, [round(float(x), 3) for x in c], round(sz, 3), h, k] for g, c, n, sz, h, k in spots],
                       'triangles_by_material': stats}, indent=1))
 
 
