@@ -226,6 +226,7 @@ public final class UiText {
         EN.put("네온 드라이브","Neon Drive");
         EN.put("네이비","Navy");
         EN.put("노을","Sunset");
+        EN.put("녹색 (구형)","Green (old)");
         EN.put("눌러서 N 계기판과 앱 목록 열기","Tap to open N Dashboard and your app list");
         EN.put("다른 칸과 위치 바꾸기","Swap with another slot");
         EN.put("다음","Next");
@@ -296,6 +297,7 @@ public final class UiText {
         EN.put("바로가기 시작 실패. 내 앱을 다시 열어 설정을 확인하세요.","Shortcut could not start. Reopen My Apps and check its settings.");
         EN.put("바로가기 시작 실패. 설정 상태와 시스템 권한을 확인하세요.","Shortcut could not start. Check its settings and system permissions.");
         EN.put("바로가기: ","Shortcut: ");
+        EN.put("반사필름 (2020~)","Reflective film (2020-)");
         EN.put("반응 시간","Reaction");
         EN.put("받은 RPM·페달·부스트로 만든 소리","Made from the received rpm, pedal and boost");
         EN.put("받지 못함","Not received");
@@ -313,6 +315,7 @@ public final class UiText {
         EN.put("버튼 위치를 갱신하지 못해 알림만 유지합니다.","Could not update the button position. Only the notification remains.");
         EN.put("번 · "," - ");
         EN.put("번 칸"," cell");
+        EN.put("번호판","Plate");
         EN.put("변속 권장","Shift hint");
         EN.put("변속 레버","Shift lever");
         EN.put("변속 알림","Shift beep");
@@ -496,6 +499,7 @@ public final class UiText {
         EN.put("연타 · 5번","Rapid · 5 taps");
         EN.put("연하게","Light");
         EN.put("영수증","RECEIPT");
+        EN.put("영업용","Commercial");
         EN.put("옆","Side");
         EN.put("예상","PREDICTED");
         EN.put("오류가 나면 앱 내부 진단 기록에 남습니다 (차량 값·음원 정보 제외).","Errors go to the app's private diagnostic record (no vehicle values or track info).");
@@ -587,6 +591,7 @@ public final class UiText {
         EN.put("적용","Apply");
         EN.put("적용하면 재부팅 뒤에 화면에 반영됩니다","A font you apply shows after a reboot");
         EN.put("전기·차체","Electrics · body");
+        EN.put("전기차","Electric car");
         EN.put("전남","Jeonnam");
         EN.put("전북","Jeonbuk");
         EN.put("전에 쓰던 화면 배치 · 테마 · 플로팅 창 설정입니다. %s 저장","Earlier screens, theme, floating window. Saved %s");
@@ -783,6 +788,7 @@ public final class UiText {
         EN.put("후진 중이거나 RPM이 없으면 조용합니다","Silent in reverse or without rpm");
         EN.put("흡기","Intake");
         EN.put("흡기 온도","Intake temperature");
+        EN.put("흰색","White");
         KO.put("가장자리 버튼 + 알림 / Floating + notification","가장자리 버튼 + 알림");
         KO.put("기어","기어");
         KO.put("내 앱 / My Apps","내 앱");

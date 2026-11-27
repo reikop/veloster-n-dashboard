@@ -43,7 +43,10 @@ final class CarRenderer implements GLSurfaceView.Renderer {
     private CarModel model;
     private Bitmap lampBase, lampGlow;
     private int[] vbo, ibo;
-    private int texBase, texGlow;
+    private int texBase, texGlow, texPlate;
+    /** The number plate picture (CarPlate), uploaded on the GL thread. */
+    private Bitmap plateBmp;
+    private boolean plateUploaded;
     private boolean uploaded;
     private Program body, lamp, glass, floor, halo, rim, sky;
     private FloatBuffer quad;
@@ -70,6 +73,7 @@ final class CarRenderer implements GLSurfaceView.Renderer {
             for (int h = 0; h < CarState.OPENINGS; h++) hinge[h] = s.hingeDeg(h);
         }
     }
+    void setPlate(Bitmap b) { synchronized (lock) { plateBmp = b; plateUploaded = false; } }
     void setScene(int s) { synchronized (lock) { scene = CarScene.valid(s); } }
     void setBackdrop(Bitmap sharp, Bitmap blurred) { synchronized (lock) { skyBmp = sharp; envBmp = blurred; skyUploaded = false; } }
     void setCamera(float yaw, float pitch, float dist) { synchronized (lock) { camera.yaw = yaw; camera.pitch = pitch; camera.dist = dist; } }
@@ -84,7 +88,7 @@ final class CarRenderer implements GLSurfaceView.Renderer {
 
     // ---- GL thread -----------------------------------------------------------------------------------------------
     @Override public void onSurfaceCreated(GL10 unused, EGLConfig config) {
-        synchronized (lock) { uploaded = false; skyUploaded = false; texSky = texEnv = 0; }   // a new context: every buffer and texture is gone
+        synchronized (lock) { uploaded = false; skyUploaded = false; plateUploaded = false; texSky = texEnv = texPlate = 0; }   // a new context: every buffer and texture is gone
         body = new Program(BODY_VS, BODY_FS); lamp = new Program(LAMP_VS, LAMP_FS); glass = new Program(BODY_VS, GLASS_FS);
         floor = new Program(FLOOR_VS, FLOOR_FS); halo = new Program(HALO_VS, HALO_FS); rim = new Program(RIM_VS, RIM_FS); sky = new Program(SKY_VS, SKY_FS);
         quad = ByteBuffer.allocateDirect(8 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -108,6 +112,10 @@ final class CarRenderer implements GLSurfaceView.Renderer {
             System.arraycopy(glow, 0, g, 0, g.length); System.arraycopy(paint, 0, pc, 0, 3);
             m = model;
             if (m != null && !uploaded) { upload(m, lampBase, lampGlow); uploaded = true; }
+            if (plateBmp != null && !plateUploaded) {
+                if (texPlate != 0) GLES20.glDeleteTextures(1, new int[] {texPlate}, 0);
+                texPlate = texture(plateBmp); plateUploaded = true;
+            }
             if (skyBmp != null && !skyUploaded) {
                 if (texSky != 0) GLES20.glDeleteTextures(2, new int[] {texSky, texEnv}, 0);
                 texSky = panorama(skyBmp); texEnv = panorama(envBmp); skyUploaded = true;
@@ -147,8 +155,16 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniform1i(lamp.u("uBase"), 0);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texGlow);
         GLES20.glUniform1i(lamp.u("uGlowTex"), 1);
+        GLES20.glUniform1f(lamp.u("uFlat"), 0f);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         for (int i = 0; i < m.chunks.length; i++) if (m.chunks[i].program == CarModel.LAMP) drawChunk(lamp, m, i, wd, roll);
+        if (texPlate != 0) {   // number plates: the lamp shader over the plate picture (group 0: never glows; a faint film sheen)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texPlate);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE1); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texPlate);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glUniform1f(lamp.u("uFlat"), 1f);   // reflective film: reads near its own colour; the rear one lit by its lamps
+            for (int i = 0; i < m.chunks.length; i++) if (m.chunks[i].program == CarModel.PLATE) drawChunk(lamp, m, i, wd, roll);
+        }
         // The backdrop and floor after the opaque car, depth-tested without writing: the pixels the car covers are never
         // shaded (they were drawn and then overdrawn before, a third of the screen with the heaviest shaders).
         GLES20.glDepthMask(false);
@@ -462,11 +478,14 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         " gl_Position=uMVP*vec4(aPos,1.0); }\n";
     private static final String LAMP_FS =
         "precision mediump float;\n" + LIGHTING +
-        "uniform sampler2D uBase; uniform sampler2D uGlowTex;\n" +
+        "uniform sampler2D uBase; uniform sampler2D uGlowTex; uniform float uFlat;\n" +
         "varying vec3 vN; varying vec3 vW; varying vec2 vUV; varying float vK;\n" +
         "void main(){ vec3 n=normalize(vN); vec3 v=normalize(uEye-vW);\n" +
         " vec3 b=texture2D(uBase,vUV).rgb; vec3 e=texture2D(uGlowTex,vUV).rgb;\n" +
         " vec3 c=shade(b*0.75,0.5,n,v)*(1.0-0.5*vK)+e*(0.05+vK*1.9);\n" +
+        // number plates (uFlat 1): the film reads near its own colour, the rear plate's lamps (vK: its POSITION group,
+        // on with the tail lamps) wash it a little brighter
+        " c=mix(c,b*(0.9+0.35*vK)+shade(vec3(0.0),0.4,n,v)*0.25,uFlat);\n" +
         " gl_FragColor=vec4(c,1.0); }\n";
     private static final String FLOOR_VS =
         "uniform mat4 uMVP; uniform float uSize; attribute vec2 aCorner; varying vec2 vXZ;\n" +

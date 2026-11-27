@@ -99,13 +99,15 @@ def main():
                 for k in range(1, 9):
                     shot(f"retro-{k}"); tap(400, 300); time.sleep(2.7)
                 continue
+            if slug == "car3d":   # headlamps on by the test button (the emulator has no car signal), the buttons hidden again
+                tap(400, 240); time.sleep(1); tap(351, 443); tap(400, 240); time.sleep(2)
             shot(slug)
             if slug == "car3d":   # the parts that open, by the test buttons: driver door + bonnet, then (from behind) the right doors + hatch
                 tap(400, 240); time.sleep(1)
                 tap(73, 389); tap(465, 389); time.sleep(2.6); shot("car3d-doors")
                 tap(73, 389); tap(465, 389); time.sleep(0.3); tap(601, 30); time.sleep(1)
                 tap(204, 389); tap(335, 389); tap(596, 389); time.sleep(2.6); shot("car3d-hatch")
-                tap(204, 389); tap(335, 389); tap(596, 389); time.sleep(1.2); tap(545, 30); time.sleep(0.5); tap(400, 240)
+                tap(204, 389); tap(335, 389); tap(596, 389); time.sleep(1.2); tap(545, 30); time.sleep(0.5); tap(351, 443); tap(400, 240)
     print("wrote", args.out)
 
 

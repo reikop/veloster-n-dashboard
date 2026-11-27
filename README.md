@@ -14,7 +14,7 @@ Owner-provided in-car photo. Missing readings display a dash. Location/camera me
 
 | N Dashboard | My Apps |
 | --- | --- |
-| 22 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive, night, VFD, HUD, G circle, warp, drag, cassette, show, circuit (lap timer at six Korean tracks), My Car (3D Veloster N with live lamps and steering; its doors, bonnet and hatch open and the mirrors fold), Retro (eight 80s digital dashes) | Dashboard and installed-app launcher |
+| 22 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive, night, VFD, HUD, G circle, warp, drag, cassette, show, circuit (lap timer at six Korean tracks), My Car (3D Veloster N with live lamps and steering; its doors, bonnet and hatch open and the mirrors fold; Korean number plates in five styles), Retro (eight 80s digital dashes) | Dashboard and installed-app launcher |
 | Screen list (show/hide/order), 20 themes, hold-to-change tiles, drive-mode colours and screens | Opt-in edge button and notification shortcut |
 | Floating window over other apps, settings backup, records room (best runs kept), [system font changer](docs/FONTS.md) | Engineering mode, USB debugging and Android utilities |
 | Taxi meter with 17 regional fares picked from GPS; engine sound, shift beep, speed chime | Bluetooth pairing and restart confirmation |

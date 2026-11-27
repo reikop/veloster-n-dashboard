@@ -1,4 +1,5 @@
 import com.veloster.car3d.CarModel;
+import com.veloster.car3d.PlateText;
 import com.veloster.car3d.CarState;
 import com.veloster.neondrive.DriveSignals;
 import java.nio.ByteBuffer;
@@ -40,6 +41,26 @@ public class Car3DTest {
         for (int k = 0; k < 4; k++) check(wheels[k] == 1 && callipers[k] == 1, "every corner has a wheel and a calliper: " + k);
         check(lamp && glass, "lamp and glass parts present");
         for (int h = 0; h < CarModel.HINGES; h++) check(hinged[h] > 0, "hinged part present: " + h);
+        int plates = 0;
+        for (CarModel.Chunk c : m.chunks) if (c.program == CarModel.PLATE) {
+            check(c.motion == CarModel.FIXED, "number plates are fixed (the rear one is on the bumper, not the hatch)");
+            ByteBuffer v = c.vertexData.duplicate().order(ByteOrder.nativeOrder());
+            boolean front = false, rear = false;
+            for (int i = 0; i < c.vertices; i++) {
+                float x = v.getFloat(i * CarModel.STRIDE), y = v.getFloat(i * CarModel.STRIDE + 4), z = v.getFloat(i * CarModel.STRIDE + 8);
+                float u = (v.getShort(i * CarModel.STRIDE + 24) & 0xffff) / 65535f, w = (v.getShort(i * CarModel.STRIDE + 26) & 0xffff) / 65535f;
+                check(Math.abs(x) <= 0.261f && y > 0.40f && y < 0.58f, "plate corner within a 520 x 110 mm plate at bumper height: " + x + "," + y);
+                check((u == 0 || u == 1) && (w == 0 || w == 1), "plate UVs span the picture");
+                if (z > 2.05f) { front = true; check((u == 1) == (x > 0), "front plate reads left to right (the viewer's right is the car's left, +X)"); check((w == 0) == (y > 0.465f), "front plate top at v 0"); check(y < 0.53f, "front plate under the badge"); }
+                if (z < -2.05f) { rear = true; check((u == 1) == (x < 0), "rear plate reads left to right from behind");
+                    check((v.getShort(i * CarModel.STRIDE + 18) & 0xffff) == CarState.POSITION, "the rear plate is lit with the tail lamps (its two lamps)"); }
+            }
+            check(front && rear, "a front and a rear plate");
+            plates++;
+        }
+        check(plates == 1, "one plate chunk");
+        check(PlateText.clean(null).equals(PlateText.DEFAULT) && PlateText.clean("  12가\n 3456  ").equals("12가 3456") && PlateText.clean("123가 45678901").length() == PlateText.MAX, "plate text cleaned");
+        check(PlateText.validStyle(9) == PlateText.FILM && PlateText.NAMES.length == PlateText.STYLES && PlateText.band(PlateText.FILM) && PlateText.band(PlateText.EV) && !PlateText.band(PlateText.GREEN), "plate styles");
         check(hx[CarModel.DOOR_L] > 0.7f && hz[CarModel.DOOR_L] > 0.5f, "the left (driver) door hinges at its front edge, outer side");
         check(hx[CarModel.DOOR_RF] < -0.7f && hz[CarModel.DOOR_RF] > 0.5f && hx[CarModel.DOOR_RR] < -0.7f && hz[CarModel.DOOR_RR] < 0 && hz[CarModel.DOOR_RR] > -0.6f, "two doors on the right, the rear one hinged behind the B-pillar");
         check(hz[CarModel.BONNET] > 0.7f && hz[CarModel.BONNET] < 1.1f && hy[CarModel.BONNET] > 0.7f, "bonnet hinged at its rear edge");
@@ -52,16 +73,18 @@ public class Car3DTest {
         check(maxY > 1.3f && maxY < 1.45f, "height (1,399 mm): " + maxY);
         for (int g : new int[] {CarState.HEAD, CarState.TAIL, CarState.STOP, CarState.TURN_L, CarState.TURN_R, CarState.REVERSE, 8})
             check(groups[g] > 0, "lamp group has triangles: " + g);
-        boolean[] spot = new boolean[CarState.GROUPS];
+        boolean[] spot = new boolean[CarState.GROUPS]; int plateLamps = 0;
         for (CarModel.Spot s : m.spots) {
             spot[s.group] = true;
             if (s.group == CarState.TURN_L) check(s.x > 0, "left turn lamps on the car's left (+X)");
             if (s.group == CarState.TURN_R) check(s.x < 0, "right turn lamps on the car's right");
             if (s.group == CarState.HEAD) check(s.z > 1.5f && s.nz > 0, "headlamps at the front, facing forward");
             if (s.group == CarState.TAIL || s.group == CarState.STOP) check(s.z < -1.5f, "tail / stop lamps at the back");
+            if (s.group == CarState.POSITION && s.z < -2f && s.y < 0.6f) plateLamps++;
             if (s.group == CarState.TURN_L && s.z > 0.3f && s.z < 0.8f) check(s.hinge == CarModel.MIRROR_L, "the left mirror repeater folds with the mirror");
             check(s.hinge < CarState.OPENINGS, "lamp spots ride on the body or an opening part");
         }
+        check(plateLamps == 2, "two rear plate lamps");
         check(spot[CarState.HEAD] && spot[CarState.TAIL] && spot[CarState.STOP] && spot[CarState.TURN_L] && spot[CarState.TURN_R], "halo spots for the lamps");
         // corrupt files are refused
         byte[] bad = data.clone(); bad[0] = 'X';

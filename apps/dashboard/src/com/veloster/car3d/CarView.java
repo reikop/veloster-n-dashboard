@@ -75,6 +75,7 @@ final class CarView extends FrameLayout implements Runnable {
         yaw = prefs.getFloat("yaw", DEFAULT_YAW); pitch = prefs.getFloat("pitch", DEFAULT_PITCH); dist = prefs.getFloat("dist", DEFAULT_DIST);
         paint = Math.max(0, Math.min(CarPaint.COUNT - 1, prefs.getInt("paint", 0)));
         applyPaint();
+        applyPlate();
         scene = CarScene.valid(prefs.getInt("scene", CarScene.STUDIO));
         renderer.setScene(scene);
         loadBackdrop(context.getApplicationContext(), scene);
@@ -100,6 +101,37 @@ final class CarView extends FrameLayout implements Runnable {
     @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         if (w > 0 && h > 0) gl.getHolder().setFixedSize(Math.round(w * RENDER_SCALE), Math.round(h * RENDER_SCALE));
+    }
+
+    /** The plate text and style (PlateText) from the preferences, onto both plates. */
+    private void applyPlate() { renderer.setPlate(CarPlate.draw(prefs.getString("plate_text", ""), prefs.getInt("plate_style", PlateText.FILM))); }
+
+    /** 번호판: the plate text and one of the Korean plate styles. */
+    private void plateDialog() {
+        final Context ctx = getContext();
+        final android.widget.EditText text = new android.widget.EditText(ctx);
+        text.setSingleLine(true); text.setText(prefs.getString("plate_text", "")); text.setHint(PlateText.DEFAULT);
+        text.setFilters(new android.text.InputFilter[] {new android.text.InputFilter.LengthFilter(PlateText.MAX)});
+        final android.widget.RadioGroup group = new android.widget.RadioGroup(ctx);
+        int now = PlateText.validStyle(prefs.getInt("plate_style", PlateText.FILM));
+        for (int i = 0; i < PlateText.STYLES; i++) {
+            android.widget.RadioButton b = new android.widget.RadioButton(ctx);
+            b.setId(1000 + i); b.setText(UiText.t(PlateText.NAMES[i])); group.addView(b);
+        }
+        group.check(1000 + now);
+        android.widget.LinearLayout box = new android.widget.LinearLayout(ctx);
+        box.setOrientation(android.widget.LinearLayout.VERTICAL); int pad = Math.round(16 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad / 2, pad, 0); box.addView(text); box.addView(group);
+        box.setFocusableInTouchMode(true); box.requestFocus();   // no keyboard until the text is touched: it would cover the styles
+        android.widget.ScrollView scroll = new android.widget.ScrollView(ctx);   // 480 px high: the list scrolls under a keyboard
+        scroll.addView(box);
+        new android.app.AlertDialog.Builder(ctx).setTitle(UiText.t("번호판")).setView(scroll)
+            .setPositiveButton(UiText.t("저장"), new android.content.DialogInterface.OnClickListener() { public void onClick(android.content.DialogInterface d, int w) {
+                int style = Math.max(0, group.getCheckedRadioButtonId() - 1000);
+                prefs.edit().putString("plate_text", text.getText().toString()).putInt("plate_style", PlateText.validStyle(style)).apply();
+                applyPlate(); gl.requestRender();
+            }})
+            .setNegativeButton(UiText.t("취소"), null).show();
     }
 
     /** Shooting Star (T5R) is the matte factory colour. */
@@ -226,6 +258,8 @@ final class CarView extends FrameLayout implements Runnable {
     private static final float CHIP_Y = 420, CHIP_H = 46, CHIP_GAP = 8, CHIP_L = 12;
     private static final float BACK_L = 12, BACK_T = 10, BACK_W = 48, BACK_H = 40;
     private static final float BG_X = 458, BG_W = 56, BGL_L = 400, BGL_R = 570;
+    /** 번호판 button, under 배경. */
+    private static final float PLATE_T = 56;
     private static final float PAL_L = 540, PAL_R = 790, PAL_T = 58, PAL_ROW = 44;
     private static float paletteRow(int i) { return PAL_T + 6 + i * PAL_ROW; }
     private static final float VIEW_L = 520, VIEW_T = 10, VIEW_W = 50, VIEW_H = 40, SWATCH_X = 762, SWATCH_Y = 30, SWATCH_R = 18;
@@ -262,6 +296,7 @@ final class CarView extends FrameLayout implements Runnable {
             // backdrop
             panel(c, BG_X, VIEW_T, BG_W, VIEW_H, sceneOpen);
             text(c, UiText.t("배경"), BG_X + BG_W / 2, VIEW_T + 26, 15, WHITE, Paint.Align.CENTER);
+            if (!sceneOpen) { panel(c, BG_X, PLATE_T, BG_W, VIEW_H, false); fit(c, UiText.t("번호판"), BG_X + BG_W / 2, PLATE_T + 26, BG_W - 8, WHITE); }
             // view presets
             for (int i = 0; i < VIEWS.length; i++) {
                 float x = VIEW_L + i * (VIEW_W + 6);
@@ -457,6 +492,7 @@ final class CarView extends FrameLayout implements Runnable {
     private boolean onControl(float x, float y) {
         if (paletteOpen && x >= PAL_L && x <= PAL_R && y >= PAL_T && y <= PAL_T + 12 + CarPaint.COUNT * PAL_ROW) return true;
         if (sceneOpen && x >= BGL_L && x <= BGL_R && y >= PAL_T && y <= PAL_T + 12 + CarScene.COUNT * PAL_ROW) return true;
+        if (!sceneOpen && x >= BG_X - 4 && x <= BG_X + BG_W + 4 && y >= PLATE_T - 4 && y <= PLATE_T + VIEW_H + 4) return true;
         return chipsShown && y >= OPEN_Y - 4 || (y <= VIEW_T + VIEW_H + 4 && (x <= BACK_L + BACK_W + 4 || x >= BG_X - 4));
     }
 
@@ -477,6 +513,7 @@ final class CarView extends FrameLayout implements Runnable {
             return;
         }
         if (x >= BG_X && x <= BG_X + BG_W && y >= VIEW_T && y <= VIEW_T + VIEW_H) { paletteOpen = false; sceneOpen = true; return; }
+        if (!paletteOpen && x >= BG_X && x <= BG_X + BG_W && y >= PLATE_T && y <= PLATE_T + VIEW_H) { plateDialog(); return; }
         if (paletteOpen) {   // pick a colour, or tap anywhere else to close the list
             paletteOpen = false;
             if (x >= PAL_L && x <= PAL_R) for (int i = 0; i < CarPaint.COUNT; i++) {

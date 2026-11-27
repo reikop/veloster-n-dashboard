@@ -13,6 +13,10 @@ What the conversion does, for a Telechips tcc893x (GLES 2.0) at 800x480:
   * drops the engine and the parts under the bonnet, decimates the rest except the paint (about 406k -> ~116k triangles)
   * bakes base-colour textures into vertex colours; only the lamp atlas stays a texture (LED detail)
   * splits the four wheels (tyre, rim, disc: spin + steer) from the callipers (steer only)
+  * adds the two number plates the model lacks (a Korean long plate, 520 x 110 mm, on a thin black holder): the front
+    one on the grille under the badge, the rear one on the bumper's black lower part between the reflectors (both
+    fixed; checked against owner photos of a Korean Veloster N), each laid on the surface it sits on; the app draws the
+    plate picture (CarPlate)
   * splits the parts that open on a hinge (the three doors, bonnet, hatch, both mirrors) with their glass and lamps, and
     keeps a decimated engine bay that the app draws only while the bonnet is open
   * sorts every lamp triangle into a lamp group from the colour it glows in the emissive map and where it sits:
@@ -23,11 +27,11 @@ Needs numpy, scipy, Pillow and fast-simplification (development only; the app ju
 
 File format (little endian), assets/car3d/veloster_n.bin:
   "VN3D" u32 version=1, u32 parts
-  per part: u8 program (0 body, 1 lamp, 2 glass), u8 motion (0 fixed, 1 wheel, 2 calliper, 3 hinge), u8 corner (wheel /
+  per part: u8 program (0 body, 1 lamp, 2 glass, 3 number plate), u8 motion (0 fixed, 1 wheel, 2 calliper, 3 hinge), u8 corner (wheel /
             calliper: 0 FL, 1 FR, 2 RL, 3 RR; hinge: the HINGES index), u8 0, f32 pivot x y z (wheel centre / hinge point;
             the part's vertices are relative to it), u32 vertices, u32 indices, vertices*28 bytes, indices*u16 (padded to 4)
   vertex (28 bytes): f32 x y z, s16 nx ny nz (/32767), u16 lamp group (8 = body paint), u8 r g b a (body: a = gloss, glass: a = opacity),
-          u16 u v (/65535)
+          u16 u v (/65535; number plates: 0..1 across the plate as seen from outside, u to the right, v down)
   then u32 spots, per spot: u8 lamp group, u8 hinge + 1 (0: on the body), 2 x u8 0, f32 x y z, f32 normal x y z,
             f32 radius (glow halos)
 """
@@ -42,7 +46,7 @@ import numpy as np
 from PIL import Image
 
 VERSION = 3
-BODY, LAMP, GLASS = 0, 1, 2
+BODY, LAMP, GLASS, PLATE = 0, 1, 2, 3
 FIXED, WHEEL, CALLIPER, HINGE = 0, 1, 2, 3
 FL, FR, RL, RR = 0, 1, 2, 3
 # Hinged parts (CarModel / CarState use the same numbers): the glTF node name that marks each. The Veloster has one door
@@ -181,6 +185,73 @@ def hinge_pivots(prims):
                                np.median(inner[:, 1]), np.percentile(inner[:, 2], 75)])
     out[ENGINE] = np.zeros(3)
     return out
+
+
+# Number plates (Korean long plate): size, the holder around it, and where each sits (centre height, side).
+PLATE_W, PLATE_H, HOLDER_W, HOLDER_H = 0.520, 0.110, 0.540, 0.130
+PLATES = ((+1, 0.465, 0.012), (-1, 0.510, 0.004))   # (+1 front / -1 rear, centre y, gap off the surface)
+# The rear plate's two lamps (light with the tail lamps): on the bumper just above the plate, shining down onto it. The
+# rear plate's vertices carry the POSITION lamp group (lit with the tail lamps, not brighter when braking).
+PLATE_LAMP_X, PLATE_LAMP_UP = 0.12, 0.018
+HOLDER_RGBA = (0.035, 0.035, 0.04, 0.3)
+
+
+def surface_z(prims, side, xs, ys):
+    """The outermost body surface (front: largest z, rear: smallest) along +-Z at each (x, y): a ray cast against every
+    body triangle (doors, bonnet, hatch, mirrors and the engine are left out); NaN where nothing is hit."""
+    T = np.vstack([p['P'][p['I']] for p in prims if p['mat'] not in DROP_MATERIALS and hinge_of(p['node']) is None])
+    T = T[(np.sign(T[:, :, 2].mean(1)) == side)]
+    out = np.full((len(ys), len(xs)), np.nan)
+    a, b, c = T[:, 0, :2], T[:, 1, :2], T[:, 2, :2]
+    den = (b[:, 1] - c[:, 1]) * (a[:, 0] - c[:, 0]) + (c[:, 0] - b[:, 0]) * (a[:, 1] - c[:, 1])
+    ok = np.abs(den) > 1e-12
+    T, a, b, c, den = T[ok], a[ok], b[ok], c[ok], den[ok]
+    for j, y in enumerate(ys):
+        for i, x in enumerate(xs):
+            l1 = ((b[:, 1] - c[:, 1]) * (x - c[:, 0]) + (c[:, 0] - b[:, 0]) * (y - c[:, 1])) / den
+            l2 = ((c[:, 1] - a[:, 1]) * (x - c[:, 0]) + (a[:, 0] - c[:, 0]) * (y - c[:, 1])) / den
+            l3 = 1 - l1 - l2
+            m = (l1 >= 0) & (l2 >= 0) & (l3 >= 0)
+            if m.any():
+                z = l1[m] * T[m, 0, 2] + l2[m] * T[m, 1, 2] + l3[m] * T[m, 2, 2]
+                out[j, i] = z.max() if side > 0 else z.min()
+    return out
+
+
+def plate_parts(prims):
+    """The two plates and their holders, as (program, triangles, normals, colours, uvs, group) tuples, the rear plate
+    lamps' halo spots, plus where they went.
+    Each lies on a plane z = a + b*y fitted to the surface under it (the rear bumper leans back), moved out until no
+    part of the surface pokes through, plus the gap."""
+    out, where, lamps = [], [], []
+    for side, cy, gap in PLATES:
+        xs = np.linspace(-HOLDER_W / 2, HOLDER_W / 2, 9); ys = np.linspace(cy - HOLDER_H / 2, cy + HOLDER_H / 2, 6)
+        Z = surface_z(prims, side, xs, ys)
+        rows = np.nanmax(Z, 1) if side > 0 else np.nanmin(Z, 1)
+        b, a = np.polyfit(ys, rows, 1)
+        lift = np.nanmax((Z - (a + b * ys)[:, None]) * side)
+        a += side * (max(lift, 0) + gap)
+        n = np.array([0.0, -b, 1.0]) * side; n /= np.linalg.norm(n)
+        right = np.array([side, 0.0, 0.0])   # the viewer's right: +X (the car's left) seen from the front, -X from behind
+        for prog, w, h, back in ((BODY, HOLDER_W, HOLDER_H, 0.003), (PLATE, PLATE_W, PLATE_H, 0.0)):
+            corners = []
+            for u, v in ((0, 0), (1, 0), (1, 1), (0, 1)):   # u right, v down
+                x = (u - 0.5) * w * side; y = cy + (0.5 - v) * h
+                corners.append((np.array([x, y, a + b * y - side * back]), (u, v)))
+            P = np.array([[corners[0][0], corners[2][0], corners[1][0]], [corners[0][0], corners[3][0], corners[2][0]]]) if side > 0 else \
+                np.array([[corners[0][0], corners[1][0], corners[2][0]], [corners[0][0], corners[2][0], corners[3][0]]])
+            UV = np.array([[corners[0][1], corners[2][1], corners[1][1]], [corners[0][1], corners[3][1], corners[2][1]]]) if side > 0 else \
+                np.array([[corners[0][1], corners[1][1], corners[2][1]], [corners[0][1], corners[2][1], corners[3][1]]])
+            N = np.tile(n, (2, 3, 1))
+            col = np.tile(HOLDER_RGBA if prog == BODY else (1, 1, 1, 0.5), (2, 3, 1))
+            out.append((prog, P, N, col, UV if prog == PLATE else np.zeros((2, 3, 2)), POSITION if prog == PLATE and side < 0 else NONE))
+        if side < 0:
+            top = cy + PLATE_H / 2 + PLATE_LAMP_UP
+            for lx in (-PLATE_LAMP_X, PLATE_LAMP_X):
+                lamps.append((POSITION, np.array([lx, top, a + b * top - 0.01]), np.array([0.0, -0.6, -0.8]), 0.025, -1))
+        where.append({'side': 'front' if side > 0 else 'rear', 'centre': [0.0, cy, round(float(a + b * cy), 4)],
+                      'lean_dz_dy': round(float(b), 3), 'right': right.tolist()})
+    return out, lamps, where
 
 
 def corner_of(c):
@@ -328,7 +399,11 @@ def build(prims):
         group = np.full(len(Id), PAINT if mat == 'CarPaint' else NONE)
         target.add(Pd[Id], Nd, group, cd[Id], np.zeros((len(Id), 3, 2)))
         stats[mat] = stats.get(mat, 0) + len(Id)
-    return parts, centres, pivots, radius, offset, stats, finish_spots(spots)
+    plates, plate_lamps, plate_where = plate_parts(prims)
+    for prog, P, N, col, UV, group in plates:
+        part(prog).add(P, N, np.full(len(P), group), col, UV)
+    stats['plates'] = plate_where
+    return parts, centres, pivots, radius, offset, stats, finish_spots(spots) + plate_lamps
 
 
 def collect_spots(p, groups, spots, hinge=None):
