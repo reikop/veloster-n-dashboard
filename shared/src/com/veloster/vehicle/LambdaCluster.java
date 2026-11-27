@@ -70,7 +70,7 @@ final class LambdaCluster extends ClusterKit {
     }
     private void band(Canvas c,float cx,boolean left,float a,float b,int col){
         float sg=left?1:-1,xa=legX(cx,left,a)+3*sg,xb=legX(cx,left,b)+3*sg;
-        path.reset();path.moveTo(xa,legY(a));path.lineTo(xb,legY(b));path.lineTo(xb+BAND*sg,legY(b));path.lineTo(xa+BAND*sg,legY(a));path.close();poly(c,col);
+        float ya=legY(a),yb=legY(b);path.reset();path.moveTo(xa,ya);path.lineTo(xb,yb);path.lineTo(xb+BAND*sg,yb);path.lineTo(xa+BAND*sg,ya);path.close();poly(c,col,key(key(key(key(key(7,xa),ya),xb),yb),BAND*sg));
     }
     /** Lines from both legs' inner edge at fraction f to the two sides of a ring at (cx, y), solid or dashed. */
     private void join(Canvas c,float cx,float f,float y,float half,float w,int col){join(c,cx,f,y,half,w,col,false);}

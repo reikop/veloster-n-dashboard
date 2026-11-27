@@ -25,6 +25,8 @@ The installer checks the live product, SDK and incremental build. A generic firm
 | My Apps 1.11.0 (versionCode 12) | v10 installed 2026-10-27 with readback hash match; owner confirmed HOME edge-button reopening. v11 installed 2026-11-25 (tablet over OTG); the owner confirmed ☆ → dashboard | 1.11.0 on the car (version name only) |
 | Vehicle signals | RPM, temperatures, TPMS, NAdd gear/pedal/brake/steering, drive mode | Active ABS/TCS/ESC transitions, exhaust temperature, e-LSD; JSN has no clutch signal |
 
+1.13.0 takes the i30 PD fork's v1.17.8–v1.18.0 updates: shapes are kept and reused instead of rebuilt every frame (the fork measured its overview going from 40 ms to 16–22 ms a frame in the car), the engine sound goes back to the earlier synthesiser with six more four-cylinder voices, optional ducking for navigation prompts and calls, and optional louder-with-speed; and Neon Drive shows the track already playing as soon as it opens. Checked on hosts only (tests and builds); not checked in the car.
+
 1.12.0 adds the 내 차 (My Car) screen: a 3D Veloster N whose lamps, front wheels, wheel roll and body pitch/roll follow the car's turn lamps, light switch, brake, reverse, steering, speed and G sensor. Checked on hosts and an Android 7.0 emulator only; frame rate on the head unit's GPU, the turn-lamp bits and the steering / lateral-G signs on the car are unverified.
 
 Releases ship only the one-click installers (Windows, macOS, Linux, Android phone); each carries both APKs. Older release metadata (`release.json`, `SHA256SUMS`, `VALIDATION.json`, `SOURCE_SHA256SUMS`) describes the 2026-10 snapshots.

@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.dashboard" android:versionCode="32" android:versionName="1.12.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.veloster.dashboard" android:versionCode="33" android:versionName="1.13.0">
     <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="17" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!-- settings backup (SettingsBackup): a file on the head unit's storage that stays when the app is removed -->

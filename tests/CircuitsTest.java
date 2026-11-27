@@ -43,6 +43,11 @@ public final class CircuitsTest {
         double[] r=tp.at(130);check(Math.abs(r[0]-100)<1e-6&&Math.abs(r[1]-30)<1e-6,"the point 130 m on is round the corner, 30 m up the far side");
         double[] u=tp.at(-10);check(Math.abs(u[0])<1e-6&&Math.abs(u[1]-10)<1e-6,"it wraps backwards past the start");
         check(Math.abs(tp.delta(290,10)-20)<1e-6&&Math.abs(tp.delta(10,290)+20)<1e-6,"the short way round, either sense");
+        // distanceFast: the track itself at the circuit, the box far off (within the circuit's size of the real distance)
+        for(int i=0;i<Circuits.count();i++){double[] st=Circuits.start(i);
+            check(Math.abs(Circuits.distanceFast(i,st[0],st[1])-Circuits.distance(i,st[0],st[1]))<1e-6,Circuits.id(i)+": fast = exact at the track");
+            double df=Circuits.distanceFast(i,37.5663,126.9779),de=Circuits.distance(i,37.5663,126.9779);
+            check(df<=de+1&&de-df<6000,Circuits.id(i)+": from Seoul the box distance is within 6 km below the track's ("+Math.round(df)+" / "+Math.round(de)+" m)");}
         System.out.println("PASS "+checks+" circuit area checks");
     }
 }

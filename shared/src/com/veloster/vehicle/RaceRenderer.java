@@ -20,7 +20,7 @@ public final class RaceRenderer {
     private static int D(){return Theme.current().danger;}
     private final Paint p=new Paint(3);
     private final RectF r=new RectF();
-    private final Path path=new Path(),cellPath=new Path();
+    private final KeyPath path=new KeyPath();private final Path cellPath=new Path();
     private final RectF cellRect=new RectF();
     private static final int PANEL=0xff101315,LINE=0xff303638,TRACK=0xff1d2326,BLUE=0xffa4d9ef,WHITE=0xffe1edf2,MUTED=0xff91a5ae,
         RED=0xffff4059,AMBER=0xffffb84d,GREEN=0xff3ddc84,BG=0xff040506;
@@ -188,7 +188,7 @@ public final class RaceRenderer {
         p.setStyle(Paint.Style.FILL);p.setColor(T(lit?AMBER:active?0xff6a5326:0xff3a4650));
         float cy=68,tip=left?l+7:rr-7,base=left?rr-8:l+8;
         path.reset();path.moveTo(tip,cy);path.lineTo(base,cy-8);path.lineTo(base,cy+8);path.close();
-        c.drawPath(path,p);
+        c.drawPath(path.kept(),p);
     }
     private boolean blink(){return (now/BLINK_MS)%2==0;}
     private static int mix(int a,int b,float t){
@@ -342,34 +342,37 @@ public final class RaceRenderer {
     private float fit(String s,float size,float width){
         p.setTypeface(Typeface.DEFAULT);p.setTextSize(size);float w=p.measureText(s);return w>width?size*width/w:size;
     }
-    // Wheel icon geometry in wheel units (x right, y down, rim radius 1), rotated clockwise by wa about (wx,wy).
-    private float wx,wy,wr,wa;
-    private float wX(float x,float y){return wx+wr*(float)(x*Math.cos(wa)-y*Math.sin(wa));}
-    private float wY(float x,float y){return wy+wr*(float)(x*Math.sin(wa)+y*Math.cos(wa));}
-    private void poly(Canvas c,float[] xy,int color,boolean fill){
-        path.reset();path.moveTo(wX(xy[0],xy[1]),wY(xy[0],xy[1]));
-        for(int i=2;i<xy.length;i+=2)path.lineTo(wX(xy[i],xy[i+1]),wY(xy[i],xy[i+1]));
-        if(fill)path.close();
-        p.setStyle(fill?Paint.Style.FILL:Paint.Style.STROKE);p.setStrokeWidth(1.5f);p.setColor(T(color));c.drawPath(path,p);p.setStyle(Paint.Style.FILL);
+    /** Filled shape from wheel units (x right, y down, rim radius 1) scaled to radius r about the origin. */
+    private static Path shape(float[] xy,float r){
+        Path s=new Path();s.moveTo(xy[0]*r,xy[1]*r);
+        for(int i=2;i<xy.length;i+=2)s.lineTo(xy[i]*r,xy[i+1]*r);
+        s.close();return s;
     }
     /** Ring segment from deg0 to deg1 (0 = 12 o'clock, clockwise) between radii r0 and r1. */
-    private void band(Canvas c,float deg0,float deg1,float r0,float r1,int color){
+    private static Path band(float deg0,float deg1,float r0,float r1,float r){
         int n=Math.max(2,(int)Math.abs(deg1-deg0)/4);float[] xy=new float[(n+1)*4];
         for(int i=0;i<=n;i++){double t=Math.toRadians(deg0+(deg1-deg0)*i/n);
             xy[i*2]=(float)(Math.sin(t)*r1);xy[i*2+1]=(float)(-Math.cos(t)*r1);
             xy[(2*n+1-i)*2]=(float)(Math.sin(t)*r0);xy[(2*n+1-i)*2+1]=(float)(-Math.cos(t)*r0);}
-        poly(c,xy,color,true);
+        return shape(xy,r);
     }
+    // Wheel parts built once and rotated by the canvas: Android 4.2's GPU renderer rasterises a rebuilt Path on the UI
+    // thread every frame and reuses only an unchanged Path object (2026-11-26 car trace: the wheel was 22 % of the
+    // race page, six paths of ~400 rotated points a frame). Last part is the red stripe.
+    private Path[] wheelParts;private float wheelR;
     /** Simple one-colour wheel in the N layout (side spokes sitting a little low, one bottom spoke) with a large red
      * 12 o'clock stripe: the stripe and the single bottom spoke make the rotation readable at a glance. */
     private void wheel(Canvas c,float x,float y,float radius,float deg){
-        wx=x;wy=y;wr=radius;wa=(float)Math.toRadians(deg);
-        band(c,0,360,.80f,1f,WHITE);
-        poly(c,new float[]{-.24f,0f,-.84f,.04f,-.84f,.20f,-.24f,.18f},WHITE,true);
-        poly(c,new float[]{.24f,0f,.84f,.04f,.84f,.20f,.24f,.18f},WHITE,true);
-        poly(c,new float[]{-.08f,.24f,.08f,.24f,.06f,.84f,-.06f,.84f},WHITE,true);
-        band(c,0,360,.18f,.28f,WHITE);
-        band(c,-9,9,.74f,1.06f,RED);
+        if(wheelParts==null||wheelR!=radius){wheelR=radius;wheelParts=new Path[]{
+            band(0,360,.80f,1f,radius),
+            shape(new float[]{-.24f,0f,-.84f,.04f,-.84f,.20f,-.24f,.18f},radius),
+            shape(new float[]{.24f,0f,.84f,.04f,.84f,.20f,.24f,.18f},radius),
+            shape(new float[]{-.08f,.24f,.08f,.24f,.06f,.84f,-.06f,.84f},radius),
+            band(0,360,.18f,.28f,radius),
+            band(-9,9,.74f,1.06f,radius)};}
+        c.save();c.translate(x,y);c.rotate(deg);p.setStyle(Paint.Style.FILL);
+        for(int i=0;i<wheelParts.length;i++){p.setColor(T(i==wheelParts.length-1?RED:WHITE));c.drawPath(wheelParts[i],p);}
+        c.restore();
     }
     private static float clampG(float g){return Math.max(-1,Math.min(1,g/1.2f));}
     private static String clock(long ms){long sec=(ms+999)/1000;return String.format(Locale.US,"%d:%02d",sec/60,sec%60);}
@@ -428,17 +431,31 @@ public final class RaceRenderer {
     /** Right-aligned numeric readout with a fixed digit cell, so a narrow 1 does not make the reading jitter as it updates. */
     /** Width rnumber draws s at: every digit as wide as the widest one. */
     private float rwidth(String s,float size){
-        p.setTypeface(Theme.current().digitWeight==2?Typeface.DEFAULT_BOLD:Typeface.DEFAULT);p.setTextSize(size);
-        float dw=0;for(char d='0';d<='9';d++)dw=Math.max(dw,p.measureText(String.valueOf(d)));
-        float total=0;for(int k=0;k<s.length();k++){char ch=s.charAt(k);total+=ch>='0'&&ch<='9'?dw:p.measureText(String.valueOf(ch));}
+        float[] d=digits(size);
+        float total=0;for(int k=0;k<s.length();k++){char ch=s.charAt(k);total+=ch>='0'&&ch<='9'?d[10]:p.measureText(String.valueOf(ch));}
         return total;
     }
+    private final Digits digitW=new Digits();
+    private float[] digits(float size){return digitW.of(p,size,Theme.current().digitWeight==2);}
+    /** Digit widths per text size: each number measured its ten digits up to three times a frame (~270 measureText a
+     *  frame on the race page, ~250 on 전체 조망, 2026-11-26 car trace). One per Paint (PitRenderer uses it too).
+     *  ponytail: 16 sizes round-robin; the cells use a handful, shrunk ones evict. */
+    static final class Digits{
+        private final float[] size=new float[16];private final boolean[] bold=new boolean[16];
+        private final float[][] w=new float[16][];private int next;
+        /** Sets p to the digit typeface at sz; the ten digit widths, then the widest at [10]. */
+        float[] of(Paint p,float sz,boolean b){
+            p.setTypeface(b?Typeface.DEFAULT_BOLD:Typeface.DEFAULT);p.setTextSize(sz);
+            for(int i=0;i<w.length;i++)if(w[i]!=null&&size[i]==sz&&bold[i]==b)return w[i];
+            float[] d=new float[11];for(int i=0;i<10;i++){d[i]=p.measureText(String.valueOf((char)('0'+i)));d[10]=Math.max(d[10],d[i]);}
+            int i=next;next=(next+1)%w.length;size[i]=sz;bold[i]=b;w[i]=d;return d;
+        }
+    }
     private void rnumber(Canvas c,String s,float rightX,float y,float size,int color){
-        float total=rwidth(s,size);
+        float total=rwidth(s,size);float[] d=digits(size);
         p.setStyle(Paint.Style.FILL);p.setColor(T(color));p.setTextAlign(Paint.Align.LEFT);
-        float dw=0;for(char d='0';d<='9';d++)dw=Math.max(dw,p.measureText(String.valueOf(d)));
         float x=rightX-total;
-        for(int k=0;k<s.length();k++){char ch=s.charAt(k);String g=String.valueOf(ch);float gw=p.measureText(g);
-            if(ch>='0'&&ch<='9'){c.drawText(g,x+(dw-gw)/2,y,p);x+=dw;}else{c.drawText(g,x,y,p);x+=gw;}}
+        for(int k=0;k<s.length();k++){char ch=s.charAt(k);String g=String.valueOf(ch);
+            if(ch>='0'&&ch<='9'){c.drawText(g,x+(d[10]-d[ch-'0'])/2,y,p);x+=d[10];}else{float gw=p.measureText(g);c.drawText(g,x,y,p);x+=gw;}}
     }
 }

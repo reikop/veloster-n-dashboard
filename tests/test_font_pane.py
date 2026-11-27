@@ -86,7 +86,7 @@ def render(folder):
         p.write_text(HARNESS)
         sources.append(p)
         sources += [ROOT / 'shared/src/com/veloster/vehicle' / (name + '.java') for name in
-                    ('SettingsPanel', 'DashboardPage', 'Theme', 'ThemedPaint', 'ThemeShapes', 'DriveModes', 'SpeedChime', 'Records', 'DriveStats', 'VehicleProfile', 'ShiftGuide', 'Telemetry', 'GearRatios', 'ShiftCoach', 'RevMatch')]
+                    ('SettingsPanel', 'DashboardPage', 'Theme', 'ThemedPaint', 'ThemeShapes', 'KeyPath', 'DriveModes', 'SpeedChime', 'Records', 'DriveStats', 'VehicleProfile', 'ShiftGuide', 'Telemetry', 'GearRatios', 'ShiftCoach', 'RevMatch')]
         sources.append(ROOT / 'shared/src/com/veloster/i18n/UiText.java')
         result = subprocess.run([javac, '-encoding', 'UTF-8', '-d', str(root), *map(str, sources)], capture_output=True, text=True)
         if result.returncode:

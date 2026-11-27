@@ -56,6 +56,15 @@ public final class Circuits {
         }
         return best;
     }
+    /** Metres to circuit i: to the track itself inside its box (with the margin), else to the box. Far off the two differ
+     *  by less than the circuit's size, which the "N km" line never shows, and the box costs nothing; the track loop ran
+     *  for every circuit at every GPS fix on every screen (2026-11-26 car traces: 8-12 % of the UI thread). */
+    public static double distanceFast(int i,double lat,double lon){
+        load();if(near(i,lat,lon))return distance(i,lat,lon);
+        int[] b=box[i];double y=lat*1e5,x=lon*1e5;
+        double dy=y<b[0]?b[0]-y:y>b[2]?y-b[2]:0,dx=x<b[1]?b[1]-x:x>b[3]?x-b[3]:0;
+        return Math.hypot(dy/1e5*110540,dx/1e5*111320*Math.cos(Math.toRadians(lat)));
+    }
     /** The circuit at this position, keeping cur while the car is on it (-1: none). */
     public static int pick(double lat,double lon,int cur){
         load();int best=-1;double bd=Double.MAX_VALUE;

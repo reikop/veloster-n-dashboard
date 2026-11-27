@@ -85,7 +85,7 @@ final class HudCluster extends ClusterKit {
         if(side<0){path.moveTo(bx,mid-18);path.lineTo(bx+bw,mid-18);path.lineTo(bx+bw+12,mid);path.lineTo(bx+bw,mid+18);path.lineTo(bx,mid+18);}
         else{path.moveTo(bx+bw,mid-18);path.lineTo(bx,mid-18);path.lineTo(bx-12,mid);path.lineTo(bx,mid+18);path.lineTo(bx+bw,mid+18);}
         path.close();poly(c,0xff000000);
-        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(G);c.drawPath(path,p);p.setStyle(Paint.Style.FILL);
+        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(G);c.drawPath(path.kept(),p);p.setStyle(Paint.Style.FILL);
         mono(c,Float.isNaN(val)?"—":String.valueOf(Math.round(val)),bx+bw/2,mid+8,21,G,Paint.Align.CENTER);
         mono(c,label,x+w/2,top-8,15,G,Paint.Align.CENTER);
     }

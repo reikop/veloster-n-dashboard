@@ -14,7 +14,7 @@ Hyundai, Veloster N, Android, CarPlay 등 명칭은 기기·호환 대상 설명
 
 ## i30 PD 포팅에서 가져온 부분
 
-N 계기판의 플로팅 창(`FloatPanel`·`FloatSkin`·`FloatLayouts`·`FloatMusic`·`FloatService`), 설정 백업(`SettingsBackup`), 기록실(`Records`·`RecordsDialog`·`DriveStats`), 레이스·람다·타코 화면(`RaceRenderer`·`LambdaCluster`·`TachoCluster`·`ClusterKit`·`RevMatch`·`ShiftCoach`·`GearRatios`·`MilLamp`), 환영 화면, 주행 모드 화면 전환(`DriveModes`), 소리(`EngineSound`·`EngineSynth`·`ShiftBeep`·`SpeedChime`), 테마(`Theme`·`ThemeShapes`), 화면 목록 개념, 주야간 판단(`DayNight`·`DayPhase`), 신호 목록(`Tiles`·`TilePicker`), 소유자용 설치기(`installer/`)는 [sung9155/i30-pd-dashboard](https://github.com/sung9155/i30-pd-dashboard)(이 저장소의 i30 PD 포크, MIT)에서 가져와 벨로스터 N JSN에 맞게 고쳤습니다. `LICENSE`의 두 저작권 표시는 MIT 조건이므로 지우지 마세요.
+N 계기판의 플로팅 창(`FloatPanel`·`FloatSkin`·`FloatLayouts`·`FloatMusic`·`FloatService`), 설정 백업(`SettingsBackup`), 기록실(`Records`·`RecordsDialog`·`DriveStats`), 레이스·람다·타코 화면(`RaceRenderer`·`LambdaCluster`·`TachoCluster`·`ClusterKit`·`RevMatch`·`ShiftCoach`·`GearRatios`·`MilLamp`), 환영 화면, 주행 모드 화면 전환(`DriveModes`), 소리(`EngineSound`·`EngineSynth`·`SoundYield`·`ShiftBeep`·`SpeedChime`), 도형 재사용(`KeyPath`), 테마(`Theme`·`ThemeShapes`), 화면 목록 개념, 주야간 판단(`DayNight`·`DayPhase`), 신호 목록(`Tiles`·`TilePicker`), 소유자용 설치기(`installer/`)는 [sung9155/i30-pd-dashboard](https://github.com/sung9155/i30-pd-dashboard)(이 저장소의 i30 PD 포크, MIT)에서 가져와 벨로스터 N JSN에 맞게 고쳤습니다. `LICENSE`의 두 저작권 표시는 MIT 조건이므로 지우지 마세요.
 
 안드로이드 휴대폰 설치 앱(`installer/android/`: `Adb`·`Flow`·`MainActivity`·`DiagProvider`, 가짜 adbd 시험)도 같은 포크의 `i30pd_port/installer/android/`(MIT)에서 가져와 벨로스터 N(`jsn_kr`·검증 빌드·이 저장소 릴리스)에 맞게 고쳤습니다. 주행 기록과 ☆ 버튼 변경은 넣지 않았습니다.
 

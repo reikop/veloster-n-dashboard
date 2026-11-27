@@ -179,7 +179,7 @@ final class FloatLayouts extends ClusterKit {
         case PILL:{   // a short pill: gear in a ring that fills with rpm, then up to two values
             float cx=20*k,cy=20*k;
             if(st){body(c,W,H,k,H/2);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(3*k);p.setColor(track);c.drawCircle(cx,cy,14*k,p);p.setStyle(Paint.Style.FILL);}
-            if(dy){if(rOk){p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(3*k);r.set(cx-14*k,cy-14*k,cx+14*k,cy+14*k);p.setColor(rf>.85f?0xffff4b3c:acc);p.setStrokeCap(Paint.Cap.ROUND);c.drawArc(r,-90,Math.max(1,360*rf),false,p);p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);}
+            if(dy){if(rOk){p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(3*k);r.set(cx-14*k,cy-14*k,cx+14*k,cy+14*k);p.setColor(rf>.85f?0xffff4b3c:acc);p.setStrokeCap(Paint.Cap.ROUND);c.drawArc(r,-90,KeyPath.arc(Math.max(1,360*rf)),false,p);p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);}
                 fit(c,gear,cx,cy+6*k,17*k,22*k,txt,Paint.Align.CENTER,bold);}
             for(int i=0;i<u;i++){float x=(44+i*81)*k;
                 if(st){if(i>0)fill(c,x-7*k,9*k,x-6*k,31*k,div);fit(c,nm(d[i]),x,14*k,7.5f*k,72*k,mut,Paint.Align.LEFT,Typeface.DEFAULT);}
@@ -195,7 +195,7 @@ final class FloatLayouts extends ClusterKit {
                 if(st){p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(6*k);p.setColor(track);c.drawArc(r,135,270,false,p);p.setStyle(Paint.Style.FILL);
                     for(int i=0;i<=10;i++){double an=Math.toRadians(135+27*i);float r1=rad-9*k,r2=rad-(i%5==0?15:12)*k;line(c,cx+(float)Math.cos(an)*r1,cy+(float)Math.sin(an)*r1,cx+(float)Math.cos(an)*r2,cy+(float)Math.sin(an)*r2,k,mut);}}
                 if(dy){boolean has=!Float.isNaN(a.f);float f=has?Math.max(0,Math.min(1,a.f)):0;
-                    if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(6*k);p.setColor(warn(a.lv,acc));c.drawArc(r,135+270*lo,Math.max(1,270*(hi-lo)),false,p);p.setStyle(Paint.Style.FILL);}
+                    if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(6*k);p.setColor(warn(a.lv,acc));c.drawArc(r,KeyPath.arc(135+270*lo),KeyPath.arc(Math.max(1,270*(hi-lo))),false,p);p.setStyle(Paint.Style.FILL);}
                     if(a.pk!=null&&!Float.isNaN(a.pf)){double an=Math.toRadians(135+270*Math.max(0,Math.min(1,a.pf)));line(c,cx+(float)Math.cos(an)*(rad-4*k),cy+(float)Math.sin(an)*(rad-4*k),cx+(float)Math.cos(an)*(rad+4*k),cy+(float)Math.sin(an)*(rad+4*k),2*k,plain?0xffffffff:txt);}
                     if(has){double an=Math.toRadians(135+270*f);p.setStrokeCap(Paint.Cap.ROUND);line(c,cx,cy,cx+(float)Math.cos(an)*(rad-6*k),cy+(float)Math.sin(an)*(rad-6*k),2*k,0xffff6b5b);p.setStrokeCap(Paint.Cap.BUTT);}
                     dot(c,cx,cy,4*k,0xffff6b5b);fit(c,a.val,cx,cy+33*k,13*k,40*k,warn(a.lv,txt),Paint.Align.CENTER,bold);   // in the opening under the hub, where the needle never goes
@@ -254,7 +254,7 @@ final class FloatLayouts extends ClusterKit {
                     fit(c,nm(a)+(a.unit.isEmpty()||nm(a).endsWith(" "+a.unit)?"":" "+a.unit),cx,cy+(pix?42:46)*k,8*k,104*k,mut,Paint.Align.CENTER,Typeface.DEFAULT);}   // 8-bit: clear of the dialog's inner line
                 if(!dy)continue;
                 boolean has=!Float.isNaN(a.f);float f=has?Math.max(0,Math.min(1,a.f)):0;
-                if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(warn(a.lv,acc));c.drawArc(r,135+270*lo,Math.max(1,270*(hi-lo)),false,p);p.setStyle(Paint.Style.FILL);}
+                if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(warn(a.lv,acc));c.drawArc(r,KeyPath.arc(135+270*lo),KeyPath.arc(Math.max(1,270*(hi-lo))),false,p);p.setStyle(Paint.Style.FILL);}
                 if(has){double an=Math.toRadians(135+270*f);line(c,cx,cy,cx+(float)Math.cos(an)*(rad-7*k),cy+(float)Math.sin(an)*(rad-7*k),2*k,0xffff6b5b);}
                 ringPeak(c,a,cx,cy,rad,k);dot(c,cx,cy,3*k,0xffff6b5b);
                 fit(c,a.val,cx,cy+31*k,14*k,44*k,warn(a.lv,txt),Paint.Align.CENTER,bold);}   // under the hub, between the ring's ends, where the needle never goes
@@ -297,7 +297,7 @@ final class FloatLayouts extends ClusterKit {
             if(st){p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(track);c.drawArc(r,135,270,false,p);p.setStyle(Paint.Style.FILL);
                 fit(c,nm(a)+(a.unit.isEmpty()?"":" "+a.unit),cx,cy+rad+12*k,8*k,W-16*k,mut,Paint.Align.CENTER,Typeface.DEFAULT);}
             if(dy){boolean has=!Float.isNaN(a.f);float f=has?Math.max(0,Math.min(1,a.f)):0;
-                if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(warn(a.lv,acc));c.drawArc(r,135+270*lo,Math.max(1,270*(hi-lo)),false,p);p.setStyle(Paint.Style.FILL);
+                if(has){float lo=Math.min(a.zero,f),hi=Math.max(a.zero,f);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5*k);p.setColor(warn(a.lv,acc));c.drawArc(r,KeyPath.arc(135+270*lo),KeyPath.arc(Math.max(1,270*(hi-lo))),false,p);p.setStyle(Paint.Style.FILL);
                     double an=Math.toRadians(135+270*f);line(c,cx,cy,cx+(float)Math.cos(an)*(rad-7*k),cy+(float)Math.sin(an)*(rad-7*k),2*k,0xffff6b5b);}
                 ringPeak(c,a,cx,cy,rad,k);   // the peak (최고값)
                 dot(c,cx,cy,3*k,0xffff6b5b);fit(c,a.val,cx,cy+30*k,14*k,44*k,warn(a.lv,txt),Paint.Align.CENTER,bold);}   // under the hub, where the needle never goes

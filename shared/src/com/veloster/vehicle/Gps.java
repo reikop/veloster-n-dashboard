@@ -5,6 +5,8 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
 
@@ -17,6 +19,11 @@ import android.os.SystemClock;
 final class Gps implements LocationListener {
     private static Gps running;
     private LocationManager lm;
+    // The listener runs on its own thread: after each fix LocationManager reports back to the system over binder
+    // (locationCallbackFinished), 2-3 ms and once 38 ms on the UI thread in the 2026-11-26 car traces, a stalled frame.
+    // The fix itself is still handed to the UI thread, so GpsFix's readers never see a half-written position.
+    private HandlerThread thread;
+    private final Handler ui=new Handler(Looper.getMainLooper());
     private int fixes;
     private long logAt,startAt;private boolean extrasLogged;
 
@@ -29,16 +36,18 @@ final class Gps implements LocationListener {
         Gps g=new Gps();g.startAt=g.logAt=SystemClock.elapsedRealtime();
         try{
             g.lm=(LocationManager)c.getSystemService(Context.LOCATION_SERVICE);
-            g.lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0,g,Looper.getMainLooper());
+            g.thread=new HandlerThread("gps");g.thread.start();
+            g.lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0,g,g.thread.getLooper());
             running=g;
             android.util.Log.i("VehicleDash","GPS requested (gps provider enabled="+g.lm.isProviderEnabled(LocationManager.GPS_PROVIDER)+")");
-        }catch(RuntimeException e){android.util.Log.w("VehicleDash","GPS unavailable: "+e);}   // no permission in a host app, no provider
+        }catch(RuntimeException e){android.util.Log.w("VehicleDash","GPS unavailable: "+e);if(g.thread!=null)g.thread.quit();}   // no permission in a host app, no provider
     }
     static void stop(){
         Gps g=running;running=null;
-        if(g!=null)try{g.lm.removeUpdates(g);}catch(RuntimeException e){/* already gone */}
+        if(g!=null){try{g.lm.removeUpdates(g);}catch(RuntimeException e){/* already gone */}g.thread.quit();}
     }
-    @Override public void onLocationChanged(Location l){
+    @Override public void onLocationChanged(final Location l){ui.post(new Runnable(){public void run(){fix(l);}});}
+    private void fix(Location l){
         long now=SystemClock.elapsedRealtime();
         if(!GpsFix.any())android.util.Log.i("VehicleDash","GPS first fix after "+(now-startAt)/1000+" s");
         GpsFix.set(l.getLatitude(),l.getLongitude(),l.hasAccuracy()?l.getAccuracy():Float.NaN,l.hasSpeed()?l.getSpeed()*3.6f:Float.NaN);fixes++;

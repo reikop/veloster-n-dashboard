@@ -14,7 +14,7 @@ import java.util.Locale;
 /** Original N/PIT drawing geometry, with only received vehicle samples as values. */
 public final class PitRenderer {
     private final ThemedPaint paint=new ThemedPaint(3);
-    private final Path shape=new Path();
+    private final KeyPath shape=new KeyPath();   // draw shape.kept(): see KeyPath
     private static int T(int c){return Theme.current().map(c);}
     /** Background and strip fades, rebuilt when the theme changes (shaders are not remapped by ThemedPaint). */
     private Theme shaderTheme;
@@ -202,8 +202,8 @@ public final class PitRenderer {
         if(ThemeShapes.cell(c,paint,shape,cellRect,x,y,x+w,y+h,fill,edge))return;   // LB / M / rose / copper / champagne / navy shapes; N keeps the cut corner
         shape.reset();shape.moveTo(x,y);shape.lineTo(x+w-12,y);shape.lineTo(x+w,y+12);
         shape.lineTo(x+w,y+h);shape.lineTo(x+12,y+h);shape.lineTo(x,y+h-12);shape.close();
-        paint.setColor(fill);c.drawPath(shape,paint);
-        paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1);paint.setColor(edge);c.drawPath(shape,paint);paint.setStyle(Paint.Style.FILL);
+        paint.setColor(fill);c.drawPath(shape.kept(),paint);
+        paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1);paint.setColor(edge);c.drawPath(shape.kept(),paint);paint.setStyle(Paint.Style.FILL);
     }
     private void stroke(Canvas c,float x,float y,float x2,float y2,int color,float width){
         paint.setColor(color);paint.setStrokeWidth(width);c.drawLine(x,y,x2,y2,paint);
@@ -274,7 +274,9 @@ public final class PitRenderer {
         box(c,30,124,470,127,LINE);if(rpm>0)box(c,30,124,30+440*rpm/8000,127,BLUE);
         box(c,180,143,316,340,BLUE);
         centered(c,"EMS GEAR",248,164,11,BG,true);
-        centered(c,value("현재 기어"),248,290,130,BG,true);
+        {String g=value("현재 기어");paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(130);float gw=paint.measureText(g);
+            float sz=gw>116?130*116/gw:130;   // "M7" in the manual gate ran past the 136-wide box: two characters shrink to fit, one stays 130 (i30 PD v1.17.12)
+            centered(c,g,248,290-(130-sz)*0.36f,sz,BG,true);}
         centered(c,"VELOSTER N",248,324,10,BG,true);
         centered(c,"SPEED",98,177,12,MUTED,true);
         centered(c,value("속도 km/h"),98,253,57,WHITE,true);
@@ -344,7 +346,8 @@ public final class PitRenderer {
         box(c,294,120,506,367,BLUE);
         centered(c,"E M S  G E A R",400,148,15,BG,true);
         String gear=value("현재 기어");
-        centered(c,gear,400,321,184,BG,true);
+        {paint.setTypeface(Typeface.DEFAULT_BOLD);paint.setTextSize(184);float gw=paint.measureText(gear),sz=gw>190?184*190/gw:184;   // "M7" ran past the 212-wide box
+            centered(c,gear,400,321-(184-sz)*0.36f,sz,BG,true);}
         centered(c,"V E L O S T E R  N",400,350,11,BG,true);
         text(c,"SPEED",22,148,14,MUTED,true);
         text(c,"km/h",229,148,12,MUTED,false);
@@ -448,7 +451,7 @@ public final class PitRenderer {
             float cx=x+32,cy=y+(head?46:56),radius=head?17:23;
             paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(head?3:4);paint.setColor(LINE);
             RectF arc=new RectF(cx-radius,cy-radius,cx+radius,cy+radius);c.drawArc(arc,150,240,false,paint);
-            if(position){paint.setColor(BLUE);c.drawArc(arc,150,240*f,false,paint);}
+            if(position){paint.setColor(BLUE);c.drawArc(arc,150,KeyPath.arc(240*f),false,paint);}
             paint.setStyle(Paint.Style.FILL);
             if(position){double angle=Math.toRadians(150+240*f);stroke(c,cx,cy,cx+(float)Math.cos(angle)*(radius-6),cy+(float)Math.sin(angle)*(radius-6),WHITE,1.5f);paint.setColor(BLUE);c.drawCircle(cx,cy,2,paint);}
             fitted(c,number,x+58,y+(head?54:66),head?26:28,w-68,color);
