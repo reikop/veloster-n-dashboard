@@ -25,13 +25,17 @@ final class CarRenderer implements GLSurfaceView.Renderer {
     private final Object lock = new Object();
     private final Camera camera = new Camera();
     private final float[] glow = new float[CarState.GROUPS];
+    /** Swing of each hinged part, degrees (CarState.hingeDeg); hinge points from the mesh. */
+    private final float[] hinge = new float[CarState.OPENINGS];
+    private final float[][] hingeAt = new float[CarModel.HINGES][3];
+    private final float[] hingeM = new float[16 * CarState.OPENINGS];
     private float wheelDeg, rollDeg, blur, bodyPitch, bodyRoll, distance;
     private int scene = CarScene.STUDIO;
     /** Backdrop panorama (sharp, behind the car) and a small blurred copy for the reflections; uploaded on the GL thread. */
     private Bitmap skyBmp, envBmp;
     private boolean skyUploaded;
     private int texSky, texEnv;
-    private final float[] bodyM = new float[16], spot = new float[4], spotW = new float[4];
+    private final float[] bodyM = new float[16], spot = new float[4], spotW = new float[4], spotN = new float[4];
     private final float[] paint = {0.20f, 0.44f, 0.71f};
     private boolean paintOn;
     private float paintGloss = 1f;
@@ -54,8 +58,18 @@ final class CarRenderer implements GLSurfaceView.Renderer {
     private static final float[] HALO_GAIN = {0, 0.75f, 0.25f, 0.45f, 0.8f, 0.9f, 0.9f, 0.35f, 0};
 
     // ---- state from the UI thread -----------------------------------------------------------------------------
-    void setModel(CarModel m, Bitmap base, Bitmap glowMap) { synchronized (lock) { model = m; lampBase = base; lampGlow = glowMap; uploaded = false; } }
-    void setState(CarState s) { synchronized (lock) { System.arraycopy(s.glow, 0, glow, 0, glow.length); wheelDeg = s.wheelDeg; rollDeg = s.rollDeg; blur = s.blur; bodyPitch = s.pitchDeg; bodyRoll = s.rollBodyDeg; distance = s.distanceM; } }
+    void setModel(CarModel m, Bitmap base, Bitmap glowMap) {
+        synchronized (lock) {
+            model = m; lampBase = base; lampGlow = glowMap; uploaded = false;
+            for (CarModel.Chunk c : m.chunks) if (c.motion == CarModel.HINGE) { hingeAt[c.corner][0] = c.px; hingeAt[c.corner][1] = c.py; hingeAt[c.corner][2] = c.pz; }
+        }
+    }
+    void setState(CarState s) {
+        synchronized (lock) {
+            System.arraycopy(s.glow, 0, glow, 0, glow.length); wheelDeg = s.wheelDeg; rollDeg = s.rollDeg; blur = s.blur; bodyPitch = s.pitchDeg; bodyRoll = s.rollBodyDeg; distance = s.distanceM;
+            for (int h = 0; h < CarState.OPENINGS; h++) hinge[h] = s.hingeDeg(h);
+        }
+    }
     void setScene(int s) { synchronized (lock) { scene = CarScene.valid(s); } }
     void setBackdrop(Bitmap sharp, Bitmap blurred) { synchronized (lock) { skyBmp = sharp; envBmp = blurred; skyUploaded = false; } }
     void setCamera(float yaw, float pitch, float dist) { synchronized (lock) { camera.yaw = yaw; camera.pitch = pitch; camera.dist = dist; } }
@@ -89,7 +103,7 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         CarModel m;
         synchronized (lock) {
             yaw = camera.yaw; pitch = camera.pitch; dist = camera.dist; wd = wheelDeg; roll = rollDeg; bl = blur; road = distance; sc = scene;
-            bodyMatrix(bodyPitch, bodyRoll); pOn = paintOn; pGloss = paintGloss;
+            bodyMatrix(bodyPitch, bodyRoll); hingeMatrices(); pOn = paintOn; pGloss = paintGloss;
             System.arraycopy(glow, 0, g, 0, g.length); System.arraycopy(paint, 0, pc, 0, 3);
             m = model;
             if (m != null && !uploaded) { upload(m, lampBase, lampGlow); uploaded = true; }
@@ -207,10 +221,29 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         Matrix.translateM(bodyM, 0, 0, -0.42f, 0.075f);
     }
 
+    /** Per hinged part: the body matrix (or the door a mirror sits on), then the swing about its hinge (the part's vertices
+     *  are relative to the hinge). Parents come first in the HINGES order. */
+    private void hingeMatrices() {
+        for (int h = 0; h < CarState.OPENINGS; h++) {
+            int o = h * 16, parent = CarState.HINGE_PARENT[h];
+            if (parent < 0) {
+                System.arraycopy(bodyM, 0, hingeM, o, 16);
+                Matrix.translateM(hingeM, o, hingeAt[h][0], hingeAt[h][1], hingeAt[h][2]);
+            } else {   // the parent's matrix is relative to its own hinge
+                System.arraycopy(hingeM, parent * 16, hingeM, o, 16);
+                Matrix.translateM(hingeM, o, hingeAt[h][0] - hingeAt[parent][0], hingeAt[h][1] - hingeAt[parent][1], hingeAt[h][2] - hingeAt[parent][2]);
+            }
+            if (hinge[h] > 0.01f) Matrix.rotateM(hingeM, o, hinge[h], CarState.HINGE_AXIS[h][0], CarState.HINGE_AXIS[h][1], CarState.HINGE_AXIS[h][2]);
+        }
+    }
+
     private void drawChunk(Program p, CarModel m, int i, float wheel, float roll) {
         CarModel.Chunk c = m.chunks[i];
-        if (c.motion == CarModel.FIXED) System.arraycopy(bodyM, 0, modelM, 0, 16); else Matrix.setIdentityM(modelM, 0);
-        if (c.motion != CarModel.FIXED) {
+        if (c.motion == CarModel.HINGE && c.corner == CarModel.ENGINE && hinge[CarModel.BONNET] < 0.5f) return;   // the bay only shows under an open bonnet
+        if (c.motion == CarModel.HINGE && c.corner < CarState.OPENINGS) System.arraycopy(hingeM, c.corner * 16, modelM, 0, 16);
+        else if (c.motion == CarModel.FIXED || c.motion == CarModel.HINGE) System.arraycopy(bodyM, 0, modelM, 0, 16);
+        else Matrix.setIdentityM(modelM, 0);
+        if (c.motion == CarModel.WHEEL || c.motion == CarModel.CALLIPER) {
             Matrix.translateM(modelM, 0, c.px, c.py, c.pz);
             if (c.corner == CarModel.FL || c.corner == CarModel.FR) Matrix.rotateM(modelM, 0, wheel, 0, 1, 0);
             if (c.motion == CarModel.WHEEL) Matrix.rotateM(modelM, 0, roll, 1, 0, 0);
@@ -310,11 +343,19 @@ final class CarRenderer implements GLSurfaceView.Renderer {
             GLES20.glUniform3f(halo.u("uUp"), view[1] * stretch, view[5] * stretch, view[9] * stretch);
             float k = s.group < g.length ? g[s.group] * HALO_GAIN[s.group] : 0;
             if (k < 0.02f) continue;
-            spot[0] = s.x; spot[1] = s.y; spot[2] = s.z; spot[3] = 1;
-            Matrix.multiplyMV(spotW, 0, bodyM, 0, spot, 0);   // the lamps ride on the body
+            float nx = s.nx, ny = s.ny, nz = s.nz;
+            if (s.hinge >= 0 && s.hinge < CarState.OPENINGS) {   // a lamp on a door / hatch / mirror swings with it
+                spot[0] = s.x - hingeAt[s.hinge][0]; spot[1] = s.y - hingeAt[s.hinge][1]; spot[2] = s.z - hingeAt[s.hinge][2]; spot[3] = 1;
+                Matrix.multiplyMV(spotW, 0, hingeM, s.hinge * 16, spot, 0);
+                spot[0] = nx; spot[1] = ny; spot[2] = nz; spot[3] = 0;
+                Matrix.multiplyMV(spotN, 0, hingeM, s.hinge * 16, spot, 0); nx = spotN[0]; ny = spotN[1]; nz = spotN[2];
+            } else {
+                spot[0] = s.x; spot[1] = s.y; spot[2] = s.z; spot[3] = 1;
+                Matrix.multiplyMV(spotW, 0, bodyM, 0, spot, 0);   // the lamps ride on the body
+            }
             float sx = spotW[0], sy = pass == 1 ? -spotW[1] : spotW[1], sz = spotW[2];
             float vx = eye[0] - sx, vy = eye[1] - sy, vz = eye[2] - sz, vl = (float) Math.sqrt(vx * vx + vy * vy + vz * vz);
-            float facing = (vx * s.nx + vy * s.ny + vz * s.nz) / vl;   // halos only towards where the lamp shines
+            float facing = (vx * nx + vy * ny + vz * nz) / vl;   // halos only towards where the lamp shines
             facing = Math.max(0f, Math.min(1f, facing * 1.6f + 0.15f));
             if (facing <= 0.01f) continue;
             float size = s.radius * 1.2f + 0.07f, push = 0.12f;

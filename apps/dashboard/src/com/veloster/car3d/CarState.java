@@ -11,13 +11,28 @@ import com.veloster.neondrive.DriveSignals;
  * (CGW1 lamp bits), otherwise a stalk / hazard switch blinks on a 0.75 s timer; headlamps = light switch at
  * headlamps or the low beam on (auto); tail lamps = DriveSignals.lamps; stop lamps = brake switch; reversing lamps =
  * the rear camera view up (reverse, inferred); steering = SAS11 wheel angle.
+ *
+ * Doors, bonnet, hatch and mirror fold: test buttons only for now. No car signal for them is decoded yet (the CGW1
+ * door / tailgate bits are expected but unconfirmed: every capture so far had them closed); a capture opening each one
+ * comes first, then the signals join here.
  */
 public final class CarState {
     /** Lamp groups (vertex attribute of the mesh). */
     public static final int NONE = 0, HEAD = 1, POSITION = 2, TAIL = 3, STOP = 4, TURN_L = 5, TURN_R = 6, REVERSE = 7, GROUPS = 9;
     /** Test buttons (bit mask). */
     public static final int TEST_LEFT = 1, TEST_RIGHT = 2, TEST_HAZARD = 4, TEST_TAIL = 8, TEST_HEAD = 16, TEST_STOP = 32,
-        TEST_REVERSE = 64, TEST_STEER = 128;
+        TEST_REVERSE = 64, TEST_STEER = 128,
+        TEST_DOOR_L = 256, TEST_DOOR_RF = 512, TEST_DOOR_RR = 1024, TEST_BONNET = 2048, TEST_HATCH = 4096, TEST_MIRRORS = 8192;
+    /** Hinged parts (CarModel.DOOR_L .. MIRROR_R) and how each opens: the axis through its hinge point (right-handed, the
+     *  model's axes: +X the car's left, +Y up, +Z forward) and how far, degrees. Doors swing out about a vertical axis at
+     *  their front edge, the bonnet lifts at its rear edge, the hatch at the roof, the mirrors fold back against the doors. */
+    public static final int OPENINGS = 7;
+    public static final float[][] HINGE_AXIS = {{0, -1, 0}, {0, 1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, -1, 0}};
+    public static final float[] HINGE_DEG = {62, 62, 60, 52, 72, 68, 68};
+    /** The part each hinged part is mounted on (-1: the body): the mirrors sit on the front doors and swing with them. */
+    public static final int[] HINGE_PARENT = {-1, -1, -1, -1, -1, CarModel.DOOR_L, CarModel.DOOR_RF};
+    /** Seconds a door / bonnet / hatch takes to open or close; the mirrors fold a little faster. */
+    public static final float OPEN_S = 0.9f, FOLD_S = 0.6f;
     /** Steering wheel degrees per road-wheel degree (approximate rack ratio; unverified for the N). */
     public static final float STEER_RATIO = 13f;
     /** Front wheel lock, degrees. */
@@ -42,6 +57,9 @@ public final class CarState {
     public static final float BLUR_FROM_DPS = 450f, BLUR_FULL_DPS = 1250f;
     /** The drawn mesh never turns faster than this, so the spokes under the blur still read as rolling forwards. */
     public static final float ROLL_CAP_DPS = 600f;
+    /** How far each hinged part is open, 0 (shut) .. 1, moving at a steady pace (the renderer eases it). */
+    public final float[] open = new float[OPENINGS];
+    private final boolean[] openTarget = new boolean[OPENINGS];
     /** Shown values. */
     public boolean live, left, right, leftActive, rightActive, hazard, tail, head, stop, reverse;
     /** Steering wheel degrees (positive = right) and km/h; NaN when unknown. */
@@ -119,7 +137,20 @@ public final class CarState {
         float b = clamp((dps - BLUR_FROM_DPS) / (BLUR_FULL_DPS - BLUR_FROM_DPS), 0f, 1f);
         blur = b * b * (3 - 2 * b);
         suspension(gLong, gLat, dt);   // the body follows the G sensor only (test buttons never tilt it)
+        openTarget[CarModel.DOOR_L] = (tests & TEST_DOOR_L) != 0;
+        openTarget[CarModel.DOOR_RF] = (tests & TEST_DOOR_RF) != 0;
+        openTarget[CarModel.DOOR_RR] = (tests & TEST_DOOR_RR) != 0;
+        openTarget[CarModel.BONNET] = (tests & TEST_BONNET) != 0;
+        openTarget[CarModel.HATCH] = (tests & TEST_HATCH) != 0;
+        openTarget[CarModel.MIRROR_L] = openTarget[CarModel.MIRROR_R] = (tests & TEST_MIRRORS) != 0;
+        for (int h = 0; h < OPENINGS; h++) {
+            float step = dt / (h >= CarModel.MIRROR_L ? FOLD_S : OPEN_S), to = openTarget[h] ? 1f : 0f;
+            open[h] = dt <= 0 ? to : open[h] < to ? Math.min(to, open[h] + step) : Math.max(to, open[h] - step);
+        }
     }
+
+    /** The swing of hinged part h this frame, degrees about HINGE_AXIS[h]: open eased in and out (smoothstep). */
+    public float hingeDeg(int h) { float o = open[h]; return HINGE_DEG[h] * o * o * (3 - 2 * o); }
 
     private void suspension(float gLong, float gLat, float dt) {
         longG = clamp(Float.isNaN(gLong) ? 0f : gLong, -1.5f, 1.5f);
@@ -138,6 +169,7 @@ public final class CarState {
     /** Anything still moving on screen (blinking, fading, rolling, steering) - the view keeps drawing frames. */
     public boolean animating() {
         if (leftActive || rightActive || Math.abs(speedKmh) > 0.1f) return true;
+        for (int h = 0; h < OPENINGS; h++) if (open[h] != (openTarget[h] ? 1f : 0f)) return true;
         if (Math.abs(pitchVel) > 0.02f || Math.abs(rollVel) > 0.02f || Math.abs(longG) > 0.01f || Math.abs(latG) > 0.01f) return true;
         for (int g = 0; g < GROUPS; g++) if (Math.abs(glow[g] - target[g]) > 0.002f) return true;
         float want = Float.isNaN(steerDeg) ? 0f : clamp(-steerDeg / STEER_RATIO, -MAX_WHEEL_DEG, MAX_WHEEL_DEG);

@@ -35,6 +35,11 @@ final class CarView extends FrameLayout implements Runnable {
     private static final int[] CHIP_TESTS = {CarState.TEST_LEFT, CarState.TEST_HAZARD, CarState.TEST_TAIL, CarState.TEST_HEAD,
         CarState.TEST_STOP, CarState.TEST_REVERSE, CarState.TEST_STEER, CarState.TEST_RIGHT};
     private static final String[] CHIP_NAMES = {"좌", "비상", "미등", "전조등", "브레이크", "후진", "핸들", "우"};
+    /** Second row: open / shut each hinged part by hand (no car signal for them yet). */
+    private static final int[] OPEN_TESTS = {CarState.TEST_DOOR_L, CarState.TEST_DOOR_RF, CarState.TEST_DOOR_RR, CarState.TEST_BONNET,
+        CarState.TEST_HATCH, CarState.TEST_MIRRORS};
+    private static final int[] OPEN_PART = {CarModel.DOOR_L, CarModel.DOOR_RF, CarModel.DOOR_RR, CarModel.BONNET, CarModel.HATCH, CarModel.MIRROR_L};
+    private static final String[] OPEN_NAMES = {"운전석 문", "조수석 문", "뒷문", "후드", "트렁크", "미러 접기"};
 
     private final DriveSignals signals;
     private final DriveSignals.Snapshot snap = new DriveSignals.Snapshot();
@@ -60,7 +65,7 @@ final class CarView extends FrameLayout implements Runnable {
     private float lastX, lastY, pinchStart, distStart, downX, downY;
     private long downAt;
     private boolean dragging, pinching, touchDown;
-    private final float[] lastGlow = new float[CarState.GROUPS];
+    private final float[] lastGlow = new float[CarState.GROUPS], lastOpen = new float[CarState.OPENINGS];
     private float lastWheel = Float.NaN, lastRoll = Float.NaN;
 
     CarView(Context context, DriveSignals signals, boolean feedAvailable) {
@@ -183,6 +188,7 @@ final class CarView extends FrameLayout implements Runnable {
         boolean c = state.wheelDeg != lastWheel || state.rollDeg != lastRoll;
         lastWheel = state.wheelDeg; lastRoll = state.rollDeg;
         for (int g = 0; g < CarState.GROUPS; g++) if (state.glow[g] != lastGlow[g]) { c = true; lastGlow[g] = state.glow[g]; }
+        for (int h = 0; h < CarState.OPENINGS; h++) if (state.open[h] != lastOpen[h]) { c = true; lastOpen[h] = state.open[h]; }
         return c;
     }
 
@@ -218,6 +224,10 @@ final class CarView extends FrameLayout implements Runnable {
 
     private static float chipW() { return (800 - 2 * CHIP_L - 7 * CHIP_GAP) / 8f; }
     private static float chipX(int i) { return CHIP_L + i * (chipW() + CHIP_GAP); }
+    /** The second row (doors, bonnet, hatch, mirrors) above the lamp row. */
+    private static final float OPEN_Y = CHIP_Y - CHIP_H - CHIP_GAP;
+    private static float openW() { return (800 - 2 * CHIP_L - (OPEN_TESTS.length - 1) * CHIP_GAP) / (float) OPEN_TESTS.length; }
+    private static float openX(int i) { return CHIP_L + i * (openW() + CHIP_GAP); }
 
     private final class Hud extends View {
         private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -232,7 +242,7 @@ final class CarView extends FrameLayout implements Runnable {
             c.save(); c.scale(s, getHeight() / 480f);
             // scrims so the text reads over a bright sky / floor
             p.setShader(top); c.drawRect(0, 0, 800, 90, p);
-            if (chipsShown) { p.setShader(bottom); c.drawRect(0, 380, 800, 480, p); }
+            if (chipsShown) { p.setShader(bottom); c.drawRect(0, 320, 800, 480, p); }
             p.setShader(null);
             // back + title
             panel(c, BACK_L, BACK_T, BACK_W, BACK_H, false);
@@ -259,7 +269,7 @@ final class CarView extends FrameLayout implements Runnable {
             String msg = failure != null ? failure : !loaded ? UiText.t("불러오는 중…") : null;
             if (msg != null) text(c, msg, 400, 250, 18, failure != null ? RED : MUTED, Paint.Align.CENTER);
             // chips
-            if (chipsShown) for (int i = 0; i < CHIP_TESTS.length; i++) chip(c, i);
+            if (chipsShown) { for (int i = 0; i < CHIP_TESTS.length; i++) chip(c, i); for (int i = 0; i < OPEN_TESTS.length; i++) openChip(c, i); }
             if (paletteOpen) palette(c);
             if (sceneOpen) scenes(c);
             c.restore();
@@ -353,6 +363,18 @@ final class CarView extends FrameLayout implements Runnable {
             }
         }
 
+        /** A door / bonnet / hatch / mirror button: lit while that part is open (or folded), outlined while it moves. */
+        private void openChip(Canvas c, int i) {
+            float x = openX(i), w = openW();
+            float o = state.open[OPEN_PART[i]];
+            boolean on = o > 0.5f, held = (tests & OPEN_TESTS[i]) != 0, moving = o > 0 && o < 1;
+            r.set(x, OPEN_Y, x + w, OPEN_Y + CHIP_H);
+            p.setColor(on ? 0x384aa3ff : PANEL); c.drawRoundRect(r, 10, 10, p);
+            p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(held || moving ? 2.5f : 1.2f); p.setColor(held || moving ? BLUE : EDGE);
+            c.drawRoundRect(r, 10, 10, p); p.setStyle(Paint.Style.FILL);
+            fit(c, UiText.t(OPEN_NAMES[i]), x + w / 2, OPEN_Y + CHIP_H / 2 + 6, w - 10, on ? BLUE : held ? WHITE : MUTED);
+        }
+
         private void panel(Canvas c, float x, float y, float w, float h, boolean lit) {
             r.set(x, y, x + w, y + h);
             p.setColor(PANEL); c.drawRoundRect(r, 10, 10, p);
@@ -427,7 +449,7 @@ final class CarView extends FrameLayout implements Runnable {
     private boolean onControl(float x, float y) {
         if (paletteOpen && x >= PAL_L && x <= PAL_R && y >= PAL_T && y <= PAL_T + 12 + CarPaint.COUNT * PAL_ROW) return true;
         if (sceneOpen && x >= BGL_L && x <= BGL_R && y >= PAL_T && y <= PAL_T + 12 + CarScene.COUNT * PAL_ROW) return true;
-        return chipsShown && y >= CHIP_Y - 4 || (y <= VIEW_T + VIEW_H + 4 && (x <= BACK_L + BACK_W + 4 || x >= BG_X - 4));
+        return chipsShown && y >= OPEN_Y - 4 || (y <= VIEW_T + VIEW_H + 4 && (x <= BACK_L + BACK_W + 4 || x >= BG_X - 4));
     }
 
     private void tap(float x, float y, long now) {
@@ -468,6 +490,10 @@ final class CarView extends FrameLayout implements Runnable {
         }
         if (Math.hypot(x - SWATCH_X, y - SWATCH_Y) <= SWATCH_R + 8) {
             paletteOpen = true; sceneOpen = false;
+            return;
+        }
+        if (chipsShown && y >= OPEN_Y && y <= OPEN_Y + CHIP_H) {
+            for (int i = 0; i < OPEN_TESTS.length; i++) if (x >= openX(i) && x <= openX(i) + openW()) { tests ^= OPEN_TESTS[i]; return; }
             return;
         }
         if (chipsShown && y >= CHIP_Y && y <= CHIP_Y + CHIP_H) {

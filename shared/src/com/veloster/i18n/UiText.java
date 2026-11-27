@@ -249,6 +249,7 @@ public final class UiText {
         EN.put("뒤 왼쪽 타이어 온도","Rear-left tyre temperature");
         EN.put("뒤 왼쪽 휠","Rear-left wheel");
         EN.put("뒤로","Back");
+        EN.put("뒷문","Rear door");
         EN.put("드래그","Drag");
         EN.put("드래그 출발 신호·0-100","Drag tree · 0-100");
         EN.put("디젤 DPF","Diesel DPF");
@@ -287,6 +288,7 @@ public final class UiText {
         EN.put("문 열림","Door open");
         EN.put("미니","Mini");
         EN.put("미등","Position lamps");
+        EN.put("미러 접기","Fold mirrors");
         EN.put("미리보기","Preview");
         EN.put("미리보기 · 화면을 누르면 시험 버튼","Preview · tap for test buttons");
         EN.put("바로가기 끄기","Turn shortcut off");
