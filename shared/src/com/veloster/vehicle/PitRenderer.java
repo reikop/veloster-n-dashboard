@@ -52,6 +52,16 @@ public final class PitRenderer {
             case DashboardPage.CASSETTE:return cassette;case DashboardPage.CIRCUIT:return circuit;default:return null;
         }
     }
+    /** Screens other than `keep` let go of their cached bitmaps and shapes (타코 face 1.4 MB, the circuit map, the memos);
+     *  each makes them again when it is shown. keep -1: all of them (the dashboard is out of sight). UI thread; the caller
+     *  invalidates, so no new display list refers to a recycled bitmap (4.2 defers the free while an old one does). */
+    public void trim(int keep){
+        for(int p=0;p<DashboardPage.COUNT;p++){ClusterKit k=kit(p);if(k!=null&&p!=keep)k.trim();}
+        if(keep!=DashboardPage.TACHO)tacho.trim();
+        if(keep!=DashboardPage.LAMBDA)lambda.trim();
+        if(keep!=DashboardPage.TAXI)taxiRenderer.trim();
+        if(keep<0)KeyPath.clear();
+    }
     /** A tap on the body of a ported screen (드래그 준비 key, cassette, circuit list); true when it used the tap. */
     public boolean screenTap(int p,float x,float y){ClusterKit k=kit(p);return k!=null&&k.tap(x,y);}
     /** Ported screens that animate (needles, stars, the G tail): redraw about 20 times a second. */
@@ -102,7 +112,7 @@ public final class PitRenderer {
     private int index(String prefix){for(int i=0;i<PREFIX.length;i++)if(PREFIX[i].equals(prefix))return i;return -1;}
     private String value(String prefix){int i=index(prefix);if(i<0||i>=samples.length||!samples[i].valid)return "—";
         if(i==8)return Telemetry.gearLabel((int)samples[i].value);
-        return String.format(Locale.US,i==0||i==7||(i>=Telemetry.TPMS_FL&&i<=Telemetry.BAT_SOC)||i==Telemetry.STEERING_SPEED?"%.0f":i==11||i==12?"%+.2f":i==13?"%+.1f":i==17||i==Telemetry.BAT_VOLTAGE?"%.2f":"%.1f",Telemetry.displayValue(i,samples[i].value));}
+        return Fmt.f(i==0||i==7||(i>=Telemetry.TPMS_FL&&i<=Telemetry.BAT_SOC)||i==Telemetry.STEERING_SPEED?"%.0f":i==11||i==12?"%+.2f":i==13?"%+.1f":i==17||i==Telemetry.BAT_VOLTAGE?"%.2f":"%.1f",Telemetry.displayValue(i,samples[i].value));}
     private float numeric(String prefix){int i=index(prefix);return i>=0&&i<samples.length&&samples[i].valid?Telemetry.displayValue(i,samples[i].value):0;}
     private boolean changed(String prefix){int i=index(prefix);return i>=0&&i<samples.length&&samples[i].changed;}
     public void draw(Canvas c,int width,int height,boolean cluster,Telemetry model,long now){
@@ -116,7 +126,7 @@ public final class PitRenderer {
         shiftTarget=ShiftGuide.clamp(target);frameTime=now;
         samples=model.snapshot(now);cue=ShiftGuide.evaluate(samples,shiftTarget);
         shaders();
-        c.save();c.scale(width/800f,height/480f);c.drawColor(T(BG));
+        c.save();c.scale(width/800f,height/480f);   // no drawColor: the opaque gradient below covers all of it
         paint.setShader(background);c.drawRect(0,0,800,480,paint);paint.setShader(null);
         for(int y=56;y<480;y+=8)stroke(c,0,y,800,y,0x063f4948,1);
         box(c,0,0,800,52,0xff090b0c);box(c,18,51,782,52,LINE);

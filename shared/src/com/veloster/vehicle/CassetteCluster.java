@@ -83,10 +83,10 @@ final class CassetteCluster extends ClusterKit {
             dot(c,x+39,364,3.5f,down?0xff3ddc84:0xff1d2a22);}
         // VU meters
         vu(c,540,62,needleL,t("L · 가속 페달"),fmt("%.0f",pedal)+" %");
-        vu(c,540,188,needleR,t("R · 부스트"),fmt("%+.2f",boost)+String.format(Locale.US," / %.1f bar",top));
+        vu(c,540,188,needleR,t("R · 부스트"),fmt("%+.2f",boost)+Fmt.f(" / %.1f bar",top));
         // counter drums
         round(c,540,314,784,354,6,0xff0d0d0f);
-        float odo=v(Telemetry.ODOMETER);String cnt=Float.isNaN(odo)?"----":String.format(Locale.US,"%04d",((int)(odo*10))%10000);
+        float odo=v(Telemetry.ODOMETER);String cnt=Float.isNaN(odo)?"----":Fmt.f("%04d",((int)(odo*10))%10000);
         for(int i=0;i<4;i++){float x=552+i*26;round(c,x,320,x+22,348,2,0xffe8e8e8);bold(c,cnt.substring(i,i+1),x+11,342,20,0xff111111,Paint.Align.CENTER);}
         bold(c,"COUNTER",664,332,11,0xff8a8c90,Paint.Align.LEFT);text(c,t("주행 0.1 km"),664,346,11,0xff8a8c90,Paint.Align.LEFT,Typeface.DEFAULT);
         // VFD
@@ -146,5 +146,5 @@ final class CassetteCluster extends ClusterKit {
         while(o.length()>2&&width(o,30,Typeface.DEFAULT_BOLD)>widthPx)o=o.substring(0,o.length()-2)+"…";
         return o;
     }
-    private static String mmss(long ms){long s=ms/1000;return String.format(Locale.US,"%d:%02d",s/60,s%60);}
+    private static String mmss(long ms){long s=ms/1000;return Fmt.f("%d:%02d",s/60,s%60);}
 }

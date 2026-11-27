@@ -152,9 +152,9 @@ public final class Telemetry {
     public static String timeLabel(float sec){
         if(Float.isNaN(sec)||sec<0)return "—";
         int t=(int)sec,h=t/3600,m=(t%3600)/60,s=t%60;
-        return h>0?String.format(java.util.Locale.US,"%d:%02d:%02d",h,m,s):String.format(java.util.Locale.US,"%d:%02d",m,s);
+        return h>0?com.veloster.vehicle.Fmt.f("%d:%02d:%02d",h,m,s):com.veloster.vehicle.Fmt.f("%d:%02d",m,s);
     }
-    /** String.format(Locale.US,f,x) without a lone minus on a value that rounds to zero; cached (it runs every frame). */
+    /** String.format(Locale.US,f,x) (through Fmt) without a lone minus on a value that rounds to zero; cached (it runs every frame). */
     private static final class Fmt{final String f,s;final int bits;Fmt(String f,int bits,String s){this.f=f;this.bits=bits;this.s=s;}}
     private static final Fmt[] FMT=new Fmt[1024];
     public static String format(String f,float x){
@@ -163,7 +163,7 @@ public final class Telemetry {
         String s=format0(f,x);FMT[at]=new Fmt(f,bits,s);return s;
     }
     private static String format0(String f,float x){
-        String s=String.format(java.util.Locale.US,f,x);
+        String s=com.veloster.vehicle.Fmt.f(f,x);
         if(s.length()<2||s.charAt(0)!='-'||s.charAt(1)!='0')return s;
         int i=2;if(i<s.length()&&s.charAt(i)=='.')for(i++;i<s.length()&&s.charAt(i)=='0';i++);
         if(i<s.length()&&s.charAt(i)>='0'&&s.charAt(i)<='9')return s;

@@ -212,6 +212,7 @@ public final class NeonRenderer {
         } else if (themeU < 1f) themeU = Math.min(1f, themeU + (s.now - lastNow) / 1800f);
         if (themeU >= 1f) themeFrom = themeTo;
         lastNow = s.now;
+        keepThemes(themeFrom, themeTo);
         float u = themeFrom == themeTo ? 0f : themeU;
         float glowLevel = mixed(Theme.GLOW), starLevel = mixed(Theme.STARS);
         road.render(s.distance * DriveModel.METRES_PER_UNIT, Theme.ROAD[themeFrom], Theme.ROAD[themeTo], u);
@@ -982,6 +983,24 @@ public final class NeonRenderer {
             | ((int) (ag + (bg - ag) * t) << 8) | (int) (ab + (bb - ab) * t);
     }
 
+    /** Bakes the layers of the themes on screen (from, to) on first use and lets go of the others (the garbage collector
+     *  frees them; a display list may still hold last frame's). One theme's bake happens at a change of time of day. */
+    private void keepThemes(int a, int b) {
+        for (int th = 0; th < Theme.COUNT; th++) {
+            if (th == a || th == b) { if (skyT[th] == null) bakeTheme(th); }
+            else { skyT[th] = null; sunT[th] = null; coastT[th] = null; cityT[th] = null; }
+        }
+    }
+    private void bakeTheme(int th) {
+        float k = Math.max(1f, baked);
+        bakeTheme = th;
+        skyT[th] = layer(W, HY, k); bakeSky(canvas(skyT[th], W));
+        sunT[th] = layer(W, HY, k); bakeSun(canvas(sunT[th], W));
+        if (Theme.daylitProps(th)) { coastT[th] = layer(W, HY, k); bakeCoast(canvas(coastT[th], W)); }
+        else { cityT[th] = layer(W, HY, k); bakeCity(canvas(cityT[th], W)); }
+        bakeTheme = Theme.NIGHT;
+    }
+
     // ---------------------------------------------------------------- baking
     private static Bitmap layer(float w, float h, float scale) {
         return Bitmap.createBitmap(Math.max(1, (int) Math.ceil(w * scale)), Math.max(1, (int) Math.ceil(h * scale)), Bitmap.Config.ARGB_8888);
@@ -998,13 +1017,9 @@ public final class NeonRenderer {
         float k = Math.max(1f, scale);
         // The scanline road renders at logical resolution (800 px wide on the head unit).
         road = new RoadRenderer((int) W, HY, H, CAR_Y);
-        for (int th = 0; th < Theme.COUNT; th++) {
-            bakeTheme = th;
-            skyT[th] = layer(W, HY, k); bakeSky(canvas(skyT[th], W));
-            sunT[th] = layer(W, HY, k); bakeSun(canvas(sunT[th], W));
-            if (Theme.daylitProps(th)) { coastT[th] = layer(W, HY, k); bakeCoast(canvas(coastT[th], W)); }
-            else { cityT[th] = layer(W, HY, k); bakeCity(canvas(cityT[th], W)); }
-        }
+        // The time-of-day layers (sky, sun, coast or city; 3 x 800 x 280 ARGB = 2.7 MB a theme) are baked when a theme is
+        // shown (bakeTheme): all four took 11 MB at once.
+        for (int th = 0; th < Theme.COUNT; th++) { skyT[th] = null; sunT[th] = null; coastT[th] = null; cityT[th] = null; }
         bakeTheme = Theme.NIGHT;
         palm = layer(220, 360, k); bakeCoastPalm(canvas(palm, 220));   // same palm shape as the coast, neon colours
         lamp = layer(70, 300, k); bakeLamp(canvas(lamp, 70));

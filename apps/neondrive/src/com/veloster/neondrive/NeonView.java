@@ -110,12 +110,18 @@ final class NeonView extends View implements Runnable {
     private double lat = SolarClock.SEOUL_LAT, lon = SolarClock.SEOUL_LON;
     private int locationSource; // 0 Seoul default, 1 saved fix, 2 GPS fix this session
     private android.location.LocationManager locations;
-    private final android.location.LocationListener locationListener = new android.location.LocationListener() {
-        public void onLocationChanged(android.location.Location l) { useLocation(l, true); }
+    private final android.location.LocationListener locationListener = new Fix(this);
+    /** The location listener holds the view weakly: the system keeps a registered listener's transport alive a while
+     *  after removeUpdates (until its own collection drops the binder), and an inner class kept the whole view, its
+     *  baked scenery included, after the dashboard let go of the page (emulator: ~5 MB of Java heap per visit). */
+    private static final class Fix implements android.location.LocationListener {
+        private final java.lang.ref.WeakReference<NeonView> view;
+        Fix(NeonView v) { view = new java.lang.ref.WeakReference<NeonView>(v); }
+        public void onLocationChanged(android.location.Location l) { NeonView v = view.get(); if (v != null) v.useLocation(l, true); }
         public void onStatusChanged(String provider, int status, android.os.Bundle extras) {}
         public void onProviderEnabled(String provider) {}
         public void onProviderDisabled(String provider) {}
-    };
+    }
 
     /** Newest last-known fix from any provider, then passive updates (fixes other apps such as navigation request). */
     private void startLocation() {
