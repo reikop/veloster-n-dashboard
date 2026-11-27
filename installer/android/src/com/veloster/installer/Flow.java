@@ -45,7 +45,7 @@ final class Flow {
     /** A failure the user should read as is (no stack trace). */
     static final class Stop extends Exception { Stop(String m) { super(m); } }
 
-    static final String VERSION = "1.13.0";   // the release version (MAJOR.MINOR.PATCH), shown on screen and compared with the published source; raise on every change
+    static final String VERSION = "1.14.0";   // the release version (MAJOR.MINOR.PATCH), shown on screen and compared with the published source; raise on every change
     static final String RELEASES = "https://github.com/reikop/veloster-n-dashboard/releases";
     static final String RAW = "https://raw.githubusercontent.com/reikop/veloster-n-dashboard/";
     static final String APK_NAME = "vn-installer-android.apk";

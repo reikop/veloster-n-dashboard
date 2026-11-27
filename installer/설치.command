@@ -21,7 +21,7 @@
 ROOT="$(cd "$(dirname "$0")" && pwd)"; ME="$(basename "$0")"
 # OS: Darwin(맥) / Linux. VN_OS로 바꿀 수 있다(시험 도구가 Windows Git Bash에서 리눅스 경로를 돌릴 때).
 OS="${VN_OS:-$(uname -s)}"; [ "$OS" = Darwin ] || OS=Linux
-INSTALLER_VERSION='1.13.0'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
+INSTALLER_VERSION='1.14.0'   # 릴리스 버전(MAJOR.MINOR.PATCH). 화면 맨 위에 찍혀, 스크린샷만으로 옛 설치기인지 알 수 있다. 고칠 때마다 올린다.
 PRODUCT='jsn_kr'                               # 벨로스터 N 국내 사양 내비
 VERIFIED_BUILD='eng.vmadmin.20250902.081552'   # 공개 앱 설치·실행을 확인한 빌드(docs/INSTALL.md). 다르면 경고만 하고 설치한다.
 # Google platform-tools: 맥, 리눅스 x86_64만 있다. 라즈베리파이 같은 ARM 리눅스는 배포판 adb 패키지(apt)를 쓴다.
