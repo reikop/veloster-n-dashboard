@@ -68,7 +68,7 @@ public final class NeonRenderer {
     private int paint;
     private float viewScale = 1, viewOffX, viewOffY;
     private final boolean korean = "ko".equals(java.util.Locale.getDefault().getLanguage());
-    public static final int HIT_NONE = 0, HIT_GEAR = 1, HIT_HUD = 2, HIT_DEMO = 3, HIT_CLOSE = 4, HIT_OUTSIDE = 5, HIT_PANEL = 6, HIT_CLOCK = 7, HIT_MEDIA = 8, HIT_TRIP = 9, HIT_EXIT = 10, HIT_PAINT = 100, HIT_THEME = 200, HIT_GEARMODE = 300;
+    public static final int HIT_NONE = 0, HIT_GEAR = 1, HIT_HUD = 2, HIT_DEMO = 3, HIT_CLOSE = 4, HIT_OUTSIDE = 5, HIT_PANEL = 6, HIT_CLOCK = 7, HIT_MEDIA = 8, HIT_TRIP = 9, HIT_EXIT = 10, HIT_IDLE = 11, HIT_PAINT = 100, HIT_THEME = 200, HIT_GEARMODE = 300;
     static final float PX0 = 170, PY0 = 24, PX1 = 630, PY1 = 414, GEAR_X = 766, GEAR_Y = 30, SWATCH_Y = 334;
     private final Typeface retro = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD_ITALIC);
 
@@ -121,6 +121,10 @@ public final class NeonRenderer {
     private boolean tripOn = true;
     /** Trip bar (time, distance) at the top on/off. */
     public void setTripOn(boolean on) { tripOn = on; }
+    /** 정차 중 움직임: off keeps the car still at a standstill (no showroom sweep across the angles, no engine shake). */
+    private boolean idleMotion = true;
+    public void setIdleMotion(boolean on) { idleMotion = on; }
+    public boolean idleMotion() { return idleMotion; }
     public boolean tripOn() { return tripOn; }
     /** Now playing card on/off. */
     public void setMediaOn(boolean on) { mediaOn = on; }
@@ -171,7 +175,7 @@ public final class NeonRenderer {
         if (x > 584 && y < 80) return HIT_CLOSE;
         if (y >= 76 && y < 116) return x < 390 ? HIT_HUD : HIT_CLOCK;
         if (y >= 116 && y < 156) return x < 390 ? HIT_DEMO : HIT_MEDIA;
-        if (y >= 156 && y < 196) return x < 390 ? HIT_TRIP : HIT_PANEL;
+        if (y >= 156 && y < 196) return x < 390 ? HIT_TRIP : HIT_IDLE;
         if (y >= 196 && y < 236) {
             for (int i = 0; i < GEARS_KO.length; i++) if (x >= 330 + i * 94 && x < 330 + (i + 1) * 94) return HIT_GEARMODE + i;
             return HIT_PANEL;
@@ -446,13 +450,13 @@ public final class NeonRenderer {
         if (s.lamps) glow(c, glowWhite, cx + shiftB, yB, 210 * gs, 50 * gs, 0.08f * night);
         // Showroom: after a few seconds at standstill the view sweeps slowly across all the angles.
         float angle = -yaw * 35f;
-        if (s.showroom > 0.01f) angle = angle * (1f - s.showroom) + 38f * (float) Math.sin(t * 0.45) * s.showroom;
+        if (idleMotion && s.showroom > 0.01f) angle = angle * (1f - s.showroom) + 38f * (float) Math.sin(t * 0.45) * s.showroom;
         int f = frameForAngle(angle);
         int[] pt = CarSprite.POINTS[f];
         float k = SPRITE_K;
         float carW = CarSprite.CELL_W * k;
         // Idle: a one-pixel engine shake while stopped (not when parked).
-        float shake = s.stoppedFor > 0.3f && !s.parked ? (((int) (t * 18)) & 1) : 0;
+        float shake = idleMotion && s.stoppedFor > 0.3f && !s.parked ? (((int) (t * 18)) & 1) : 0;
         float bodyDy = Math.round(s.pitch * 3f + s.bob) + shake;
         float left = Math.round(cx - carW / 2), top = Math.round(CAR_Y - pt[9] * k + bodyDy);
         // Ground shadow and light spill toward the camera.
@@ -886,6 +890,7 @@ public final class NeonRenderer {
         toggle(c, PX0 + 24, 300, 136, t("데모 모드", "Demo mode"), demoOn);
         toggle(c, 404, 532, 136, t("음원 정보", "Now playing"), mediaOn);
         toggle(c, PX0 + 24, 300, 176, t("트립 정보", "Trip"), tripOn);
+        toggle(c, 404, 532, 176, t("정차 중 움직임", "Idle motion"), idleMotion);
         text.setTextAlign(Paint.Align.LEFT); text.setTextSize(15); text.setColor(0xffd8d0f0);
         c.drawText(t("기어 표시", "Gear"), PX0 + 24, 216, text);
         text.setTextSize(10); text.setColor(dctGuessed ? 0xffffd23f : 0xff8a82a8);

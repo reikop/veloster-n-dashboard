@@ -71,6 +71,7 @@ final class NeonView extends View implements Runnable {
         model.setEightSpeed(renderer.gearMode() == NeonRenderer.GEARS_DCT);
         renderer.setMediaOn(prefs.getBoolean("media", true));
         renderer.setTripOn(prefs.getBoolean("trip", true));
+        renderer.setIdleMotion(prefs.getBoolean("idle_motion", true));
         // v16 stored 0 auto / 1 day / 2 night; the five-way setting uses "tod" (0 auto, 1 morning, 2 day, 3 sunset, 4 night).
         themeMode = Math.max(0, Math.min(Theme.MODE_KO.length - 1, prefs.getInt("tod", Theme.MODE_AUTO)));
         if (prefs.contains("lat") && prefs.contains("lon")) {
@@ -183,7 +184,7 @@ final class NeonView extends View implements Runnable {
 
     private void save() {
         getContext().getSharedPreferences(PREFS, 0).edit()
-            .putBoolean("hud", renderer.hud()).putBoolean("clock", clockOn).putBoolean("demo", model.demoForced()).putInt("paint", paint).putInt("tod", themeMode).putInt("gearmode", renderer.gearMode()).putBoolean("media", renderer.mediaOn()).putBoolean("trip", renderer.tripOn()).apply();
+            .putBoolean("hud", renderer.hud()).putBoolean("clock", clockOn).putBoolean("demo", model.demoForced()).putInt("paint", paint).putInt("tod", themeMode).putInt("gearmode", renderer.gearMode()).putBoolean("media", renderer.mediaOn()).putBoolean("trip", renderer.tripOn()).putBoolean("idle_motion", renderer.idleMotion()).apply();
     }
 
     void resume() {
@@ -271,6 +272,7 @@ final class NeonView extends View implements Runnable {
         else if (hit == NeonRenderer.HIT_DEMO) model.setDemoForced(!model.demoForced());
         else if (hit == NeonRenderer.HIT_MEDIA) renderer.setMediaOn(!renderer.mediaOn());
         else if (hit == NeonRenderer.HIT_TRIP) renderer.setTripOn(!renderer.tripOn());
+        else if (hit == NeonRenderer.HIT_IDLE) renderer.setIdleMotion(!renderer.idleMotion());
         else if (hit >= NeonRenderer.HIT_GEARMODE && hit < NeonRenderer.HIT_GEARMODE + NeonRenderer.GEARS_KO.length) {
             renderer.setGearMode(hit - NeonRenderer.HIT_GEARMODE); model.setEightSpeed(renderer.gearMode() == NeonRenderer.GEARS_DCT);
         }
