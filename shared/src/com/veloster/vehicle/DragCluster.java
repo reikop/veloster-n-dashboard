@@ -63,15 +63,15 @@ final class DragCluster extends ClusterKit {
         key(c,KL,KT,KR,KB,launchAt>=0?t("측정 중 · 버튼"):armed?t("취소"):t("측정 준비"),30,launchAt>=0?KEY_GREY:armed?KEY_SLATE:KEY_AMBER,launchAt>=0?GR:armed?AM:0);
         // right side
         float x0=300;
-        String state=launchAt>=0?(foul?t("부정 출발"):"GO"):staged?(since<2?t("곧 출발"):String.format(Locale.US,t("출발하세요 · %d초"),(int)Math.ceil((green+GREEN_WAIT-now)/1000f))):armed?(stopped?t("정지 유지 · 곧 트리 시작"):t("정차하면 트리가 켜집니다"))
+        String state=launchAt>=0?(foul?t("부정 출발"):"GO"):staged?(since<2?t("곧 출발"):Fmt.f(t("출발하세요 · %d초"),(int)Math.ceil((green+GREEN_WAIT-now)/1000f))):armed?(stopped?t("정지 유지 · 곧 트리 시작"):t("정차하면 트리가 켜집니다"))
             :outcome==1?t("측정 완료"):outcome==2?t("시간 초과 · 취소됨"):t("측정 준비를 누르세요");
         bold(c,state,x0,86,18,launchAt>=0?(foul?RD:GR):staged?AM:armed?TX:MU,Paint.Align.LEFT);
-        String big=launchAt>=0?String.format(Locale.US,"%.3f",e):!Float.isNaN(best[2])?String.format(Locale.US,"%.3f",best[2]):"—";
+        String big=launchAt>=0?Fmt.f("%.3f",e):!Float.isNaN(best[2])?Fmt.f("%.3f",best[2]):"—";
         bold(c,big,x0,160,84,TX,Paint.Align.LEFT);
         bold(c,launchAt>=0?t("경과 초"):t("최고 0→100 km/h 초"),x0+4,182,13,MU,Paint.Align.LEFT);
         bold(c,fmt("%.0f",v)+" km/h · "+gear(),790,160,30,ACC,Paint.Align.RIGHT);
         float co=v(Telemetry.CLUTCH_ODD),ce=v(Telemetry.CLUTCH_EVEN);   // 7DCT: clutch heat between runs (the run itself shows its distance here)
-        if(launchAt>=0)bold(c,String.format(Locale.US,"%.0f m",dist),790,182,15,MU,Paint.Align.RIGHT);
+        if(launchAt>=0)bold(c,Fmt.f("%.0f m",dist),790,182,15,MU,Paint.Align.RIGHT);
         else if(!(Float.isNaN(co)&&Float.isNaN(ce))){int lv=Math.max(Telemetry.clutchLevel(co),Telemetry.clutchLevel(ce));
             bold(c,String.format(Locale.US,t("클러치 홀 %s° · 짝 %s°"),fmt("%.0f",co),fmt("%.0f",ce)),790,182,15,lv==2?RD:lv==1?AM:MU,Paint.Align.RIGHT);}
         round(c,x0,200,790,380,8,0xff111214);outline(c,x0,200,790,380,8,1,0xff25272b);
@@ -97,7 +97,7 @@ final class DragCluster extends ClusterKit {
         if(armed){armed=false;treeAt=-1;outcome=0;}else{armed=true;outcome=0;}
         return true;
     }
-    private static String val(float x,int i){return Float.isNaN(x)?"—":i==4?String.format(Locale.US,"%.0f km/h",x):String.format(Locale.US,i==0?"%.3f s":"%.2f s",x);}
+    private static String val(float x,int i){return Float.isNaN(x)?"—":i==4?Fmt.f("%.0f km/h",x):Fmt.f(i==0?"%.3f s":"%.2f s",x);}
     private void lamp(Canvas c,float x,float y,float r,int color,boolean on){
         dot(c,x,y,r+4,0xff050505);
         if(on){dot(c,x,y,r*1.6f,(color&0xffffff)|0x40000000);dot(c,x,y,r,color);dot(c,x-r*0.3f,y-r*0.3f,r*0.35f,0xffffffff);}

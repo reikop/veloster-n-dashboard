@@ -55,7 +55,7 @@ final class WarpCluster extends ClusterKit {
         mono(c,"ENERGY",150,376,12,MU,Paint.Align.LEFT);
         float ef=Float.isNaN(boost)?0:clamp((boost+0.7f)/(top+0.7f),0,1);
         for(int i=0;i<10;i++)fill(c,150+i*10,384,158+i*10,408,i<Math.round(ef*10)?(i>7?0xffffb35a:AC):0xff18203a);
-        mono(c,fmt("%+.2f",boost)+String.format(Locale.US," / %.1f bar",top),258,428,12,TX,Paint.Align.RIGHT);   // right-aligned to the bar's end so it stays inside the panel
+        mono(c,fmt("%+.2f",boost)+Fmt.f(" / %.1f bar",top),258,428,12,TX,Paint.Align.RIGHT);   // right-aligned to the bar's end so it stays inside the panel
         // inertia radar
         round(c,282,352,518,466,8,PANEL);outline(c,282,352,518,466,8,1,EDGE);
         float rx=400,ry=410,rad=48;
@@ -63,10 +63,10 @@ final class WarpCluster extends ClusterKit {
         r.set(-rad,-rad,rad,rad);p.setStyle(Paint.Style.FILL);p.setColor(0x5550ff96);c.save();c.translate(rx,ry);c.rotate(sweep%360);c.drawArc(r,-30,30,true,p);c.restore();   // one wedge turned by the canvas: a new sweep angle every frame was a new arc texture on 4.2
         if(!Float.isNaN(lat)&&!Float.isNaN(lon))dot(c,rx+clamp(lat,-1,1)*rad,ry+clamp(lon,-1,1)*rad,4,0xff6dffa0);
         bold(c,t("관성"),296,374,12,MU,Paint.Align.LEFT);
-        mono(c,Float.isNaN(lat)||Float.isNaN(lon)?"—":String.format(Locale.US,"%.2f g",Math.hypot(lat,lon)),504,374,13,TX,Paint.Align.RIGHT);
+        mono(c,Float.isNaN(lat)||Float.isNaN(lon)?"—":Fmt.f("%.2f g",Math.hypot(lat,lon)),504,374,13,TX,Paint.Align.RIGHT);
         // status
         round(c,538,352,776,466,8,PANEL);outline(c,538,352,776,466,8,1,EDGE);
-        String[][] rows={{"VELOCITY",fmt("%.0f",v)+" km/h"},{"HULL TEMP",fmt("%.0f",v(2))+" °C"},{"FUEL",fmt("%.0f",v(Telemetry.RANGE))+" km"},{"DISTANCE",String.format(Locale.US,"%.1f km",dist)}};
+        String[][] rows={{"VELOCITY",fmt("%.0f",v)+" km/h"},{"HULL TEMP",fmt("%.0f",v(2))+" °C"},{"FUEL",fmt("%.0f",v(Telemetry.RANGE))+" km"},{"DISTANCE",Fmt.f("%.1f km",dist)}};
         for(int i=0;i<4;i++){mono(c,rows[i][0],552,378+i*24,13,MU,Paint.Align.LEFT);mono(c,rows[i][1],762,378+i*24,16,i==0?AC:TX,Paint.Align.RIGHT);}
         if(!Float.isNaN(brake)&&brake>35){outline(c,4,56,796,476,0,8,blink(now,500)?0xffff2a3a:0x4dff2a3a);bold(c,t("RED ALERT · 급제동"),cx,98,22,0xffff4a5a,Paint.Align.CENTER);}
     }

@@ -25,7 +25,7 @@ final class HudCluster extends ClusterKit {
             if(k>0){segR(c,-88,y,-40,y,roll,2);segR(c,40,y,88,y,roll,2);}
             else for(float x=-88;x<-40;x+=12){segR(c,x,y,Math.min(x+7,-40),y,roll,2);segR(c,Math.max(40,-x-7),y,-x,y,roll,2);}   // dashed below the horizon
             segR(c,-88,y+tick,-88,y,roll,2);segR(c,88,y,88,y+tick,roll,2);
-            String lbl=(k>0?"+":"-")+String.format(Locale.US,"%.1f",Math.abs(k)*0.2f);
+            String lbl=(k>0?"+":"-")+Fmt.f("%.1f",Math.abs(k)*0.2f);
             mono(c,lbl,rx(-96,y,roll),ry(-96,y,roll)+5,14,G,Paint.Align.RIGHT);mono(c,lbl,rx(96,y,roll),ry(96,y,roll)+5,14,G,Paint.Align.LEFT);
         }
         c.restore();
@@ -57,7 +57,7 @@ final class HudCluster extends ClusterKit {
         if(!(Float.isNaN(co)&&Float.isNaN(ce))&&(Math.max(Telemetry.clutchLevel(co),Telemetry.clutchLevel(ce))==0||blink(now,400))){
             mono(c,"CLU",576,214,14,GD,Paint.Align.RIGHT);mono(c,fmt("%.0f",co)+"/"+fmt("%.0f",ce)+"C",636,214,16,G,Paint.Align.RIGHT);}
         Calendar k=Calendar.getInstance();
-        mono(c,String.format(Locale.US,"%02d:%02d:%02d",k.get(Calendar.HOUR_OF_DAY),k.get(Calendar.MINUTE),k.get(Calendar.SECOND)),740,470,15,GD,Paint.Align.RIGHT);
+        mono(c,Fmt.f("%02d:%02d:%02d",k.get(Calendar.HOUR_OF_DAY),k.get(Calendar.MINUTE),k.get(Calendar.SECOND)),740,470,15,GD,Paint.Align.RIGHT);
         mono(c,"ODO "+fmt("%.0f",v(Telemetry.ODOMETER)),60,470,15,GD,Paint.Align.LEFT);
         if(!Float.isNaN(rpm)&&rpm>prof.redline-500&&blink(now,400)){outline(c,CX-52,184,CX+52,214,0,2.5f,G);mono(c,"SHIFT",CX,206,22,G,Paint.Align.CENTER);}
         if(!Float.isNaN(brake)&&brake>35)mono(c,"BRAKE "+fmt("%.2f",lon)+" G",CX,334,18,G,Paint.Align.CENTER);

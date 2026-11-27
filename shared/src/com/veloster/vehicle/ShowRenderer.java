@@ -80,7 +80,7 @@ public final class ShowRenderer {
         panel(c,l,t,r,b);
         text(c,"POWERBAND",l+16,t+24,13,MUTED,true);
         float rpm=v(0);
-        text(c,Float.isNaN(rpm)?"—":String.format(Locale.US,"%.0f",rpm),r-16,t+26,20,WHITE,Paint.Align.RIGHT);
+        text(c,Float.isNaN(rpm)?"—":Fmt.f("%.0f",rpm),r-16,t+26,20,WHITE,Paint.Align.RIGHT);
         text(c,"rpm",r-16,t+42,11,MUTED,Paint.Align.RIGHT);
         float gl=l+20,gr=r-20,gt=t+70,gb=b-52;                  // curve plot box
         // stylised 1.6 T-GDI torque feel: rises, broad plateau, tapers past the power peak.
@@ -154,7 +154,7 @@ public final class ShowRenderer {
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(major?3:2);p.setColor(T(major?WHITE:MUTED));
             c.drawLine(cx+c1*(rad-12),cy+s1*(rad-12),cx+c1*(rad+2),cy+s1*(rad+2),p);
             p.setStyle(Paint.Style.FILL);
-            text(c,(bl>0?"+":"")+String.format(Locale.US,"%.1f",bl),cx+c1*(rad-30),cy+s1*(rad-30)+4,11,major?WHITE:MUTED,Paint.Align.CENTER);
+            text(c,(bl>0?"+":"")+Fmt.f("%.1f",bl),cx+c1*(rad-30),cy+s1*(rad-30)+4,11,major?WHITE:MUTED,Paint.Align.CENTER);
         }
         // peak-hold needle
         if(peakBoost!=Float.NEGATIVE_INFINITY){
@@ -211,8 +211,8 @@ public final class ShowRenderer {
             p.setColor(T(0xffffffff));c.drawCircle(px,py,2,p);
         }
         float g=(Float.isNaN(lat)||Float.isNaN(lon))?Float.NaN:(float)Math.hypot(lat,lon);
-        text(c,Float.isNaN(g)?"—":String.format(Locale.US,"%.2f g",g),cx,b-30,22,WHITE,Paint.Align.CENTER);
-        if(peakG>0)text(c,String.format(Locale.US,"PEAK %.2f g",peakG),cx,b-12,12,AMBER,Paint.Align.CENTER);
+        text(c,Float.isNaN(g)?"—":Fmt.f("%.2f g",g),cx,b-30,22,WHITE,Paint.Align.CENTER);
+        if(peakG>0)text(c,Fmt.f("PEAK %.2f g",peakG),cx,b-12,12,AMBER,Paint.Align.CENTER);
     }
 
     // ---- bottom strip: speed / gear / mode -----------------------------------------------------

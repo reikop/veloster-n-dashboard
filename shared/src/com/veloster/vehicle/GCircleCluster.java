@@ -18,7 +18,7 @@ final class GCircleCluster extends ClusterKit {
         float lat=v(11),lon=v(12),pin=Float.isNaN(lat)||Float.isNaN(lon)?1:Telemetry.pinG(lat,lon,1),v=v(7),pedal=v(9),brake=v(10),steer=v(Telemetry.STEERING),yaw=v(Telemetry.YAW);
         fill(c,0,52,800,480,0xff040506);
         for(float g:new float[]{0.25f,0.5f,0.75f,1f}){ring(c,CX,CY,R*g,g==1?2:1,g==1?RING:LN);
-            text(c,String.format(java.util.Locale.US,"%.2f",g),CX+R*g*0.707f+4,CY-R*g*0.707f-4,12,MU,Paint.Align.LEFT,Typeface.DEFAULT);}
+            text(c,Fmt.f("%.2f",g),CX+R*g*0.707f+4,CY-R*g*0.707f-4,12,MU,Paint.Align.LEFT,Typeface.DEFAULT);}
         line(c,CX-R,CY,CX+R,CY,1,LN);line(c,CX,CY-R,CX,CY+R,1,LN);
         bold(c,t("제동"),CX,72,13,MU,Paint.Align.CENTER);bold(c,t("가속"),CX,476,13,MU,Paint.Align.CENTER);   // braking (-lon) up
         bold(c,t("오른쪽"),CX-R-8,CY+4,13,MU,Paint.Align.RIGHT);bold(c,t("왼쪽"),CX+R+8,CY+4,13,MU,Paint.Align.LEFT);   // the dot goes where the body is thrown: a left turn (+lat) right
@@ -68,7 +68,7 @@ final class GCircleCluster extends ClusterKit {
         if(centre){float w=clamp(f,-1,1)*150;fill(c,x0+150+Math.min(0,w),y+8,x0+150+Math.max(0,w),y+18,color);fill(c,x0+149,y+5,x0+151,y+21,0xff3a4a54);}
         else fill(c,x0,y+8,x0+300*clamp(f,0,1),y+18,color);
     }
-    private static String f2(float x){return String.format(java.util.Locale.US,"%.2f",x);}
+    private static String f2(float x){return Fmt.f("%.2f",x);}
     /** Green to red by strength (0..1 g). */
     private static int heat(float g){float t=clamp(g,0,1);return mix(0xffff4a3a,0xff3ddc84,t);}
     private static int fade(int c,float a){return ((int)(clamp(a,0,1)*0.9f*255)<<24)|(c&0xffffff);}

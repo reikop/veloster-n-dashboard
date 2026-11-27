@@ -25,7 +25,7 @@ public final class GaugeRenderer {
         if("bar".equals(u))return i==10?100:2.5f;if(i==Telemetry.STEERING)return 540;
         return i==8?6:100;
     }
-    private static String axis(float value){return String.format(Locale.US,value==(int)value?"%.0f":"%.1f",value);}
+    private static String axis(float value){return Fmt.f(value==(int)value?"%.0f":"%.1f",value);}
     public void draw(Canvas c,Telemetry data,long now,GaugeLayout layout){
         int save=c.save();c.clipRect(0,52,800,480);p.setColor(0xff070b0e);c.drawRect(0,52,800,480,p);
         text(c,UiText.t("게이지를 길게 눌러 항목 · 모양 · 위치 편집"),300,71,13,MUTED);
@@ -43,7 +43,7 @@ public final class GaugeRenderer {
             text(c,UiText.t(Telemetry.LABELS[i]),cx,t+25,17,BLUE);
             boolean ok=s.valid&&!Float.isNaN(s.value)&&!Float.isInfinite(s.value);
             float displayed=Telemetry.displayValue(i,s.value);
-            String value=ok?(i==8?Telemetry.gearLabel((int)s.value):String.format(Locale.US,"rpm".equals(u)||"km/h".equals(u)?"%.0f":"G".equals(u)?"%+.2f":i==Telemetry.STEERING?"%+.1f":"%.1f",displayed)):"—";
+            String value=ok?(i==8?Telemetry.gearLabel((int)s.value):Fmt.f("rpm".equals(u)||"km/h".equals(u)?"%.0f":"G".equals(u)?"%+.2f":i==Telemetry.STEERING?"%+.1f":"%.1f",displayed)):"—";
             float lo=min(i,u),hi=max(i,u),f=ok?Math.max(0,Math.min(1,(displayed-lo)/(hi-lo))):0;
             if(style==0){
                 float cy=t+107,r=63;

@@ -29,6 +29,8 @@ final class KeyPath extends Path {
      *  a reading that holds still (cruise, a warm engine) now reuses one, and half a degree is under a pixel on the
      *  gauges (1 px at the 128 px 쇼 dial, 2 px at the RPM screen's rim). */
     static float arc(float deg){return Math.round(deg*2)/2f;}
+    /** Drops every kept shape (the dashboard is out of sight); they are made again as they are drawn. */
+    static void clear(){MEMO.clear();}
     /** The kept copy of the shape now in this path, made on first use. */
     Path kept(){
         Path m=MEMO.get(key);

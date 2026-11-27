@@ -27,7 +27,7 @@ final class RetroCluster extends ClusterKit {
     // ---- the cached unlit layer ---------------------------------------------------------------------------------
     private Bitmap glass;
     private int glassKey=-1;
-    @Override void trim(){glass=recycle(glass);glassKey=-1;}
+    @Override void trim(){super.trim();glass=recycle(glass);glassKey=-1;}
 
     @Override protected void draw(Canvas c){
         style=validStyle(style);

@@ -181,6 +181,7 @@ public final class VehicleDash extends View implements Runnable {
         if(neon==null)return;
         neon.stop();android.view.View v=neon.view();
         if(v.getParent()!=null)((ViewGroup)v.getParent()).removeView(v);
+        neon=null;   // its baked scenery and sprites (several MB) go with it; the next visit builds the page again
     }
     private void exitNeon(){hideNeon();setPage(neonBack==DashboardPage.NEON?DashboardPage.OVERVIEW:neonBack,true);invalidate();}
     // ---- 내 차 (com.veloster.car3d): the 3D car with lamps and steering, its own GL view over the dashboard ----
@@ -198,7 +199,8 @@ public final class VehicleDash extends View implements Runnable {
     private void hideCar(){
         if(car==null)return;
         car.stop();android.view.View v=car.view();
-        if(v.getParent()!=null)((ViewGroup)v.getParent()).removeView(v);
+        if(v.getParent()!=null)((ViewGroup)v.getParent()).removeView(v);   // detached: its GL thread ends and the context with the mesh and textures goes
+        car=null;   // and the mesh, lamp atlas and backdrop bitmaps (~10 MB) with the page; the next visit loads them again
     }
     private void exitCar(){hideCar();setPage(carBack==DashboardPage.CAR3D?DashboardPage.OVERVIEW:carBack,true);invalidate();}
     /** The back key: leaves Neon Drive or closes the settings; false lets the activity go back as usual. */
@@ -232,6 +234,7 @@ public final class VehicleDash extends View implements Runnable {
     private void setPage(int value,boolean save){
         int before=page;
         page=DashboardPage.resolve(value);FloatPanel.screen=page;
+        if(page!=before){renderer.trim(page);invalidate();}   // the screen left behind lets go of its bitmaps and shapes
         if(page==DashboardPage.NEON){if(before!=DashboardPage.NEON)neonBack=before;if(resumed||standalone&&getVisibility()==VISIBLE)showNeon();}
         else hideNeon();
         if(page==DashboardPage.CAR3D){if(before!=DashboardPage.CAR3D)carBack=before;if(resumed||standalone&&getVisibility()==VISIBLE)showCar();}
@@ -262,6 +265,7 @@ public final class VehicleDash extends View implements Runnable {
     public static void attachStandalone(Activity a){
         FrameLayout parent=(FrameLayout)a.findViewById(android.R.id.content);
         VehicleDash dash=new VehicleDash(a);dash.standalone=true;dash.blocked=false;
+        a.getWindow().setBackgroundDrawable(null);   // the dashboard and its pages cover the window: no full-screen fill under them each frame
         current=new WeakReference<VehicleDash>(dash);
         parent.addView(dash,new FrameLayout.LayoutParams(-1,-1));dash.setVisibility(VISIBLE);
         dash.introStart=SystemClock.elapsedRealtime();   // the welcome sweep on each start of the dashboard
@@ -277,6 +281,7 @@ public final class VehicleDash extends View implements Runnable {
     public static void pauseStandalone(Activity a){
         VehicleDash d=current.get();if(d==null||d.activity!=a)return;
         d.resumed=false;d.touching=false;d.removeCallbacks(d.editHold);d.removeCallbacks(d.stripHold);backupSave(a);d.hideNeon();d.hideCar();d.stopRetroFeed();
+        d.renderer.trim(-1);d.invalidate();   // out of sight: every screen lets go of its caches
         d.gaugeEditor.dismiss();d.graphEditor.dismiss();d.cellPicker.dismiss();if(!FloatPanel.musicShown()||FloatPanel.shape==FloatPanel.OFF)d.mediaReceiver.stop();d.artwork.close();
     }
     private void showDashboard(){setVisibility(VISIBLE);if(entry!=null)entry.setVisibility(GONE);bringToFront();}
@@ -366,7 +371,8 @@ public final class VehicleDash extends View implements Runnable {
         feedStats(tick);
         modeTick(tick);
         savedShift=shiftTarget;soundTick(resumed&&getVisibility()==VISIBLE);
-        if(getVisibility()==VISIBLE) {
+        boolean covered=page==DashboardPage.NEON&&neon!=null||page==DashboardPage.CAR3D&&car!=null;   // their own full-screen views draw
+        if(getVisibility()==VISIBLE&&!covered) {
             invalidate();long now=SystemClock.elapsedRealtime();
             if(graphs)delay=250;
             else if((page==DashboardPage.OVERVIEW||page==DashboardPage.F1&&!media||page==DashboardPage.GAUGES)&&!settings&&mediaState.snapshot(now).notice)delay=16;

@@ -89,7 +89,7 @@ final class CircuitCluster extends ClusterKit {
         if(GpsFix.any())java.util.Arrays.sort(o,new java.util.Comparator<Integer>(){public int compare(Integer a,Integer b){return Double.compare(dist[a],dist[b]);}});
         int[] r=new int[o.length];for(int i=0;i<r.length;i++)r[i]=o[i];return r;
     }
-    private String km(double m){return m<1000?String.format(Locale.US,"%.0f m",m):String.format(Locale.US,"%.0f km",m/1000);}
+    private String km(double m){return m<1000?Fmt.f("%.0f m",m):Fmt.f("%.0f km",m/1000);}
     private long current(){return lap.state()==CircuitLap.TIMING?fixT+(System.nanoTime()/1000000-fixNano)-lap.startAt:-1;}
 
     @Override protected void draw(Canvas c){
@@ -100,7 +100,7 @@ final class CircuitCluster extends ClusterKit {
         bold(c,name,ML+14,MT+24,15,TX,Paint.Align.LEFT);
         float tx=ML+14+width(name,15,Typeface.DEFAULT_BOLD)+10;   // a drawn ▾: the head unit's font has no such glyph
         path.reset();path.moveTo(tx,MT+14);path.lineTo(tx+10,MT+14);path.lineTo(tx+5,MT+20);path.close();poly(c,TX);
-        if(circuit>=0)text(c,String.format(Locale.US,"%.2f km",Circuits.lengthM(circuit)/1000f),MR-14,MT+24,13,MU,Paint.Align.RIGHT,Typeface.DEFAULT);
+        if(circuit>=0)text(c,Fmt.f("%.2f km",Circuits.lengthM(circuit)/1000f),MR-14,MT+24,13,MU,Paint.Align.RIGHT,Typeface.DEFAULT);
         String sub=chosen<0?t("자동 · 가장 가까운 서킷"):t("직접 선택");
         if(circuit>=0&&Circuits.lineEstimated(circuit))sub+=" · "+t("출발선 위치는 추정");
         text(c,sub,ML+14,MT+44,12,MU,Paint.Align.LEFT,Typeface.DEFAULT);
@@ -116,7 +116,7 @@ final class CircuitCluster extends ClusterKit {
     private void side(Canvas c){
         boolean timing=lap.state()==CircuitLap.TIMING;
         bold(c,timing?"LAP "+(lap.laps+1):"LAP —",L,84,16,ACC,Paint.Align.LEFT);
-        String gps=!GpsFix.any()?t("GPS 없음"):!GpsFix.fresh()?t("GPS 끊김"):Float.isNaN(GpsFix.accuracy)?"GPS":String.format(Locale.US,"GPS ±%.0f m",GpsFix.accuracy);
+        String gps=!GpsFix.any()?t("GPS 없음"):!GpsFix.fresh()?t("GPS 끊김"):Float.isNaN(GpsFix.accuracy)?"GPS":Fmt.f("GPS ±%.0f m",GpsFix.accuracy);
         text(c,gps,R,84,12,GpsFix.fresh()?MU:BAD,Paint.Align.RIGHT,Typeface.DEFAULT);
         bold(c,LapTimer.format(current()),L,136,44,timing?TX:MU,Paint.Align.LEFT);
         // live gap to the best lap: the number, and a bar from the middle (a full side = 2 s), green ahead / red behind
@@ -196,7 +196,7 @@ final class CircuitCluster extends ClusterKit {
     private float vk,vox,voy;
     private float sx(double x){return vox+(float)(x-vx)*vk;}
     private float sy(double y){return voy-(float)(y-vy)*vk;}
-    @Override void trim(){trackBmp=recycle(trackBmp);}
+    @Override void trim(){super.trim();trackBmp=recycle(trackBmp);bmpFor=-1;}
     private void drawTrack(){
         float[] a=track;int an=a.length/2;
         double x0=Double.MAX_VALUE,x1=-Double.MAX_VALUE,y0=Double.MAX_VALUE,y1=-Double.MAX_VALUE;
