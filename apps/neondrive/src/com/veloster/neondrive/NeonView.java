@@ -20,8 +20,9 @@ final class NeonView extends View implements Runnable {
     private final NeonRenderer renderer = new NeonRenderer();
     private final DriveModel model = new DriveModel();
     /** Now playing: the N dashboard's passive OEM media widget receiver and artwork decoder. */
-    private final com.veloster.vehicle.MediaState media = new com.veloster.vehicle.MediaState();
-    private final com.veloster.vehicle.MediaReceiver mediaReceiver = new com.veloster.vehicle.MediaReceiver(media);
+    private final com.veloster.vehicle.MediaState media;
+    /** Own receiver only when standalone; as a dashboard page the dashboard's state (already holding the track) is used. */
+    private final com.veloster.vehicle.MediaReceiver mediaReceiver;
     private com.veloster.vehicle.ArtworkLoader artwork;
     private final DriveSignals signals;
     private final Bitmap baseSprites;
@@ -52,9 +53,14 @@ final class NeonView extends View implements Runnable {
         renderer.setClock(clockOn, time, suffix, date);
     }
 
-    NeonView(Context context, DriveSignals signals, boolean feedAvailable) {
+    NeonView(Context context, DriveSignals signals, boolean feedAvailable) { this(context, signals, feedAvailable, null); }
+
+    /** shared: the N dashboard's now-playing state, so the track playing when the page opens shows at once (null = own). */
+    NeonView(Context context, DriveSignals signals, boolean feedAvailable, com.veloster.vehicle.MediaState shared) {
         super(context);
         this.signals = signals;
+        media = shared != null ? shared : new com.veloster.vehicle.MediaState();
+        mediaReceiver = shared != null ? null : new com.veloster.vehicle.MediaReceiver(media);
         model.setFeedAvailable(feedAvailable);
         SharedPreferences prefs = context.getSharedPreferences(PREFS, 0);
         renderer.setHud(prefs.getBoolean("hud", true));
@@ -177,9 +183,9 @@ final class NeonView extends View implements Runnable {
     void resume() {
         running = true; lastFrame = -1; removeCallbacks(this); post(this); startLocation();
         if (artwork == null) artwork = new com.veloster.vehicle.ArtworkLoader(getContext(), this);
-        artwork.open(); mediaReceiver.start(getContext());
+        artwork.open(); if (mediaReceiver != null) mediaReceiver.start(getContext());
     }
-    void pause() { running = false; removeCallbacks(this); stopLocation(); mediaReceiver.stop(); if (artwork != null) artwork.close(); }
+    void pause() { running = false; removeCallbacks(this); stopLocation(); if (mediaReceiver != null) mediaReceiver.stop(); if (artwork != null) artwork.close(); }
 
     public void run() {
         if (!running) return;

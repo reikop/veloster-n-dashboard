@@ -60,7 +60,7 @@ final class WarpCluster extends ClusterKit {
         round(c,282,352,518,466,8,PANEL);outline(c,282,352,518,466,8,1,EDGE);
         float rx=400,ry=410,rad=48;
         dot(c,rx,ry,rad,0xff06140f);ring(c,rx,ry,rad,1.5f,0xff1f5a3a);ring(c,rx,ry,rad/2,1,0xff1f5a3a);line(c,rx-rad,ry,rx+rad,ry,1,0xff1f5a3a);line(c,rx,ry-rad,rx,ry+rad,1,0xff1f5a3a);
-        r.set(rx-rad,ry-rad,rx+rad,ry+rad);p.setStyle(Paint.Style.FILL);p.setColor(0x5550ff96);c.drawArc(r,sweep%360-30,30,true,p);
+        r.set(-rad,-rad,rad,rad);p.setStyle(Paint.Style.FILL);p.setColor(0x5550ff96);c.save();c.translate(rx,ry);c.rotate(sweep%360);c.drawArc(r,-30,30,true,p);c.restore();   // one wedge turned by the canvas: a new sweep angle every frame was a new arc texture on 4.2
         if(!Float.isNaN(lat)&&!Float.isNaN(lon))dot(c,rx+clamp(lat,-1,1)*rad,ry+clamp(lon,-1,1)*rad,4,0xff6dffa0);
         bold(c,t("관성"),296,374,12,MU,Paint.Align.LEFT);
         mono(c,Float.isNaN(lat)||Float.isNaN(lon)?"—":String.format(Locale.US,"%.2f g",Math.hypot(lat,lon)),504,374,13,TX,Paint.Align.RIGHT);

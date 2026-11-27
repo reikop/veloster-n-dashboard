@@ -80,7 +80,9 @@ public final class VehicleDash extends View implements Runnable {
             soundVol=clampI(p.getInt("engine_sound_volume",70),10,200);beepSound=clampI(p.getInt("shift_beep_sound",0),0,SettingsPanel.BEEP_SOUNDS.length-1);
             beepVol=clampI(p.getInt("shift_beep_vol",70),0,200);fxVol=clampI(p.getInt("fx_vol",70),0,200);
             SpeedChime.kmh=p.getInt("speed_chime_kmh",0);SpeedChime.sound=clampI(p.getInt("speed_chime_sound",0),0,SpeedChime.NAMES.length-1);
-            savedShift=ShiftGuide.clamp(p.getInt("shift_target",ShiftGuide.DEFAULT));}
+            savedShift=ShiftGuide.clamp(p.getInt("shift_target",ShiftGuide.DEFAULT));
+            EngineSound.yieldMode=clampI(p.getInt("engine_sound_yield",0),0,SettingsPanel.SOUND_YIELDS.length-1);
+            EngineSound.boostLevel=clampI(p.getInt("engine_sound_boost",0),0,SettingsPanel.SOUND_BOOSTS.length-1);}
         catch(ClassCastException e){soundOn=beepOn=false;}
         sound.volume(soundVol);sound.voice(soundEngine,soundExhaust);
     }
@@ -88,7 +90,8 @@ public final class VehicleDash extends View implements Runnable {
     private static void saveSound(android.content.SharedPreferences p){
         p.edit().putBoolean("engine_sound",soundOn).putBoolean("shift_beep",beepOn).putBoolean("float_sound",floatSound).putBoolean("float_beep",floatBeep)
          .putInt("engine_sound_engine",soundEngine).putInt("engine_sound_exhaust",soundExhaust).putInt("engine_sound_volume",soundVol)
-         .putInt("shift_beep_sound",beepSound).putInt("shift_beep_vol",beepVol).putInt("fx_vol",fxVol).putInt("speed_chime_kmh",SpeedChime.kmh).putInt("speed_chime_sound",SpeedChime.sound).apply();
+         .putInt("shift_beep_sound",beepSound).putInt("shift_beep_vol",beepVol).putInt("fx_vol",fxVol).putInt("speed_chime_kmh",SpeedChime.kmh).putInt("speed_chime_sound",SpeedChime.sound)
+         .putInt("engine_sound_yield",EngineSound.yieldMode).putInt("engine_sound_boost",EngineSound.boostLevel).apply();
     }
     /** The engine sound stream when the beep should ride on it (the car's alarm path carries one AudioTrack), else null. */
     private static EngineSound mix(){return soundOn&&sound!=null?sound:null;}
@@ -167,7 +170,7 @@ public final class VehicleDash extends View implements Runnable {
     private void showNeon(){
         if(!standalone)return;
         try{
-            if(neon==null)neon=new com.veloster.neondrive.NeonDrivePage(activity,new Runnable(){public void run(){exitNeon();}});
+            if(neon==null)neon=new com.veloster.neondrive.NeonDrivePage(activity,new Runnable(){public void run(){exitNeon();}},mediaState);   // the track already playing shows at once
             android.view.View v=neon.view();
             if(v.getParent()==null){FrameLayout parent=(FrameLayout)activity.findViewById(android.R.id.content);parent.addView(v,new FrameLayout.LayoutParams(-1,-1));}
             v.bringToFront();neon.start();
@@ -510,7 +513,7 @@ public final class VehicleDash extends View implements Runnable {
     private void syncModeState(){settingsState.modeColor=modeColor;settingsState.modeScreen=modeScreen;System.arraycopy(modeTargets,0,settingsState.modeTargets,0,modeTargets.length);
         Telemetry.Sample m=DATA.sample(Telemetry.DRIVE_MODE,SystemClock.elapsedRealtime());settingsState.modeNow=m.valid?(int)m.value:-1;}
     private void syncSoundState(){SettingsPanel.State st=settingsState;st.engineOn=soundOn;st.beepOn=beepOn;st.floatEngine=floatSound;st.floatBeep=floatBeep;
-        st.engine=soundEngine;st.exhaust=soundExhaust;st.engineVol=soundVol;st.beep=beepSound;st.beepVol=beepVol;st.chimeKmh=SpeedChime.kmh;st.chime=SpeedChime.sound;st.fxVol=fxVol;}
+        st.engine=soundEngine;st.exhaust=soundExhaust;st.yield=EngineSound.yieldMode;st.boost=EngineSound.boostLevel;st.engineVol=soundVol;st.beep=beepSound;st.beepVol=beepVol;st.chimeKmh=SpeedChime.kmh;st.chime=SpeedChime.sound;st.fxVol=fxVol;}
     private void openSettings(int cat){syncModeState();syncSoundState();settings=true;settingsState.cat=cat<0||cat>=SettingsPanel.CATS?0:cat;gaugeEditor.dismiss();graphEditor.dismiss();refreshBackupTime();refreshUsb();fontFirstScan();invalidate();}
     private void closeSettings(){settings=false;cellPicker.dismiss();invalidate();}
     /** The back key: true when it closed the open settings. */
@@ -673,6 +676,8 @@ public final class VehicleDash extends View implements Runnable {
         else if(a==SettingsPanel.S_BEEP_SOUND)pickSound(UiText.t("알림 소리"),UiText.list(SettingsPanel.BEEP_SOUNDS),beepSound,2);
         else if(a==SettingsPanel.S_CHIME_KMH){String[] n=new String[SpeedChime.KMH.length];int at=0;for(int i=0;i<n.length;i++){n[i]=SpeedChime.KMH[i]<=0?UiText.t("끔"):SpeedChime.KMH[i]+" km/h";if(SpeedChime.KMH[i]==SpeedChime.kmh)at=i;}pickSound(UiText.t("과속 차임"),n,at,3);}
         else if(a==SettingsPanel.S_CHIME_SOUND)pickSound(UiText.t("차임 소리"),UiText.list(SpeedChime.NAMES),SpeedChime.sound,4);
+        else if(a==SettingsPanel.S_YIELD)pickSound(UiText.t("안내·통화 양보"),UiText.list(SettingsPanel.SOUND_YIELDS),EngineSound.yieldMode,5);
+        else if(a==SettingsPanel.S_BOOST)pickSound(UiText.t("속도 따라 키우기"),UiText.list(SettingsPanel.SOUND_BOOSTS),EngineSound.boostLevel,6);
         else if(a==SettingsPanel.S_TEST_BEEP&&beep!=null)beep.play(mix(),beepSound,beepVol/100f);
         else if(a==SettingsPanel.S_TEST_CHIME&&beep!=null)beep.playChime(mix(),SpeedChime.sound,fxVol/100f);
         if(sound!=null){sound.volume(soundVol);sound.voice(soundEngine,soundExhaust);}
@@ -684,7 +689,10 @@ public final class VehicleDash extends View implements Runnable {
         new android.app.AlertDialog.Builder(activity).setTitle(title).setSingleChoiceItems(names,at,new android.content.DialogInterface.OnClickListener(){public void onClick(android.content.DialogInterface d,int w){
             d.dismiss();
             if(which==0)soundEngine=w;else if(which==1)soundExhaust=w;else if(which==2){beepSound=w;if(beep!=null)beep.play(mix(),w,beepVol/100f);}
-            else if(which==3)SpeedChime.kmh=SpeedChime.KMH[w];else{SpeedChime.sound=w;if(beep!=null)beep.playChime(mix(),w,fxVol/100f);}
+            else if(which==3)SpeedChime.kmh=SpeedChime.KMH[w];
+            else if(which==5){if(w!=EngineSound.yieldMode){EngineSound.yieldMode=w;if(sound!=null)sound.play(-1);}}   // read when the thread starts: the next tick starts it again
+            else if(which==6)EngineSound.boostLevel=w;
+            else{SpeedChime.sound=w;if(beep!=null)beep.playChime(mix(),w,fxVol/100f);}
             if(sound!=null)sound.voice(soundEngine,soundExhaust);saveSound(ui());syncSoundState();invalidate();}})
             .setNegativeButton(UiText.t("취소"),null).show();
     }

@@ -26,10 +26,13 @@ public final class SettingsPanel {
         F_SKIN_DAY=770,F_SKIN_NIGHT=771,F_CELLS=772,F_MUSIC=780,F_HIDE=781,R_LIST=800,R_CLEAR=801,B_SAVE=900,B_RESTORE=901,
         D_COLOR_ON=1000,D_COLOR_OFF=1001,D_SCREEN_ON=1002,D_SCREEN_OFF=1003,D_TARGET=1010,
         S_ENGINE_ON=1100,S_ENGINE_OFF=1101,S_ENGINE=1102,S_EXHAUST=1103,S_VOL=1110,S_BEEP_ON=1120,S_BEEP_OFF=1121,S_BEEP_SOUND=1122,S_BEEP_VOL=1130,
-        S_CHIME_KMH=1140,S_CHIME_SOUND=1141,S_FX_VOL=1150,S_FLOAT_ENGINE=1160,S_FLOAT_BEEP=1161,S_TEST_BEEP=1170,S_TEST_CHIME=1171,
+        S_CHIME_KMH=1140,S_CHIME_SOUND=1141,S_FX_VOL=1150,S_FLOAT_ENGINE=1160,S_FLOAT_BEEP=1161,S_TEST_BEEP=1170,S_TEST_CHIME=1171,S_YIELD=1172,S_BOOST=1173,
         U_ON=1200,U_OFF=1201,FONT_UP=1300,FONT_DOWN=1301,FONT_SCAN=1302,FONT_APPLY=1303,FONT_REBOOT=1304,FONT_PICK=1310;
     /** Engine sound voices (EngineSynth.ENGINES / EXHAUSTS order) and shift beeps (ShiftBeep.SOUNDS order), from the i30 PD build. */
-    public static final String[] SOUND_ENGINES={"직렬 4기통 터보","직렬 6기통 터보","V6 트윈터보","V8 크로스플레인","V8 플랫플레인"};
+    public static final String[] SOUND_ENGINES={"직렬 4기통 터보","직렬 6기통 터보","V6 트윈터보","V8 크로스플레인","V8 플랫플레인",
+        "4기통 · 2.0 터보 핫해치","4기통 · 고회전 캠 전환","4기통 · 수평대향 터보","4기통 · 랠리 안티랙","4기통 · 경량 자연흡기","4기통 · 디젤 터보"};
+    /** 안내·통화 양보 (SoundYield.OFF, DUCK, STOP) and 속도 따라 키우기 (SoundYield.speedBoost levels 0..3), from i30 PD v1.18.0. */
+    public static final String[] SOUND_YIELDS={"끔","안내 때 줄이기","안내 때 멈추기"},SOUND_BOOSTS={"끔","약 (+3 dB)","중 (+6 dB)","강 (+9 dB)"};
     public static final String[] SOUND_EXHAUSTS={"순정","스포츠 머플러","중통 제거","풀 배기 · 팝앤뱅"};
     public static final String[] BEEP_SOUNDS={"삐빅","삑","상승 3음","레이스 버저","틱틱",
         "삐빅 · 3번","삐빅 · 4번 빠르게","연타 · 5번","삐빅 · 낮게","삐빅 · 높게","두 번 · 길고 짧게","상승 2음","하강 2음","하강 3음","빠른 상승 4음","5도 위로","옥타브 위로","맑은 차임","두 음 차임","낮은 차임","유리 톡","디지털 3틱","짧은 펄스 · 낮게","긴 비프","낮은 톤"};
@@ -47,6 +50,8 @@ public final class SettingsPanel {
     static final float TILE_W=(PANE_R-PANE_L-(THEME_COLS-1)*8)/THEME_COLS,TILE_H=94;
     static final float F_ROW_T=62,F_ROW_H=36,F_ROW_STEP=41,F_LABEL_W=88,F_CTRL_L=PANE_L+F_LABEL_W,F_CTRL_R=560,PREVIEW_L=572,PREVIEW_T=62,PREVIEW_B=378;
     static final float TOGGLE_T1=386,TOGGLE_T2=430,TOGGLE_H=38;
+    /** 사운드: the 양보 and 속도 buttons at the top of the right column. */
+    static final float YIELD_T=PREVIEW_T,BOOST_T=PREVIEW_T+F_ROW_STEP;
     /** 정보: the USB debugging ON / OFF buttons (the same OEM request as My Apps → USB 디버깅). */
     static final float USB_T=402,USB_H=44,USB_W=170,USB_OFF_L=PANE_R-USB_W,USB_ON_L=USB_OFF_L-8-USB_W;
     /** 글꼴: the list (six rows a page) on the left, the preview and the state on the right, apply / reboot below. */
@@ -91,6 +96,8 @@ public final class SettingsPanel {
                 if((a=chips(x,y,6,2,S_CHIME_KMH))!=NONE)return a;
                 if((a=chips(x,y,7,3,S_FX_VOL))!=NONE)return a;
                 if((a=chips(x,y,8,2,S_FLOAT_ENGINE))!=NONE)return a;
+                if(in(x,y,PREVIEW_L,YIELD_T,PANE_R,YIELD_T+F_ROW_H))return S_YIELD;
+                if(in(x,y,PREVIEW_L,BOOST_T,PANE_R,BOOST_T+F_ROW_H))return S_BOOST;
                 if(in(x,y,PREVIEW_L,TOGGLE_T1,PANE_R,TOGGLE_T1+TOGGLE_H))return S_TEST_BEEP;
                 if(in(x,y,PREVIEW_L,TOGGLE_T2,PANE_R,TOGGLE_T2+TOGGLE_H))return S_TEST_CHIME;
                 return NONE;}
@@ -154,7 +161,7 @@ public final class SettingsPanel {
         /** 주행 모드: accent follows the mode, the mode opens its screen, the screen per mode (-1 원래 화면), the mode now (-1 none). */
         public boolean modeColor,modeScreen;
         /** 사운드: switches, voices and volumes (percent). */
-        public boolean engineOn,beepOn,floatEngine,floatBeep;public int engine,exhaust,engineVol=70,beep,beepVol=70,chimeKmh,chime,fxVol=70;public int[] modeTargets=new int[DriveModes.NAMES.length];public int modeNow=-1;
+        public boolean engineOn,beepOn,floatEngine,floatBeep;public int engine,exhaust,yield,boost,engineVol=70,beep,beepVol=70,chimeKmh,chime,fxVol=70;public int[] modeTargets=new int[DriveModes.NAMES.length];public int modeNow=-1;
         /** 글꼴: the last scan (null before the first one ends), the row picked, the first row shown, and work in progress. */
         public FontManager.Snapshot fonts;public int fontPick=-1,fontTop;public boolean fontBusy;}
 
@@ -200,10 +207,14 @@ public final class SettingsPanel {
         label(c,6,UiText.t("과속 차임"));chipRow(c,6,new String[]{(s.chimeKmh<=0?UiText.t("끔"):s.chimeKmh+" km/h")+" ›",UiText.t(SpeedChime.NAMES[s.chime])+" ›"},-1);
         volRow(c,7,UiText.t("효과음 볼륨"),s.fxVol);
         label(c,8,UiText.t("플로팅 중"));chipRow(c,8,new String[]{UiText.t("엔진 사운드")+(s.floatEngine?" ON":" OFF"),UiText.t("변속 알림")+(s.floatBeep?" ON":" OFF")},-1);
-        panel(c,PREVIEW_L,PREVIEW_T,PANE_R-PREVIEW_L,PREVIEW_B-PREVIEW_T-8,0xff0b0f12,LINE);
-        String[] notes={UiText.t("차의 알림 채널(앞 스피커)로 냅니다"),UiText.t("음악 위에 섞여 들리고, 소리를 낼 때"),UiText.t("음악이 잠깐 작아질 수 있습니다"),"",
-            UiText.t("엔진 사운드는 받은 RPM·페달·부스트로"),UiText.t("만든 소리입니다 (녹음 아님)"),"",UiText.t("후진 중이거나 RPM이 없으면 조용합니다"),"",UiText.t("i30 PD 포팅에서 가져옴 · 벨로스터 N 실차 소리 확인")};
-        float y=PREVIEW_T+24;for(String n:notes){if(n.length()>0)fitted(c,n,PREVIEW_L+10,y,12,PANE_R-PREVIEW_L-20,MUTED);y+=24;}
+        button(c,UiText.t("양보")+" · "+UiText.t(SOUND_YIELDS[s.yield])+"  ›",PREVIEW_L,YIELD_T,PANE_R-PREVIEW_L,F_ROW_H,false,13);
+        button(c,UiText.t("속도")+" · "+UiText.t(SOUND_BOOSTS[s.boost])+"  ›",PREVIEW_L,BOOST_T,PANE_R-PREVIEW_L,F_ROW_H,false,13);
+        float pt=BOOST_T+F_ROW_STEP;
+        panel(c,PREVIEW_L,pt,PANE_R-PREVIEW_L,PREVIEW_B-pt-8,0xff0b0f12,LINE);
+        String[] notes={UiText.t("차의 알림 채널(앞 스피커)로 냅니다"),UiText.t("음악 위에 섞여 들리고, 소리를 낼 때"),UiText.t("음악이 잠깐 작아질 수 있습니다"),
+            UiText.t("받은 RPM·페달·부스트로 만든 소리"),UiText.t("후진 중이거나 RPM이 없으면 조용합니다"),
+            UiText.t("양보: 내비 안내 때 줄이거나 멈춤, 통화 때 멈춤"),UiText.t("속도: 40~110 km/h에서 바람 소리만큼 키움"),UiText.t("i30 PD 포팅에서 가져옴 · 실차 미확인")};
+        float y=pt+22;for(String n:notes){fitted(c,n,PREVIEW_L+10,y,12,PANE_R-PREVIEW_L-20,MUTED);y+=24;}
         button(c,UiText.t("변속음 미리 듣기"),PREVIEW_L,TOGGLE_T1,PANE_R-PREVIEW_L,TOGGLE_H,false,14);
         button(c,UiText.t("차임 미리 듣기"),PREVIEW_L,TOGGLE_T2,PANE_R-PREVIEW_L,TOGGLE_H,false,14);
     }

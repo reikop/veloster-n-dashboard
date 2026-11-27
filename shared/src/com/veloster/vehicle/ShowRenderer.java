@@ -18,7 +18,7 @@ public final class ShowRenderer {
     private static int T(int c){return Theme.current().map(c);}
     private static int D(){return Theme.current().danger;}
     private final Paint p=new Paint(3);
-    private final Path path=new Path(),cellPath=new Path();
+    private final KeyPath path=new KeyPath();private final Path cellPath=new Path();
     private final RectF cellRect=new RectF();
     private final RectF oval=new RectF();
     private static final int BG=0xff05070a,PANEL=0xff0e1318,LINE=0xff263038,TRACK=0xff1b2228,
@@ -91,10 +91,10 @@ public final class ShowRenderer {
         p.setStyle(Paint.Style.FILL);p.setColor(T(0x22ff4a5e));c.drawRect(rx,gt,gr,gb,p);
         // area under the curve
         path.reset();path.moveTo(cx[0],gb);for(int i=0;i<=N;i++)path.lineTo(cx[i],cy[i]);path.lineTo(cx[N],gb);path.close();
-        p.setColor(T(withAlpha(accent,0x22)));c.drawPath(path,p);
+        p.setColor(T(withAlpha(accent,0x22)));c.drawPath(path.kept(),p);
         // curve line
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(3);p.setColor(T(withAlpha(accent,0xcc)));
-        path.reset();path.moveTo(cx[0],cy[0]);for(int i=1;i<=N;i++)path.lineTo(cx[i],cy[i]);c.drawPath(path,p);
+        path.reset();path.moveTo(cx[0],cy[0]);for(int i=1;i<=N;i++)path.lineTo(cx[i],cy[i]);c.drawPath(path.kept(),p);
         p.setStyle(Paint.Style.FILL);
         // baseline + rpm ticks
         p.setColor(T(LINE));p.setStrokeWidth(1);c.drawLine(gl,gb,gr,gb,p);
@@ -139,11 +139,11 @@ public final class ShowRenderer {
         if(!Float.isNaN(nb)&&nb>0){
             float a=SW*((nb-0)/(bmax-BMIN));
             float glow=Math.max(0,Math.min(1,nb/bmax));
-            p.setStrokeWidth(14+10*glow);p.setColor(T(withAlpha(accent,0x33)));c.drawArc(oval,A0+SW*zf,a,false,p);
-            p.setStrokeWidth(14);p.setColor(T(accent));c.drawArc(oval,A0+SW*zf,a,false,p);
+            p.setStrokeWidth(Math.round((14+10*glow)*2)/2f);p.setColor(T(withAlpha(accent,0x33)));   /* half-pixel steps: the glow width is part of the arc texture key */c.drawArc(oval,KeyPath.arc(A0+SW*zf),KeyPath.arc(a),false,p);
+            p.setStrokeWidth(14);p.setColor(T(accent));c.drawArc(oval,KeyPath.arc(A0+SW*zf),KeyPath.arc(a),false,p);
         }else if(!Float.isNaN(nb)&&nb<0){
             float a=SW*((0-nb)/(bmax-BMIN));
-            p.setStrokeWidth(14);p.setColor(T(0xff4a5a63));c.drawArc(oval,A0+SW*zf-a,a,false,p);
+            p.setStrokeWidth(14);p.setColor(T(0xff4a5a63));c.drawArc(oval,KeyPath.arc(A0+SW*zf-a),KeyPath.arc(a),false,p);
         }
         p.setStrokeCap(Paint.Cap.BUTT);
         // ticks + labels every 0.5 bar

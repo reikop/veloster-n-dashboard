@@ -15,7 +15,23 @@ import java.util.Locale;
  */
 abstract class ClusterKit {
     protected final Paint p=new Paint(3);
-    protected final Path path=new Path();
+    protected final KeyPath path=new KeyPath();   // draw path.kept(): see KeyPath
+    // ---- shape memo. Android 4.2's GPU renderer turns every drawPath into a texture on the UI thread, and reuses it only
+    // for the same, unchanged Path object: the one shared `path`, reset and rebuilt for every shape, missed every time
+    // (2026-11-26 car traces: 80년대 201 ms, 람다 134 ms, 택시 100 ms of GPU work a frame, mostly 7-segment and band
+    // shapes rasterised again each frame). A shape whose numbers repeat now draws the same Path instance.
+    // ponytail: keys are 64-bit hashes of the floats (a collision would draw the other shape); cleared past MEMO_MAX.
+    private final java.util.HashMap<Long,Path> memo=new java.util.HashMap<Long,Path>();
+    static final int MEMO_MAX=1500;
+    static long key(long h,float v){return (h^Float.floatToIntBits(v))*0x9E3779B97F4A7C15L+0x632BE59BD9B4E019L;}
+    /** The cached copy of `path` (just built by the caller) for this key, made on first use. */
+    protected Path memo(long k){
+        Path m=memo.get(k);
+        if(m==null){if(memo.size()>=MEMO_MAX)memo.clear();m=new Path(path);memo.put(k,m);}
+        return m;
+    }
+    /** Fills the current path through the memo (for shapes that repeat frame to frame). */
+    protected void poly(Canvas c,int color,long k){p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(memo(k),p);}
     protected final RectF r=new RectF();
     /** Cached pixel art is drawn without smoothing. */
     private final Paint bmpPaint=new Paint(0);
@@ -84,7 +100,7 @@ abstract class ClusterKit {
         srcRect.set(sx,sy,sx+sw,sy+sh);r.set(l,t,rr,bt);c.drawBitmap(b,srcRect,r,bmpPaint);
     }
     /** Fills the current path. */
-    protected void poly(Canvas c,int color){p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(path,p);}
+    protected void poly(Canvas c,int color){p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(path.kept(),p);}
     protected void dot(Canvas c,float x,float y,float rad,int color){p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawCircle(x,y,rad,p);}
     protected void ring(Canvas c,float x,float y,float rad,float width,int color){
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(width);p.setColor(col(color));c.drawCircle(x,y,rad,p);p.setStyle(Paint.Style.FILL);
@@ -154,7 +170,8 @@ abstract class ClusterKit {
             case 'b':vseg(x+w-t/2,y+t/2+g,y+hh-g,t);break;
             default:vseg(x+w-t/2,y+hh+g,y+h-t/2-g,t);break;
         }
-        p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(path,p);
+        long sk=key(key(key(key(key(key(k,x),y),w),h),t),g);
+        p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(memo(sk),p);
     }
     private float base;
     /** Segment corner, slanted 0.1 to the right per unit of height above the digit's baseline. */

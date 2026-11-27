@@ -33,6 +33,12 @@ public final class UiText {
         EN.put("3D 모델을 불러오지 못했습니다","Could not load the 3D model");
         EN.put("3D 화면을 그릴 수 없습니다","Cannot draw the 3D view");
         EN.put("4 × 3 보기","4 x 3 grid");
+        EN.put("4기통 · 2.0 터보 핫해치","Four · 2.0 turbo hot hatch");
+        EN.put("4기통 · 경량 자연흡기","Four · light NA");
+        EN.put("4기통 · 고회전 캠 전환","Four · high-rev cam changeover");
+        EN.put("4기통 · 디젤 터보","Four · turbo diesel");
+        EN.put("4기통 · 랠리 안티랙","Four · rally anti-lag");
+        EN.put("4기통 · 수평대향 터보","Four · flat-four turbo");
         EN.put("5도 위로","Up a fifth");
         EN.put("5분","5 min");
         EN.put("80년대","80s");
@@ -92,6 +98,7 @@ public final class UiText {
         EN.put("Wi-Fi/AP 상태가 안정된 꺼짐/켜짐 상태가 아닙니다. 변경하지 않았습니다.","Wi-Fi/AP is not in a stable on/off state. No changes were made.");
         EN.put("e-LSD 수치","e-LSD value");
         EN.put("i30 PD 포팅에서 가져옴 · 벨로스터 N 실차 소리 확인","From the i30 PD port · heard in this car");
+        EN.put("i30 PD 포팅에서 가져옴 · 실차 미확인","From the i30 PD port · not checked in the car");
         EN.put("sung9155/i30-pd-dashboard (i30 PD 포팅, MIT)에서 가져와 벨로스터 N에 맞춤","adapted from sung9155/i30-pd-dashboard (i30 PD port, MIT) for the Veloster N");
         EN.put("Λ RPM·속도계","Λ rpm and speed");
         EN.put("‘원래 화면’이면 처음 보던 화면으로 돌아갑니다","'Previous screen' goes back to where you were");
@@ -116,6 +123,7 @@ public final class UiText {
         EN.put("가장자리 버튼 + 알림","Floating + notification");
         EN.put("가장자리 버튼 + 알림 / Floating + notification","Floating + notification");
         EN.put("가장자리 버튼을 표시할 수 없어 알림 바로가기를 유지합니다. 시스템의 다른 앱 위 표시 권한을 확인하세요.","The floating button could not be shown. The notification remains. Check permission to display over other apps.");
+        EN.put("강 (+9 dB)","High (+9 dB)");
         EN.put("강원","Gangwon");
         EN.put("강제 재시작","Restart head unit");
         EN.put("개발자 설정","Developer options");
@@ -282,6 +290,7 @@ public final class UiText {
         EN.put("바로가기 시작 실패. 설정 상태와 시스템 권한을 확인하세요.","Shortcut could not start. Check its settings and system permissions.");
         EN.put("바로가기: ","Shortcut: ");
         EN.put("반응 시간","Reaction");
+        EN.put("받은 RPM·페달·부스트로 만든 소리","Made from the received rpm, pedal and boost");
         EN.put("받지 못함","Not received");
         EN.put("밤","Night");
         EN.put("밤용 최소 화면","Night minimal");
@@ -390,6 +399,8 @@ public final class UiText {
         EN.put("세종","Sejong");
         EN.put("속도","Speed");
         EN.put("속도 km/h","Speed km/h");
+        EN.put("속도 따라 키우기","Louder with speed");
+        EN.put("속도: 40~110 km/h에서 바람 소리만큼 키움","Speed: louder from 40 to 110 km/h, like wind noise");
         EN.put("손글씨","handwriting");
         EN.put("쇼","Show");
         EN.put("순간 연료소모","Fuel rate");
@@ -422,6 +433,9 @@ public final class UiText {
         EN.put("심야 할증은 시계로 자동 적용","Night surcharge follows the clock");
         EN.put("아이스","Ice");
         EN.put("아주 크게","Extra large");
+        EN.put("안내 때 멈추기","Stop for prompts");
+        EN.put("안내 때 줄이기","Lower for prompts");
+        EN.put("안내·통화 양보","Give way to prompts and calls");
         EN.put("안드로이드 기본앱","Android utilities");
         EN.put("안드로이드 블루투스 어댑터가 없습니다.","No Android Bluetooth adapter is available.");
         EN.put("안드로이드 설정","Android settings");
@@ -449,7 +463,10 @@ public final class UiText {
         EN.put("앱에 포함 · 내비에 설치됨","In the app · installed");
         EN.put("야간","Night");
         EN.put("야간 도로","Night road");
+        EN.put("약 (+3 dB)","Low (+3 dB)");
         EN.put("얇은 띠","Thin strip");
+        EN.put("양보","Prompts");
+        EN.put("양보: 내비 안내 때 줄이거나 멈춤, 통화 때 멈춤","Prompts: lower or stop for guidance, stop for calls");
         EN.put("언어 설정을 저장하지 못했습니다.","Could not save the language setting.");
         EN.put("없음","None");
         EN.put("에메랄드","Emerald");
@@ -601,6 +618,7 @@ public final class UiText {
         EN.put("주행가능거리","Range");
         EN.put("주행거리","Odometer");
         EN.put("줄을 누르면 보이기·숨기기, ▲▼로 순서 변경 · 탭 줄을 길게 눌러도 열립니다","Tap a row to show or hide it, ▲▼ to reorder · a long press on the tabs opens this too");
+        EN.put("중 (+6 dB)","Medium (+6 dB)");
         EN.put("중통 제거","Resonator delete");
         EN.put("지금","Now");
         EN.put("지금 모드","Mode now");

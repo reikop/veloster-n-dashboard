@@ -48,7 +48,7 @@ public final class GaugeRenderer {
             if(style==0){
                 float cy=t+107,r=63;
                 p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5);p.setColor(LINE);RectF arc=new RectF(cx-r,cy-r,cx+r,cy+r);c.drawArc(arc,150,240,false,p);
-                if(ok){p.setColor(BLUE);c.drawArc(arc,150,240*f,false,p);}
+                if(ok){p.setColor(BLUE);c.drawArc(arc,150,KeyPath.arc(240*f),false,p);}
                 for(int tick=0;tick<=8;tick++){double a=Math.toRadians(150+30*tick);line(c,cx+(float)Math.cos(a)*54,cy+(float)Math.sin(a)*54,cx+(float)Math.cos(a)*60,cy+(float)Math.sin(a)*60,MUTED,1);}
                 if(ok){double a=Math.toRadians(150+240*f);line(c,cx,cy,cx+(float)Math.cos(a)*48,cy+(float)Math.sin(a)*48,WHITE,2);p.setStyle(Paint.Style.FILL);p.setColor(BLUE);c.drawCircle(cx,cy,4,p);}
                 text(c,axis(lo),cx-69,t+155,10,MUTED);text(c,axis(hi),cx+69,t+155,10,MUTED);

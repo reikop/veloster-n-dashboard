@@ -24,6 +24,9 @@ final class EngineSound implements Runnable {
      *  70 ms instead of 139 ms ahead. The risk is a gap when the UI thread stalls (the draw takes 40..130 ms here), which is why
      *  it is a switch; read when the thread starts, so changing it restarts the thread. */
     static volatile boolean fast;
+    /** 안내·통화 양보 (SoundYield.OFF / DUCK / STOP) and 속도 따라 키우기 level (0..3). The mode is read when the thread
+     *  starts (OFF keeps the old path: startAudio once, endAudio at the end), so changing it restarts the thread. */
+    static volatile int yieldMode,boostLevel;
     private final Context context;
     private final Telemetry data;
     private volatile Thread thread;
@@ -44,11 +47,9 @@ final class EngineSound implements Runnable {
     private volatile EngineSynth.Voice voice=EngineSynth.voice(0,0);
     private volatile double popRate=1,turboVol=1,bovVol=1,lead=.08;
     void voice(int engine,int exhaust){voice=EngineSynth.voice(engine,exhaust);}
-    /** The sound's own tuning in percent (SettingsLayout.SOUND_TONE..SOUND_LOW): brightness, flow noise, pipe reflections,
-     *  intake, firing scatter (100 = as designed) and the off-load loudness (of full load). */
-    private volatile double tone=1,rough=1,body=1,intake=1,uneven=1,low=EngineSynth.LOW;
-    void tune(int tonePercent,int roughPercent,int bodyPercent,int intakePercent,int unevenPercent,int lowPercent){
-        tone=tonePercent/100.0;rough=roughPercent/100.0;body=bodyPercent/100.0;intake=intakePercent/100.0;uneven=unevenPercent/100.0;low=lowPercent/100.0;}
+    private volatile double engineMix=1;
+    /** 엔진음 in percent: the engine itself against the turbo whistle and blow-off (0 = only those). */
+    void engineMix(int percent){engineMix=Math.max(0,Math.min(100,percent))/100.0;}
     void trims(int popPercent,int turboPercent,int bovPercent,int leadMs){popRate=popPercent/100.0;turboVol=turboPercent/100.0;bovVol=bovPercent/100.0;lead=leadMs/1000.0;}
 
     /** Idempotent. route -1 stops. A new route stops the old thread first, so its endAudio never closes the new path. */
@@ -64,8 +65,9 @@ final class EngineSound implements Runnable {
         // Default, not THREAD_PRIORITY_AUDIO: on this head unit the audio band (-16) preempted the cluster's own
         // drawing and the whole UI stuttered. The stream buffer below is large enough to ride out the lower priority.
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DEFAULT);
-        int r=route,micom=ROUTE_MICOM[r];
+        int r=route,micom=ROUTE_MICOM[r],mode=yieldMode;
         Object router=null;AudioTrack track=null;
+        SoundYield yield=mode==SoundYield.OFF?null:new SoundYield(mode);MicomListener ears=null;boolean open=false;double lastGain=0;
         try{
             int min=AudioTrack.getMinBufferSize(EngineSynth.RATE,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT);
             final int blk=fast?BLOCK/2:BLOCK;
@@ -73,7 +75,9 @@ final class EngineSound implements Runnable {
             track=new AudioTrack(ROUTE_STREAM[r],EngineSynth.RATE,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT,
                 bytes,AudioTrack.MODE_STREAM);
             if(track.getState()!=AudioTrack.STATE_INITIALIZED){android.util.Log.w("VehicleDash","Engine sound: AudioTrack not initialised, stream "+ROUTE_STREAM[r]);return;}
-            if(micom>=0)router=startMicom(context,micom);
+            if(yield!=null){ears=MicomListener.register(yield,micom);if(ears==null)yield=null;}   // no listener: as with 양보 off
+            if(yield==null){if(micom>=0)router=startMicom(context,micom);}
+            else{router=micom>=0?newRouter(context):null;if(router==null)open=true;}   // no path to manage: only the gain follows the voices
             track.play();
             android.util.Log.i("VehicleDash","Engine sound on: route "+r+" stream "+ROUTE_STREAM[r]+" micom 0x"+Integer.toHexString(micom)+" min buffer "+min+" block "+blk+" buffer "+bytes+" B ahead "+aheadMs+" ms");
             EngineSynth.Voice playing=voice;EngineSynth synth=new EngineSynth(EngineSynth.RATE,playing);float[] f=new float[blk];short[] pcm=new short[blk];int flames=0;
@@ -84,14 +88,32 @@ final class EngineSound implements Runnable {
                     selector=data.sample(Telemetry.GEAR_SELECTOR,now);
                 Telemetry.Sample gear=data.sample(8,now);
                 boolean reverse=selector.valid&&(int)selector.value==1||gear.valid&&(int)gear.value==14;   // DCT lever R, or 6MT reverse
-                synth.set(rpm.valid&&rpm.ageMs<=1000&&!reverse?rpm.value:Double.NaN,pedal.valid?pedal.value/100.0:0,boost.valid?boost.value:0);
-                if(voice!=playing){playing=voice;synth.use(playing);}
-                synth.tune(tone,rough,body,intake,uneven,low);   // rebuilds the wavelets only when brightness or reflections changed
-                synth.popRate=popRate;synth.turboVol=turboVol;synth.bovVol=bovVol;synth.lead=lead;
-                long t0=android.os.Debug.threadCpuTimeNanos();synth.render(f,0,blk,volume);cost+=android.os.Debug.threadCpuTimeNanos()-t0;
+                boolean live=rpm.valid&&rpm.ageMs<=1000&&!reverse;
+                Telemetry.Sample speed=data.sample(7,now);
+                float vol=volume*(float)SoundYield.speedBoost(boostLevel,speed.valid?speed.value:Double.NaN);
+                long t0=android.os.Debug.threadCpuTimeNanos();
+                {synth.set(live?rpm.value:Double.NaN,pedal.valid?pedal.value/100.0:0,boost.valid?boost.value:0);
+                    if(voice!=playing){playing=voice;synth.use(playing);}
+                    synth.popRate=popRate;synth.turboVol=turboVol;synth.bovVol=bovVol;synth.lead=lead;synth.engineVol=engineMix;
+                    synth.render(f,0,blk,vol);}
+                cost+=android.os.Debug.threadCpuTimeNanos()-t0;
+                if(yield!=null){   // the path follows the head unit's voices (SoundYield): open, closed, taken back
+                    long up=SystemClock.uptimeMillis();
+                    if(router!=null){int act=yield.tick(up,live&&volume>0||beepMix!=null,lastGain);
+                        if(act==SoundYield.ACT_OPEN||act==SoundYield.ACT_REGRAB){yield.ownStartCalled(up);boolean ok=micomStart(router,micom);
+                            if(act==SoundYield.ACT_OPEN)yield.openResult(ok,up);else yield.regrabResult(ok,up);open=ok;
+                            android.util.Log.i("VehicleDash","Engine sound: "+(act==SoundYield.ACT_OPEN?"open":"regrab")+" "+ok);}
+                        else if(act==SoundYield.ACT_CLOSE){
+                            if(open&&!yield.skipEnd(up)){yield.ownEndCalled(up);endMicom(router,micom);}
+                            if(open)android.util.Log.i("VehicleDash","Engine sound: closed, voices "+yield.activeSources(up));
+                            open=false;}}
+                    double g=open?yield.gain(up):0,g0=lastGain;lastGain=g;   // closed: silent, so nothing leaks into a voice's channel
+                    if(g<1||g0<1)for(int i=0;i<blk;i++)f[i]*=(float)(g0+(g-g0)*(i+1)/blk);   // ramp across the block: no zipper
+                }
                 if((made+=blk)>=30*EngineSynth.RATE){android.util.Log.i("VehicleDash","Engine sound: "+cost/1000000*EngineSynth.RATE/made+" ms of CPU per s of sound, rpm "+(rpm.valid?(int)rpm.value:-1));cost=0;made=0;}
                 if(synth.flames!=flames){flames=synth.flames;if(volume>0)EngineSynth.flameAt=now+aheadMs;}
-                short[] bm=beepMix;
+                short[] bm=beepMix;   // with 양보 on, a beep waits for the path (opened for it on the next block) and is dropped while a voice speaks
+                if(bm!=null&&yield!=null&&!open){if(yield.yielding(SystemClock.uptimeMillis()))beepMix=null;bm=null;}
                 if(bm!=null){int bp=beepPos;float bg=beepGain;
                     for(int i=0;i<blk&&bp<bm.length;i++,bp++){float s=f[i]+(bm[bp]/32000f)*bg;f[i]=s>1?1:s<-1?-1:s;}
                     beepPos=bp;if(bp>=bm.length)beepMix=null;}
@@ -105,18 +127,69 @@ final class EngineSound implements Runnable {
         finally{
             EngineSynth.voiced=false;
             if(track!=null){try{track.stop();}catch(IllegalStateException ignored){/* never started */}track.release();}
-            if(router!=null)endMicom(router,micom);
+            if(ears!=null)ears.unregister();
+            if(router!=null&&(yield==null||open&&!yield.skipEnd(SystemClock.uptimeMillis())))endMicom(router,micom);
         }
     }
 
     /** MicomAudioManager lives in the head unit's automotive library; anywhere else this logs and plays unrouted. */
     static Object startMicom(Context context,int type){
-        try{
-            com.hkmc.media.MicomAudioManager m=new com.hkmc.media.MicomAudioManager(context);
-            boolean ok=m.startAudio(type);
-            android.util.Log.i("VehicleDash","Engine sound: micom startAudio(0x"+Integer.toHexString(type)+") = "+ok);
-            return m;
-        }catch(LinkageError|RuntimeException e){android.util.Log.w("VehicleDash","Engine sound: no micom audio router",e);return null;}
+        Object m=newRouter(context);
+        if(m!=null)micomStart(m,type);
+        return m;
+    }
+    static Object newRouter(Context context){
+        try{return new com.hkmc.media.MicomAudioManager(context);}
+        catch(LinkageError|RuntimeException e){android.util.Log.w("VehicleDash","Engine sound: no micom audio router",e);return null;}
+    }
+    static boolean micomStart(Object router,int type){
+        try{boolean ok=((com.hkmc.media.MicomAudioManager)router).startAudio(type);
+            android.util.Log.i("VehicleDash","Engine sound: micom startAudio(0x"+Integer.toHexString(type)+") = "+ok);return ok;}
+        catch(LinkageError|RuntimeException e){android.util.Log.w("VehicleDash","Engine sound: startAudio failed",e);return false;}
+    }
+
+    /**
+     * IMicomAudioStateChangeListener by hand (raw binder to com.hkmc.micom.audiosetup, registerListener 3 /
+     * unregisterListener 4, V141): the head unit's voices start and end, and AudioStart / AudioEnd per stream type,
+     * fed to SoundYield. Every event is logged ("Engine sound: micom ...") so a drive shows what this firmware
+     * really sends. Calls arrive oneway on binder threads.
+     */
+    static final class MicomListener extends android.os.Binder {
+        private static final String SVC="com.hkmc.micom.audiosetup",DESC="com.hkmc.media.IMicomAudioService",LDESC="com.hkmc.media.IMicomAudioStateChangeListener";
+        private final SoundYield yield;private final int ownType;private android.os.IBinder svc;
+        private MicomListener(SoundYield y,int own){yield=y;ownType=own;attachInterface(null,LDESC);}
+        /** null when the service is missing (not this head unit) or refuses: the sound then plays as with 양보 off */
+        static MicomListener register(SoundYield y,int ownType){
+            MicomListener l=new MicomListener(y,ownType);
+            try{l.svc=(android.os.IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,SVC);
+                if(l.svc==null||!l.call(3))return null;
+                android.util.Log.i("VehicleDash","Engine sound: micom listener registered, own type 0x"+Integer.toHexString(ownType));return l;}
+            catch(Exception|LinkageError e){android.util.Log.w("VehicleDash","Engine sound: no micom listener",e);return null;}
+        }
+        void unregister(){call(4);}
+        private boolean call(int code){
+            android.os.Parcel d=android.os.Parcel.obtain(),r=android.os.Parcel.obtain();
+            try{d.writeInterfaceToken(DESC);d.writeStrongBinder(this);svc.transact(code,d,r,0);r.readException();return true;}
+            catch(Exception e){android.util.Log.w("VehicleDash","Engine sound: micom listener call "+code,e);return false;}
+            finally{d.recycle();r.recycle();}
+        }
+        @Override protected boolean onTransact(int code,android.os.Parcel data,android.os.Parcel reply,int flags){
+            if(code==INTERFACE_TRANSACTION){if(reply!=null)reply.writeString(LDESC);return true;}
+            try{data.enforceInterface(LDESC);}catch(RuntimeException e){return false;}
+            long now=SystemClock.uptimeMillis();String what;
+            try{
+                String src=SoundYield.source(code);
+                if(src!=null){boolean start=SoundYield.isStart(code);yield.source(src,start,now);what=(start?"start ":"end ")+src;}
+                else if(code==SoundYield.CB_AUDIO_START||code==SoundYield.CB_AUDIO_END){
+                    int t=data.readInt();boolean start=code==SoundYield.CB_AUDIO_START;String ev=(start?"AudioStart 0x":"AudioEnd 0x")+Integer.toHexString(t);
+                    if(t==ownType){int who=yield.ownType(start,now);what=ev+" own "+(who==SoundYield.OURS?"ours":who==SoundYield.RESTORE?"restore":"foreign");}
+                    else if(SoundYield.yieldsFor(t)){yield.source("a"+t,start,now);what=ev;}
+                    else what=ev+" ignored";}
+                else what="cb 0x"+Integer.toHexString(code);
+            }catch(RuntimeException e){what="cb 0x"+Integer.toHexString(code)+" "+e;}
+            android.util.Log.i("VehicleDash","Engine sound: micom "+what+" gain "+Math.round(yield.gain(now)*100)+"%");
+            return true;
+        }
     }
     static void endMicom(Object router,int type){
         try{boolean ok=((com.hkmc.media.MicomAudioManager)router).endAudio(type);android.util.Log.i("VehicleDash","Engine sound: micom endAudio(0x"+Integer.toHexString(type)+") = "+ok);}

@@ -15,10 +15,13 @@ public final class NeonDrivePage {
     private final NeonView view;
     private boolean running;
 
-    public NeonDrivePage(Context context, Runnable onExit) {
+    public NeonDrivePage(Context context, Runnable onExit) { this(context, onExit, null); }
+
+    /** media: the dashboard's now-playing state (its receiver keeps running while the page is up), or null for an own one. */
+    public NeonDrivePage(Context context, Runnable onExit, com.veloster.vehicle.MediaState media) {
         feed = new HscanFeed(signals);
         gear = new GearFeed(context, signals);
-        view = new NeonView(context, signals, HscanFeed.supported());
+        view = new NeonView(context, signals, HscanFeed.supported(), media);
         view.setExit(onExit);
     }
     public View view() { return view; }

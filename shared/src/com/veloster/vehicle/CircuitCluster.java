@@ -47,7 +47,7 @@ final class CircuitCluster extends ClusterKit {
         if(lap.state()==CircuitLap.TIMING&&!Float.isNaN(v))vmax=Float.isNaN(vmax)?v:Math.max(vmax,v);
     }
     void feed(double lat,double lon,long t){
-        for(int i=0;i<dist.length;i++)dist[i]=Circuits.distance(i,lat,lon);
+        for(int i=0;i<dist.length;i++)dist[i]=Circuits.distanceFast(i,lat,lon);
         int c=chosen;
         if(c<0){c=Circuits.pick(lat,lon,circuit);if(c<0)c=nearest();}
         if(c!=circuit){circuit=c;atCircuit();}

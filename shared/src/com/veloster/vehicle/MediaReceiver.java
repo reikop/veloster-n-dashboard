@@ -17,7 +17,11 @@ public final class MediaReceiver extends BroadcastReceiver {
         IntentFilter filter=new IntentFilter();for(String action:MediaState.ACTIONS)filter.addAction(action);
         filter.addAction(MODE_CHANGED);
         try{
-            context.registerReceiver(this,filter);registered=context;
+            Intent sticky=context.registerReceiver(this,filter);registered=context;
+            // If a producer sent its widget update sticky, the last one comes back here: show the current track at once.
+            // (Whether the OEM producers use sticky broadcasts is unverified; for normal broadcasts this is null.)
+            if(sticky!=null)onReceive(context,sticky);
+            for(String action:MediaState.ACTIONS){Intent last=context.registerReceiver(null,new IntentFilter(action));if(last!=null&&last!=sticky)onReceive(context,last);}
             try{
                 Class<?> type=Class.forName("com.hkmc.mode.ModeManager");
                 Object manager=type.getConstructor(Context.class).newInstance(context);

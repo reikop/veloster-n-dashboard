@@ -114,7 +114,7 @@ final class TachoCluster extends ClusterKit {
     }
     private void sector(Canvas c,float d0,float d1,String val,String unit,float frac,boolean fromEnd,int acc){
         float r=AR1-8,p0=d0+3.5f,p1=d1-3.5f,f=Float.isNaN(frac)?0:clamp(frac,0,1);
-        if(f>.01f){float s0=fromEnd?p1-(p1-p0)*f:p0,s1=fromEnd?p1:p0+(p1-p0)*f;
+        if(f>.01f){float s0=KeyPath.arc(fromEnd?p1-(p1-p0)*f:p0),s1=KeyPath.arc(fromEnd?p1:p0+(p1-p0)*f);
             p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(8);p.setStrokeCap(Paint.Cap.ROUND);p.setColor(acc);this.r.set(CX-r,CY-r,CX+r,CY+r);
             c.drawArc(this.r,s0,s1-s0,false,p);p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
             float tip=fromEnd?s0:s1;dot(c,px(tip,r),py(tip,r),4.5f,FG);}
@@ -165,13 +165,13 @@ final class TachoCluster extends ClusterKit {
             else path.lineTo(x,y);
         }
         path.close();
-        poly(c,CELL);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(EDGE);c.drawPath(path,p);p.setStyle(Paint.Style.FILL);
+        poly(c,CELL);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(EDGE);c.drawPath(path.kept(),p);p.setStyle(Paint.Style.FILL);
     }
     private void label(Canvas c,boolean right,float y,String s,int acc){bold(c,s,right?W-28:28,y,14,acc,right?Paint.Align.RIGHT:Paint.Align.LEFT);}
     private void sectorCell(Canvas c,float d0,float d1,String label,int acc){
         path.reset();RectF o=new RectF(CX-AR1,CY-AR1,CX+AR1,CY+AR1),in=new RectF(CX-AR0,CY-AR0,CX+AR0,CY+AR0);
         path.arcTo(o,d0,d1-d0);path.arcTo(in,d1,d0-d1);path.close();poly(c,CELL);
-        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(EDGE);c.drawPath(path,p);
+        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(EDGE);c.drawPath(path.kept(),p);
         p.setStrokeWidth(8);p.setStrokeCap(Paint.Cap.ROUND);p.setColor(TRACK);float r=AR1-8;r(r);c.drawArc(this.r,d0+3.5f,d1-d0-7,false,p);p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         float am=(d0+d1)/2,lx=px(am,AR0+28),ly=py(am,AR0+28);
         c.save();c.rotate(tilt(am),lx,ly);bold(c,label,lx,ly-8,12,acc,Paint.Align.CENTER);c.restore();

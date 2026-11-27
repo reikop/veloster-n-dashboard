@@ -525,7 +525,7 @@ public final class FloatPanel {
         if(!dy())return;
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(sw);p.setStrokeCap(Paint.Cap.ROUND);
         if(!Float.isNaN(f)){f=Math.max(0,Math.min(1,f));float zero=zero(sig),a=Math.min(zero,f),b=Math.max(zero,f);
-            p.setColor(lv==2?HOT:lv==1?WARM:ACC);c.drawArc(r,135+270*a,Math.max(1,270*(b-a)),false,p);}
+            p.setColor(lv==2?HOT:lv==1?WARM:ACC);c.drawArc(r,KeyPath.arc(135+270*a),KeyPath.arc(Math.max(1,270*(b-a))),false,p);}
         p.setStrokeCap(Paint.Cap.BUTT);p.setStyle(Paint.Style.FILL);
         float pf=Float.isNaN(pk)?Float.NaN:frac(sig,pk);
         if(!Float.isNaN(pf)){double a=Math.toRadians(135+270*Math.max(0,Math.min(1,pf)));float o=ar+sw/2+1*k,in=ar-sw/2-1*k;   // the peak: a white tick across the ring

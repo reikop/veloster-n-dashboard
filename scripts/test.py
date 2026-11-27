@@ -33,7 +33,7 @@ def main():
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in
                 ("VehicleProfile", "ShiftGuide", "Theme", "Records", "SettingsBackup", "DriveStats", "GearRatios", "ShiftCoach", "RevMatch", "DayNight", "DayPhase", "Tiles", "TaxiTariff", "TaxiZones", "TaxiZoneData", "DriveModes", "SpeedChime")]
     # 설정 → 글꼴: the font reader and the system font change (FontManager runs it on the head unit).
-    sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("FontFile", "SystemFonts", "BundledFonts")]
+    sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("FontFile", "SystemFonts", "BundledFonts", "EngineSynth", "SoundYield")]
     # Circuit screen: the circuits (OpenStreetMap, ODbL), lap detection and the lap clock (i30 PD build v1.17.7).
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("Circuits", "CircuitData", "CircuitLap", "LapTimer", "TrackPath")]
     # 내 차 (3D car): the mesh reader and the lamp / steering state.
@@ -43,7 +43,9 @@ def main():
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,
                         *map(str, sources)], check=True)
         for test in tests:
-            cls = ("com.veloster.dashboard." if test.stem == "HscanFrameDecoderTest" else "") + test.stem
+            head = test.read_text(encoding="utf-8").lstrip()
+            pkg = head.split(";", 1)[0].split()[1] + "." if head.startswith("package ") else ""
+            cls = pkg + test.stem
             subprocess.run([str(java), "-ea", "-Dvn.root=" + str(ROOT), "-cp", temporary, cls], check=True)
     print("PASS: " + str(len(tests)) + " synthetic host test programs. Vehicle operation is outside this scope.")
 
