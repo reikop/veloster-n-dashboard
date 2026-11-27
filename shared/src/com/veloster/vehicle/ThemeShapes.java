@@ -18,12 +18,12 @@ final class ThemeShapes {
         int shape=Theme.current().shape;
         if(shape==Theme.SHAPE_CUT)return false;
         if(shape==Theme.SHAPE_ROUND){r.set(l,t,rr,b);}
-        else{long key=ClusterKit.key(ClusterKit.key(ClusterKit.key(ClusterKit.key(11,l),t),rr),b);
+        else{long key=KeyPath.key(KeyPath.key(KeyPath.key(KeyPath.key(11,l),t),rr),b);
             Path m=HEX.get(key);
             if(m==null){float k=Math.min(CUT,Math.min(rr-l,b-t)/3);m=new Path();
                 m.moveTo(l+k,t);m.lineTo(rr-k,t);m.lineTo(rr,t+k);m.lineTo(rr,b-k);m.lineTo(rr-k,b);
                 m.lineTo(l+k,b);m.lineTo(l,b-k);m.lineTo(l,t+k);m.close();
-                if(HEX.size()>=ClusterKit.MEMO_MAX)HEX.clear();HEX.put(key,m);}
+                if(HEX.size()>=KeyPath.MAX)HEX.clear();HEX.put(key,m);}
             path=m;}
         for(int pass=0;pass<2;pass++){
             p.setStyle(pass==0?Paint.Style.FILL:Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(pass==0?fill:edge);

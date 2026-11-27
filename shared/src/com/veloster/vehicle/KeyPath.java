@@ -16,7 +16,9 @@ final class KeyPath extends Path {
     private static final java.util.HashMap<Long,Path> MEMO=new java.util.HashMap<Long,Path>();
     static final int MAX=2000;
     private long key=1;
-    private static long k(long h,float v){return ClusterKit.key(h,v);}   // no varargs: no array per point
+    /** The shape hash step (ClusterKit.key keeps the same formula for its own memos). */
+    static long key(long h,float v){return (h^Float.floatToIntBits(v))*0x9E3779B97F4A7C15L+0x632BE59BD9B4E019L;}
+    private static long k(long h,float v){return key(h,v);}   // no varargs: no array per point
     @Override public void reset(){super.reset();key=1;}
     @Override public void moveTo(float x,float y){super.moveTo(x,y);key=k(k(k(key,1),x),y);}
     @Override public void lineTo(float x,float y){super.lineTo(x,y);key=k(k(k(key,2),x),y);}
