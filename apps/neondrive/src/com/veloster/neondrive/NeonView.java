@@ -71,6 +71,7 @@ final class NeonView extends View implements Runnable {
         model.setEightSpeed(renderer.gearMode() == NeonRenderer.GEARS_DCT);
         renderer.setMediaOn(prefs.getBoolean("media", true));
         renderer.setTripOn(prefs.getBoolean("trip", true));
+        renderer.setIdleMotion(prefs.getBoolean("idle_motion", true));
         // v16 stored 0 auto / 1 day / 2 night; the five-way setting uses "tod" (0 auto, 1 morning, 2 day, 3 sunset, 4 night).
         themeMode = Math.max(0, Math.min(Theme.MODE_KO.length - 1, prefs.getInt("tod", Theme.MODE_AUTO)));
         if (prefs.contains("lat") && prefs.contains("lon")) {
@@ -110,12 +111,18 @@ final class NeonView extends View implements Runnable {
     private double lat = SolarClock.SEOUL_LAT, lon = SolarClock.SEOUL_LON;
     private int locationSource; // 0 Seoul default, 1 saved fix, 2 GPS fix this session
     private android.location.LocationManager locations;
-    private final android.location.LocationListener locationListener = new android.location.LocationListener() {
-        public void onLocationChanged(android.location.Location l) { useLocation(l, true); }
+    private final android.location.LocationListener locationListener = new Fix(this);
+    /** The location listener holds the view weakly: the system keeps a registered listener's transport alive a while
+     *  after removeUpdates (until its own collection drops the binder), and an inner class kept the whole view, its
+     *  baked scenery included, after the dashboard let go of the page (emulator: ~5 MB of Java heap per visit). */
+    private static final class Fix implements android.location.LocationListener {
+        private final java.lang.ref.WeakReference<NeonView> view;
+        Fix(NeonView v) { view = new java.lang.ref.WeakReference<NeonView>(v); }
+        public void onLocationChanged(android.location.Location l) { NeonView v = view.get(); if (v != null) v.useLocation(l, true); }
         public void onStatusChanged(String provider, int status, android.os.Bundle extras) {}
         public void onProviderEnabled(String provider) {}
         public void onProviderDisabled(String provider) {}
-    };
+    }
 
     /** Newest last-known fix from any provider, then passive updates (fixes other apps such as navigation request). */
     private void startLocation() {
@@ -177,7 +184,7 @@ final class NeonView extends View implements Runnable {
 
     private void save() {
         getContext().getSharedPreferences(PREFS, 0).edit()
-            .putBoolean("hud", renderer.hud()).putBoolean("clock", clockOn).putBoolean("demo", model.demoForced()).putInt("paint", paint).putInt("tod", themeMode).putInt("gearmode", renderer.gearMode()).putBoolean("media", renderer.mediaOn()).putBoolean("trip", renderer.tripOn()).apply();
+            .putBoolean("hud", renderer.hud()).putBoolean("clock", clockOn).putBoolean("demo", model.demoForced()).putInt("paint", paint).putInt("tod", themeMode).putInt("gearmode", renderer.gearMode()).putBoolean("media", renderer.mediaOn()).putBoolean("trip", renderer.tripOn()).putBoolean("idle_motion", renderer.idleMotion()).apply();
     }
 
     void resume() {
@@ -265,6 +272,7 @@ final class NeonView extends View implements Runnable {
         else if (hit == NeonRenderer.HIT_DEMO) model.setDemoForced(!model.demoForced());
         else if (hit == NeonRenderer.HIT_MEDIA) renderer.setMediaOn(!renderer.mediaOn());
         else if (hit == NeonRenderer.HIT_TRIP) renderer.setTripOn(!renderer.tripOn());
+        else if (hit == NeonRenderer.HIT_IDLE) renderer.setIdleMotion(!renderer.idleMotion());
         else if (hit >= NeonRenderer.HIT_GEARMODE && hit < NeonRenderer.HIT_GEARMODE + NeonRenderer.GEARS_KO.length) {
             renderer.setGearMode(hit - NeonRenderer.HIT_GEARMODE); model.setEightSpeed(renderer.gearMode() == NeonRenderer.GEARS_DCT);
         }

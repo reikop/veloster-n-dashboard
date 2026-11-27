@@ -15,7 +15,7 @@ final class NightCluster extends ClusterKit {
         float v=v(7),rpm=v(0),cool=v(2);
         fill(c,0,52,800,480,0xff000000);
         Calendar k=Calendar.getInstance();
-        bold(c,String.format(Locale.US,"%02d:%02d",k.get(Calendar.HOUR_OF_DAY),k.get(Calendar.MINUTE)),24,88,20,DIM,Paint.Align.LEFT);
+        bold(c,Fmt.f("%02d:%02d",k.get(Calendar.HOUR_OF_DAY),k.get(Calendar.MINUTE)),24,88,20,DIM,Paint.Align.LEFT);
         bold(c,fmt("%.0f",cool)+"°C",776,88,20,0xff2c3338,Paint.Align.RIGHT);
         if(v(Telemetry.MIL)>0)MilLamp.draw(c,686,81,18,MilLamp.AMBER);   // engine warning lamp: a small amber glyph by the temperature, nothing when off
         text(c,fmt("%.0f",v),400,354,236,SP,Paint.Align.CENTER,Typeface.DEFAULT);

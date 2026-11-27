@@ -4,8 +4,9 @@ veloster_n.bin, lamp_base.png and lamp_glow.png in this folder are an adaptation
   by Ddiaz Design (https://sketchfab.com/ddiaz-design)
   licensed under CC BY-NC-SA 4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
 
-Changes: converted to metres, engine and under-bonnet parts removed, decimated except the paint (about 406k to 116k triangles),
-base-colour textures baked into vertex colours, wheels and callipers split for steering, lamp triangles sorted into
+Changes: converted to metres, the engine bay decimated hard, decimated except the paint (about 406k to 121k triangles),
+base-colour textures baked into vertex colours, wheels and callipers split for steering, the doors, bonnet, hatch (with
+the roof spoiler) and mirrors split to open on hinges, two number plates with holders added, lamp triangles sorted into
 lamp groups (scripts/car3d_model.py). Only the lamp texture atlas is kept as images.
 
 This adaptation is likewise licensed under CC BY-NC-SA 4.0: credit the author, no commercial use, share alike.

@@ -16,10 +16,10 @@ final class RecordsRenderer {
     static final float RUN_TOP=60,RUN_BOTTOM=250;
     private static final int PANEL=0xff101315,LINE=0xff303638,BLUE=0xffa4d9ef,WHITE=0xffe1edf2,MUTED=0xff91a5ae,GREEN=0xff3ddc84,AMBER=0xffffb347;
     private final ThemedPaint p=new ThemedPaint(3);
-    private final Path path=new Path();
+    private final KeyPath path=new KeyPath();   // draw path.kept(): the panel outlines repeat every frame
     private final RectF rect=new RectF();
     private static String fmt(String f,float x){return Float.isNaN(x)?"—":Telemetry.format(f,x);}
-    private static String run(int i){return String.format(java.util.Locale.US,"%.0f→%.0f",DriveStats.RUNS[i][0],DriveStats.RUNS[i][1]);}
+    private static String run(int i){return Fmt.f("%.0f→%.0f",DriveStats.RUNS[i][0],DriveStats.RUNS[i][1]);}
     void draw(Canvas c,DriveStats st,long now){
         float l0=18,r0=782,w=(r0-l0-16)/3;
         for(int i=0;i<3;i++){
@@ -52,8 +52,8 @@ final class RecordsRenderer {
         if(ThemeShapes.cell(c,p,path,rect,x,y,x+w,y+h,fill,edge))return;
         path.reset();path.moveTo(x,y);path.lineTo(x+w-12,y);path.lineTo(x+w,y+12);
         path.lineTo(x+w,y+h);path.lineTo(x+12,y+h);path.lineTo(x,y+h-12);path.close();
-        p.setStyle(Paint.Style.FILL);p.setColor(fill);c.drawPath(path,p);
-        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(edge);c.drawPath(path,p);p.setStyle(Paint.Style.FILL);
+        p.setStyle(Paint.Style.FILL);p.setColor(fill);c.drawPath(path.kept(),p);
+        p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1);p.setColor(edge);c.drawPath(path.kept(),p);p.setStyle(Paint.Style.FILL);
     }
     private void text(Canvas c,String t,float x,float y,float size,int color,boolean bold,Paint.Align align){
         p.setStyle(Paint.Style.FILL);p.setColor(color);p.setTypeface(bold?Typeface.DEFAULT_BOLD:Typeface.DEFAULT);p.setTextSize(size);

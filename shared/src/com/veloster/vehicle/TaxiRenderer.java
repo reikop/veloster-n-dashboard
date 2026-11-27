@@ -107,7 +107,7 @@ public final class TaxiRenderer {
         TaxiMeter.Tariff t = m.tariff();
         String area = UiText.t(m.area()) + (t.area != null && t.area.borrowed ? "(" + UiText.t("서울 요금") + ")" : "");
         String gps = m.located() ? UiText.t("GPS 지역") : UiText.t("GPS 없음 · 마지막 지역");
-        return String.format(Locale.US, UiText.t("%s 중형 (%s): 기본 %,d원/%.1fkm · %.0fm당 100원 · %.2fkm/h 이하 %.0f초당 100원"),
+        return String.format(Locale.US,UiText.t("%s 중형 (%s): 기본 %,d원/%.1fkm · %.0fm당 100원 · %.2fkm/h 이하 %.0f초당 100원"),
             area, gps, t.baseFare, t.baseM / 1000f, t.stepM, t.slowKmh, t.stepS)
             + (m.autoOutside() ? " · " + UiText.t("시계외 자동") : "");
     }
@@ -117,8 +117,8 @@ public final class TaxiRenderer {
         int state = m.state();
         boolean running = state == TaxiMeter.HIRED;
         horse(c, 38, 78, running, speed, now, state == TaxiMeter.VACANT);
-        text(c, String.format(Locale.US, "%.2f km", m.distanceKm()), 258, 112, 22, CYAN, Paint.Align.LEFT, true);
-        String sp = Float.isNaN(speed) ? "—" : String.format(Locale.US, "%.1f", speed);
+        text(c, Fmt.f("%.2f km", m.distanceKm()), 258, 112, 22, CYAN, Paint.Align.LEFT, true);
+        String sp = Float.isNaN(speed) ? "—" : Fmt.f("%.1f", speed);
         text(c, sp + " Km/h", 600, 112, 28, GREEN, Paint.Align.RIGHT, true);
         int fare = state == TaxiMeter.VACANT ? m.tariff().baseFare : m.fare();
         bigFare(c, String.valueOf(fare), 600, 240, state == TaxiMeter.VACANT ? 0xff6a7076 : WHITE);
@@ -134,8 +134,8 @@ public final class TaxiRenderer {
         String tag = state == TaxiMeter.VACANT ? UiText.t("빈차") : state == TaxiMeter.HIRED ? UiText.t("주행") : UiText.t("지불");
         round(c, 52, 312, 140, 342, 6, state == TaxiMeter.VACANT ? 0xffd0405a : state == TaxiMeter.HIRED ? TAG : 0xff2f9e4a);
         text(c, tag, 96, 334, 17, WHITE, Paint.Align.CENTER, true);
-        if (running) text(c, String.format(Locale.US, UiText.t("다음 100원까지 %.0f m"), m.toNextStepM(hour)), 156, 334, 15, AMBER, Paint.Align.LEFT, false);
-        String info = "1." + UiText.t("거리") + " " + String.format(Locale.US, "%.2f", m.distanceKm()) + "km   2."
+        if (running) text(c, Fmt.f(UiText.t("다음 100원까지 %.0f m"), m.toNextStepM(hour)), 156, 334, 15, AMBER, Paint.Align.LEFT, false);
+        String info = "1." + UiText.t("거리") + " " + Fmt.f("%.2f", m.distanceKm()) + "km   2."
             + UiText.t("운행 시간") + " " + time(m.elapsedMs()) + "   3." + UiText.t("저속 시간") + " " + time(m.slowMs())
             + "   4." + UiText.t("심야 할증은 시계로 자동 적용");
         text(c, info, 52, 366, 13, WHITE, Paint.Align.LEFT, false);
@@ -170,14 +170,14 @@ public final class TaxiRenderer {
         text(c, state == TaxiMeter.PAID ? ui("합계", "Total") : ui("요금", "Fare"), 160, 196, 18, WHITE, Paint.Align.LEFT, true);
         int fare = state == TaxiMeter.VACANT ? m.tariff().baseFare : m.fare();
         p.setTypeface(Typeface.DEFAULT_BOLD); p.setTextSize(78);
-        String fareText = String.format(Locale.US, "%,d", fare);
+        String fareText = Fmt.f("%,d", fare);
         float fw = p.measureText(fareText), size = fw > 380 ? 78 * 380 / fw : 78;
         text(c, fareText, 628, 196, size, state == TaxiMeter.VACANT ? 0xff8fa0c8 : WHITE, Paint.Align.RIGHT, true);
         text(c, "円", 652, 196, 18, WHITE, Paint.Align.RIGHT, true);
         // Info rows.
-        jpRow(c, 218, ui("거리", "Distance"), String.format(Locale.US, "%.2f km", m.distanceKm()));
+        jpRow(c, 218, ui("거리", "Distance"), Fmt.f("%.2f km", m.distanceKm()));
         jpRow(c, 256, ui("시간", "Time"), time(m.elapsedMs()) + "   (" + ui("저속", "slow") + " " + time(m.slowMs()) + ")");
-        String sp = Float.isNaN(speed) ? "—" : String.format(Locale.US, "%.0f km/h", speed);
+        String sp = Float.isNaN(speed) ? "—" : Fmt.f("%.0f km/h", speed);
         jpRow(c, 294, ui("속도", "Speed"), sp);
         jpRow(c, 332, ui("할증", "Surcharge"), rate > 0 ? Math.round(rate * 100) + "%" + (night > 0 ? " (" + ui("심야", "night") + ")" : "") : ui("없음", "None"));
         text(c, ui("도쿄 23구 기준(2022.11): 첫 1.096km 500엔 · 255m마다 100엔 · 10km/h 이하 95초마다 100엔 · 심야 22–5시 20% · 참고용",
@@ -291,16 +291,16 @@ public final class TaxiRenderer {
         y += 24; row(c, japan ? "乗車" : UiText.t("승차"), start > 0 ? receiptTime.format(new java.util.Date(start)) : "—", y, ink);
         y += 24; row(c, japan ? "降車" : UiText.t("하차"), end > 0 ? receiptTime.format(new java.util.Date(end)) : "—", y, ink);
         y += 24; row(c, japan ? "時間" : UiText.t("운행 시간"), time(m.elapsedMs()), y, ink);
-        y += 24; row(c, japan ? "距離" : UiText.t("거리"), String.format(Locale.US, "%.2f km", m.distanceKm()), y, ink);
+        y += 24; row(c, japan ? "距離" : UiText.t("거리"), Fmt.f("%.2f km", m.distanceKm()), y, ink);
         y += 14; dash(c, l + 16, r - 16, y);
-        y += 26; row(c, japan ? "初乗運賃" : UiText.t("기본요금"), String.format(Locale.US, "%,d %s", m.baseCharged(), unit), y, ink);
-        y += 24; row(c, japan ? "加算運賃" : UiText.t("거리·시간 요금"), String.format(Locale.US, "%,d %s", m.stepsCharged(), unit), y, ink);
+        y += 26; row(c, japan ? "初乗運賃" : UiText.t("기본요금"), Fmt.f("%,d", m.baseCharged()) + " " + unit, y, ink);
+        y += 24; row(c, japan ? "加算運賃" : UiText.t("거리·시간 요금"), Fmt.f("%,d", m.stepsCharged()) + " " + unit, y, ink);
         float rate = m.rate(hour);
         y += 24; row(c, japan ? "割増" : UiText.t("할증"), rate > 0 ? Math.round(rate * 100) + "%" : (japan ? "なし" : UiText.t("없음")), y, ink);
         y += 14; dash(c, l + 16, r - 16, y);
         y += 36;
         mono(c, japan ? "合計" : UiText.t("합계"), l + 22, y, 20, ink, Paint.Align.LEFT, true);
-        mono(c, String.format(Locale.US, "%,d %s", m.fare(), unit), r - 22, y, 26, ink, Paint.Align.RIGHT, true);
+        mono(c, Fmt.f("%,d", m.fare()) + " " + unit, r - 22, y, 26, ink, Paint.Align.RIGHT, true);
         y += 30; mono(c, japan ? "ご乗車ありがとうございました" : UiText.t("이용해 주셔서 감사합니다"), 400, y, 13, soft, Paint.Align.CENTER, false);
         y += 20; mono(c, japan ? "画面をタッチすると閉じます" : UiText.t("화면을 누르면 닫힙니다"), 400, y, 11, soft, Paint.Align.CENTER, false);
     }
@@ -321,10 +321,10 @@ public final class TaxiRenderer {
         long start = m.startWall(), end = m.endWall();
         float y = t + 34;
         mono(c, "領 収 書", cx, y, 22, ink, Paint.Align.CENTER, true);
-        mono(c, String.format(Locale.US, "No.%04d", m.receiptNo()), r - 10, y - 10, 11, soft, Paint.Align.RIGHT, false);
+        mono(c, Fmt.f("No.%04d", m.receiptNo()), r - 10, y - 10, 11, soft, Paint.Align.RIGHT, false);
         y += 22; mono(c, start > 0 ? jpDate.format(new java.util.Date(start)) : "", cx + 30, y, 13, ink, Paint.Align.CENTER, false);
         y += 22; jpLine(c, l, r, "日付", start > 0 ? receiptTime.format(new java.util.Date(start)) + "–" + (end > 0 ? receiptTime.format(new java.util.Date(end)) : "") : "", y, ink);
-        y += 19; jpLine(c, l, r, "距離", String.format(Locale.US, "%.2fkm", m.distanceKm()), y, ink);
+        y += 19; jpLine(c, l, r, "距離", Fmt.f("%.2fkm", m.distanceKm()), y, ink);
         y += 19; jpLine(c, l, r, "時間", time(m.elapsedMs()), y, ink);
         y += 19; jpLine(c, l, r, "初乗運賃", yen(m.baseCharged()), y, ink);
         y += 19; jpLine(c, l, r, "加算運賃", yen(m.stepsCharged()), y, ink);
@@ -379,7 +379,7 @@ public final class TaxiRenderer {
     private int dotRows;
 
     public void setHorse(Bitmap strip, int frames) {
-        dotFrames = null;
+        dotFrames = null; trim();
         if (strip == null) return;
         int n = Math.max(1, frames), cw = strip.getWidth() / n, ch = strip.getHeight();
         dotRows = Math.max(1, Math.round(DOT_COLS * ch / (float) cw));
@@ -401,6 +401,32 @@ public final class TaxiRenderer {
         dotFrames = out;
     }
 
+    private Bitmap[] horseBmp;
+    private boolean horseDim;
+    private final Paint bmpPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
+    /** Lets go of the drawn horse frames (the page is out of sight); they are drawn again when shown. */
+    public void trim() {
+        if (horseBmp != null) for (int i = 0; i < horseBmp.length; i++) if (horseBmp[i] != null) { horseBmp[i].recycle(); horseBmp[i] = null; }
+        horseBmp = null;
+    }
+    /** One frame of dots at x, y (lit dots with their glow, unlit ones faint). */
+    private void dots(Canvas c, float x, float y, boolean[] dots, boolean dim) {
+        int lit = dim ? 0xff1d6a78 : 0xff5ff0ff, glow = dim ? 0x00000000 : 0x445ff0ff;
+        float r = DOT_PITCH * 0.36f;
+        Paint q = new Paint(Paint.ANTI_ALIAS_FLAG);
+        q.setStyle(Paint.Style.FILL);
+        for (int row = 0; row < dotRows; row++) {
+            for (int col = 0; col < DOT_COLS; col++) {
+                float cx = x + col * DOT_PITCH + DOT_PITCH / 2, cy = y + row * DOT_PITCH + DOT_PITCH / 2;
+                if (dots[row * DOT_COLS + col]) {
+                    if (glow != 0) { q.setColor(glow); c.drawCircle(cx, cy, r * 1.9f, q); }
+                    q.setColor(lit); c.drawCircle(cx, cy, r * 1.1f, q);
+                } else {
+                    q.setColor(0xff0b1a1e); c.drawCircle(cx, cy, r * 0.75f, q);
+                }
+            }
+        }
+    }
     private double horsePhase;
     private float horseFps;
     private long horseLast = -1;
@@ -423,27 +449,23 @@ public final class TaxiRenderer {
         } else horsePhase += horseFps * dt;
         if (horsePhase > 1e6) horsePhase -= Math.floor(horsePhase / n) * n;
         int frame = (int) Math.floor(horsePhase) % n;
-        boolean[] dots = dotFrames[frame];
-        int lit = dim ? 0xff1d6a78 : 0xff5ff0ff, glow = dim ? 0x00000000 : 0x445ff0ff;
-        float r = DOT_PITCH * 0.36f;
-        p.setStyle(Paint.Style.FILL);
-        for (int row = 0; row < dotRows; row++) {
-            for (int col = 0; col < DOT_COLS; col++) {
-                float cx = x + col * DOT_PITCH + DOT_PITCH / 2, cy = y + row * DOT_PITCH + DOT_PITCH / 2;
-                if (dots[row * DOT_COLS + col]) {
-                    if (glow != 0) { p.setColor(glow); c.drawCircle(cx, cy, r * 1.9f, p); }
-                    p.setColor(lit); c.drawCircle(cx, cy, r * 1.1f, p);
-                } else {
-                    p.setColor(0xff0b1a1e); c.drawCircle(cx, cy, r * 0.75f, p);
-                }
-            }
+        // Each frame's ~1,400 dots (and glows) are drawn once into a bitmap: drawn dot by dot they were ~1,700 circles a
+        // frame, the whole cost of this page (33 ms a frame on the emulator against ~12 for the other screens).
+        if (horseBmp == null || horseDim != dim) { trim(); horseBmp = new Bitmap[n]; horseDim = dim; }
+        Bitmap b = horseBmp[frame];
+        if (b == null) {
+            float pad = DOT_PITCH;   // room for the glow past the outer dots
+            b = Bitmap.createBitmap((int) Math.ceil(DOT_COLS * DOT_PITCH + 2 * pad), (int) Math.ceil(dotRows * DOT_PITCH + 2 * pad), Bitmap.Config.ARGB_8888);
+            dots(new Canvas(b), pad, pad, dotFrames[frame], dim);
+            horseBmp[frame] = b;
         }
+        c.drawBitmap(b, x - DOT_PITCH, y - DOT_PITCH, bmpPaint);
     }
 
     // ------------------------------------------------------------ helpers
     private static String time(long ms) {
         long s = ms / 1000;
-        return s >= 3600 ? String.format(Locale.US, "%d:%02d:%02d", s / 3600, (s / 60) % 60, s % 60) : String.format(Locale.US, "%d:%02d", s / 60, s % 60);
+        return s >= 3600 ? Fmt.f("%d:%02d:%02d", s / 3600, (s / 60) % 60, s % 60) : Fmt.f("%d:%02d", s / 60, s % 60);
     }
 
     private void round(Canvas c, float l, float t, float r, float b, float rad, int fill) {

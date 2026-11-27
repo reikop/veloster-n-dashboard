@@ -64,10 +64,20 @@ final class LambdaCluster extends ClusterKit {
     private void lambda(Canvas c,float cx,float f,float red,int col,boolean over){
         line(c,legX(cx,true,0),BOT,legX(cx,true,1),TOP,2,LINE_);line(c,legX(cx,false,0),BOT,legX(cx,false,1),TOP,2,LINE_);
         f=clamp(f,0,1);int seg=40;
-        for(int i=0;i<seg;i++){float a=i/(float)seg,b=(i+1)/(float)seg,e=b;
-            int k=a<f?(!over&&a>=red?RED:col):DIM;if(a<f)e=Math.min(b,f);
-            band(c,cx,true,a,e,k);band(c,cx,false,a,e,k);if(e<b){band(c,cx,true,e,b,DIM);band(c,cx,false,e,b,DIM);}}
+        // Whole segments of one colour are drawn as one band (their ends stay on the 1/40 steps, so the shapes repeat and
+        // are kept); only the segment the fill ends in is split. Was 80 paths a Λ every frame, now about 8.
+        int runFrom=-1,runTo=0,runCol=0;
+        for(int i=0;i<seg;i++){float a=i/(float)seg,b=(i+1)/(float)seg;
+            int k=a<f?(!over&&a>=red?RED:col):DIM;
+            if(a<f&&f<b){   // the fill ends inside: lit to f, dim after, each on its own
+                if(runFrom>=0){bands(c,cx,runFrom/(float)seg,runTo/(float)seg,runCol);runFrom=-1;}
+                bands(c,cx,a,f,k);bands(c,cx,f,b,DIM);continue;}
+            if(runFrom>=0&&runCol==k&&runTo==i){runTo=i+1;continue;}
+            if(runFrom>=0)bands(c,cx,runFrom/(float)seg,runTo/(float)seg,runCol);
+            runFrom=i;runTo=i+1;runCol=k;}
+        if(runFrom>=0)bands(c,cx,runFrom/(float)seg,runTo/(float)seg,runCol);
     }
+    private void bands(Canvas c,float cx,float a,float b,int col){band(c,cx,true,a,b,col);band(c,cx,false,a,b,col);}
     private void band(Canvas c,float cx,boolean left,float a,float b,int col){
         float sg=left?1:-1,xa=legX(cx,left,a)+3*sg,xb=legX(cx,left,b)+3*sg;
         float ya=legY(a),yb=legY(b);path.reset();path.moveTo(xa,ya);path.lineTo(xb,yb);path.lineTo(xb+BAND*sg,yb);path.lineTo(xa+BAND*sg,ya);path.close();poly(c,col,key(key(key(key(key(7,xa),ya),xb),yb),BAND*sg));
@@ -171,7 +181,7 @@ final class LambdaCluster extends ClusterKit {
         float lat=v(11),lon=v(12);
         if(!Float.isNaN(lat)&&!Float.isNaN(lon)){float k=Telemetry.pinG(lat,lon,1.2f)/1.2f,fy=clamp(.5f+lon*k*.5f,0,1),w=wt+(wb-wt)*fy;
             dot(c,cx+lat*k*w/2,top+(bot-top)*fy,6,GREEN);}
-        mono(c,String.format(Locale.US,"%.2f G",Float.isNaN(lat)||Float.isNaN(lon)?0:Math.hypot(lat,lon)),cx+wt/2,bot+18,12,WH,Paint.Align.RIGHT);
+        mono(c,Fmt.f("%.2f G",Float.isNaN(lat)||Float.isNaN(lon)?0:Math.hypot(lat,lon)),cx+wt/2,bot+18,12,WH,Paint.Align.RIGHT);
         float m=v(Telemetry.DRIVE_MODE);int mode=Float.isNaN(m)?-1:(int)m;   // the drive mode, in its own colour (SPORT red, ECO green)
         mono(c,mode<0?"MODE —":Telemetry.driveModeLabel(mode),cx-wt/2,bot+18,12,mode==1?RED:mode==3?GREEN:GREY,Paint.Align.LEFT);
         mini(c,364,196,"COOLANT",v(2),40,120,"%.0f");mini(c,436,196,"BOOST",v(Telemetry.BOOST),-1,1.5f,"%+.1f");
@@ -183,9 +193,9 @@ final class LambdaCluster extends ClusterKit {
         mono(c,"LAST SHIFT",cx,344,11,GREY,Paint.Align.CENTER);
         if(sh!=null){bold(c,sh.from+" > "+sh.to,cx,376,26,WH,Paint.Align.CENTER);
             if(sh.heelToe)mono(c,"H/T",cx,394,12,OR,Paint.Align.CENTER);
-            stat(c,414,"REV",Float.isNaN(sh.revErr)?"—":String.format(Locale.US,"%+,d rpm",Math.round(sh.revErr)));
-            stat(c,432,mt?"CLUTCH":"SYNC",Float.isNaN(sh.timeS)?"—":String.format(Locale.US,"%.2f s",sh.timeS));
-            stat(c,450,"JOLT",Float.isNaN(sh.jolt)?"—":String.format(Locale.US,"%.2f G",sh.jolt));}
+            stat(c,414,"REV",Float.isNaN(sh.revErr)?"—":Fmt.f("%+,d rpm",Math.round(sh.revErr)));
+            stat(c,432,mt?"CLUTCH":"SYNC",Float.isNaN(sh.timeS)?"—":Fmt.f("%.2f s",sh.timeS));
+            stat(c,450,"JOLT",Float.isNaN(sh.jolt)?"—":Fmt.f("%.2f G",sh.jolt));}
     }
     private void stat(Canvas c,float y,String k,String val){mono(c,k,346,y,11,GREY,Paint.Align.LEFT);mono(c,val,454,y,12,WH,Paint.Align.RIGHT);}
     private void clutchTemp(Canvas c,float x,String name,float t){

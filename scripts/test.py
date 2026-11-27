@@ -20,7 +20,7 @@ def main():
     java = Path(found).resolve()
     javac = java.with_name("javac.exe" if os.name == "nt" else "javac")
     hub = ROOT / "apps/hub/src/com/veloster/carplayhub"
-    sources = [ROOT / "shared/src/com/veloster/vehicle/Telemetry.java",
+    sources = [ROOT / "shared/src/com/veloster/vehicle/Telemetry.java", ROOT / "shared/src/com/veloster/vehicle/Fmt.java",
                ROOT / "shared/src/com/veloster/i18n/UiText.java",
                ROOT / "apps/dashboard/src/com/veloster/dashboard/HscanFrameDecoder.java"]
     neon = ROOT / "apps/neondrive/src/com/veloster/neondrive"
@@ -37,7 +37,7 @@ def main():
     # Circuit screen: the circuits (OpenStreetMap, ODbL), lap detection and the lap clock (i30 PD build v1.17.7).
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("Circuits", "CircuitData", "CircuitLap", "LapTimer", "TrackPath")]
     # 내 차 (3D car): the mesh reader and the lamp / steering state.
-    sources += [ROOT / "apps/dashboard/src/com/veloster/car3d" / (name + ".java") for name in ("CarModel", "CarState", "CarScene")]
+    sources += [ROOT / "apps/dashboard/src/com/veloster/car3d" / (name + ".java") for name in ("CarModel", "CarState", "CarScene", "PlateText")]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,

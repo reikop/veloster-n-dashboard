@@ -25,13 +25,17 @@ final class CarRenderer implements GLSurfaceView.Renderer {
     private final Object lock = new Object();
     private final Camera camera = new Camera();
     private final float[] glow = new float[CarState.GROUPS];
+    /** Swing of each hinged part, degrees (CarState.hingeDeg); hinge points from the mesh. */
+    private final float[] hinge = new float[CarState.OPENINGS];
+    private final float[][] hingeAt = new float[CarModel.HINGES][3];
+    private final float[] hingeM = new float[16 * CarState.OPENINGS];
     private float wheelDeg, rollDeg, blur, bodyPitch, bodyRoll, distance;
     private int scene = CarScene.STUDIO;
     /** Backdrop panorama (sharp, behind the car) and a small blurred copy for the reflections; uploaded on the GL thread. */
     private Bitmap skyBmp, envBmp;
     private boolean skyUploaded;
     private int texSky, texEnv;
-    private final float[] bodyM = new float[16], spot = new float[4], spotW = new float[4];
+    private final float[] bodyM = new float[16], spot = new float[4], spotW = new float[4], spotN = new float[4];
     private final float[] paint = {0.20f, 0.44f, 0.71f};
     private boolean paintOn;
     private float paintGloss = 1f;
@@ -39,7 +43,10 @@ final class CarRenderer implements GLSurfaceView.Renderer {
     private CarModel model;
     private Bitmap lampBase, lampGlow;
     private int[] vbo, ibo;
-    private int texBase, texGlow;
+    private int texBase, texGlow, texPlate;
+    /** The number plate picture (CarPlate), uploaded on the GL thread. */
+    private Bitmap plateBmp;
+    private boolean plateUploaded;
     private boolean uploaded;
     private Program body, lamp, glass, floor, halo, rim, sky;
     private FloatBuffer quad;
@@ -54,8 +61,19 @@ final class CarRenderer implements GLSurfaceView.Renderer {
     private static final float[] HALO_GAIN = {0, 0.75f, 0.25f, 0.45f, 0.8f, 0.9f, 0.9f, 0.35f, 0};
 
     // ---- state from the UI thread -----------------------------------------------------------------------------
-    void setModel(CarModel m, Bitmap base, Bitmap glowMap) { synchronized (lock) { model = m; lampBase = base; lampGlow = glowMap; uploaded = false; } }
-    void setState(CarState s) { synchronized (lock) { System.arraycopy(s.glow, 0, glow, 0, glow.length); wheelDeg = s.wheelDeg; rollDeg = s.rollDeg; blur = s.blur; bodyPitch = s.pitchDeg; bodyRoll = s.rollBodyDeg; distance = s.distanceM; } }
+    void setModel(CarModel m, Bitmap base, Bitmap glowMap) {
+        synchronized (lock) {
+            model = m; lampBase = base; lampGlow = glowMap; uploaded = false;
+            for (CarModel.Chunk c : m.chunks) if (c.motion == CarModel.HINGE) { hingeAt[c.corner][0] = c.px; hingeAt[c.corner][1] = c.py; hingeAt[c.corner][2] = c.pz; }
+        }
+    }
+    void setState(CarState s) {
+        synchronized (lock) {
+            System.arraycopy(s.glow, 0, glow, 0, glow.length); wheelDeg = s.wheelDeg; rollDeg = s.rollDeg; blur = s.blur; bodyPitch = s.pitchDeg; bodyRoll = s.rollBodyDeg; distance = s.distanceM;
+            for (int h = 0; h < CarState.OPENINGS; h++) hinge[h] = s.hingeDeg(h);
+        }
+    }
+    void setPlate(Bitmap b) { synchronized (lock) { plateBmp = b; plateUploaded = false; } }
     void setScene(int s) { synchronized (lock) { scene = CarScene.valid(s); } }
     void setBackdrop(Bitmap sharp, Bitmap blurred) { synchronized (lock) { skyBmp = sharp; envBmp = blurred; skyUploaded = false; } }
     void setCamera(float yaw, float pitch, float dist) { synchronized (lock) { camera.yaw = yaw; camera.pitch = pitch; camera.dist = dist; } }
@@ -70,11 +88,12 @@ final class CarRenderer implements GLSurfaceView.Renderer {
 
     // ---- GL thread -----------------------------------------------------------------------------------------------
     @Override public void onSurfaceCreated(GL10 unused, EGLConfig config) {
-        synchronized (lock) { uploaded = false; skyUploaded = false; texSky = texEnv = 0; }   // a new context: every buffer and texture is gone
+        synchronized (lock) { uploaded = false; skyUploaded = false; plateUploaded = false; texSky = texEnv = texPlate = 0; }   // a new context: every buffer and texture is gone
         body = new Program(BODY_VS, BODY_FS); lamp = new Program(LAMP_VS, LAMP_FS); glass = new Program(BODY_VS, GLASS_FS);
         floor = new Program(FLOOR_VS, FLOOR_FS); halo = new Program(HALO_VS, HALO_FS); rim = new Program(RIM_VS, RIM_FS); sky = new Program(SKY_VS, SKY_FS);
         quad = ByteBuffer.allocateDirect(8 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         quad.put(new float[] {-1, -1, 1, -1, -1, 1, 1, 1}); rewind(quad);
+        skyGrid = skyGrid();
         GLES20.glClearColor(CLEAR_R, CLEAR_G, CLEAR_B, 1);
     }
 
@@ -89,10 +108,14 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         CarModel m;
         synchronized (lock) {
             yaw = camera.yaw; pitch = camera.pitch; dist = camera.dist; wd = wheelDeg; roll = rollDeg; bl = blur; road = distance; sc = scene;
-            bodyMatrix(bodyPitch, bodyRoll); pOn = paintOn; pGloss = paintGloss;
+            bodyMatrix(bodyPitch, bodyRoll); hingeMatrices(); pOn = paintOn; pGloss = paintGloss;
             System.arraycopy(glow, 0, g, 0, g.length); System.arraycopy(paint, 0, pc, 0, 3);
             m = model;
             if (m != null && !uploaded) { upload(m, lampBase, lampGlow); uploaded = true; }
+            if (plateBmp != null && !plateUploaded) {
+                if (texPlate != 0) GLES20.glDeleteTextures(1, new int[] {texPlate}, 0);
+                texPlate = texture(plateBmp); plateUploaded = true;
+            }
             if (skyBmp != null && !skyUploaded) {
                 if (texSky != 0) GLES20.glDeleteTextures(2, new int[] {texSky, texEnv}, 0);
                 texSky = panorama(skyBmp); texEnv = panorama(envBmp); skyUploaded = true;
@@ -111,11 +134,9 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         GLES20.glActiveTexture(GLES20.GL_TEXTURE2); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texEnv);   // reflections, every program
         GLES20.glActiveTexture(GLES20.GL_TEXTURE3); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texSky);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        drawSky();
-        drawFloor(g, sc, road);
-        if (m == null) return;
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
         GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+        if (m == null) { GLES20.glDepthMask(false); drawSky(); drawFloor(g, sc, road); GLES20.glDepthMask(true); return; }
         GLES20.glDepthMask(true);
         GLES20.glDisable(GLES20.GL_BLEND);
         // Opaque body, then lamps.
@@ -134,8 +155,21 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         GLES20.glUniform1i(lamp.u("uBase"), 0);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texGlow);
         GLES20.glUniform1i(lamp.u("uGlowTex"), 1);
+        GLES20.glUniform1f(lamp.u("uFlat"), 0f);
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         for (int i = 0; i < m.chunks.length; i++) if (m.chunks[i].program == CarModel.LAMP) drawChunk(lamp, m, i, wd, roll);
+        if (texPlate != 0) {   // number plates: the lamp shader over the plate picture (group 0: never glows; a faint film sheen)
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texPlate);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE1); GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texPlate);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glUniform1f(lamp.u("uFlat"), 1f);   // reflective film: reads near its own colour; the rear one lit by its lamps
+            for (int i = 0; i < m.chunks.length; i++) if (m.chunks[i].program == CarModel.PLATE) drawChunk(lamp, m, i, wd, roll);
+        }
+        // The backdrop and floor after the opaque car, depth-tested without writing: the pixels the car covers are never
+        // shaded (they were drawn and then overdrawn before, a third of the screen with the heaviest shaders).
+        GLES20.glDepthMask(false);
+        drawSky();
+        drawFloor(g, sc, road);
         // Glass: premultiplied blending, no depth writes.
         GLES20.glEnable(GLES20.GL_BLEND);
         if (bl > 0.01f) drawBlur(m, wd, bl);
@@ -207,10 +241,29 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         Matrix.translateM(bodyM, 0, 0, -0.42f, 0.075f);
     }
 
+    /** Per hinged part: the body matrix (or the door a mirror sits on), then the swing about its hinge (the part's vertices
+     *  are relative to the hinge). Parents come first in the HINGES order. */
+    private void hingeMatrices() {
+        for (int h = 0; h < CarState.OPENINGS; h++) {
+            int o = h * 16, parent = CarState.HINGE_PARENT[h];
+            if (parent < 0) {
+                System.arraycopy(bodyM, 0, hingeM, o, 16);
+                Matrix.translateM(hingeM, o, hingeAt[h][0], hingeAt[h][1], hingeAt[h][2]);
+            } else {   // the parent's matrix is relative to its own hinge
+                System.arraycopy(hingeM, parent * 16, hingeM, o, 16);
+                Matrix.translateM(hingeM, o, hingeAt[h][0] - hingeAt[parent][0], hingeAt[h][1] - hingeAt[parent][1], hingeAt[h][2] - hingeAt[parent][2]);
+            }
+            if (hinge[h] > 0.01f) Matrix.rotateM(hingeM, o, hinge[h], CarState.HINGE_AXIS[h][0], CarState.HINGE_AXIS[h][1], CarState.HINGE_AXIS[h][2]);
+        }
+    }
+
     private void drawChunk(Program p, CarModel m, int i, float wheel, float roll) {
         CarModel.Chunk c = m.chunks[i];
-        if (c.motion == CarModel.FIXED) System.arraycopy(bodyM, 0, modelM, 0, 16); else Matrix.setIdentityM(modelM, 0);
-        if (c.motion != CarModel.FIXED) {
+        if (c.motion == CarModel.HINGE && c.corner == CarModel.ENGINE && hinge[CarModel.BONNET] < 0.5f) return;   // the bay only shows under an open bonnet
+        if (c.motion == CarModel.HINGE && c.corner < CarState.OPENINGS) System.arraycopy(hingeM, c.corner * 16, modelM, 0, 16);
+        else if (c.motion == CarModel.FIXED || c.motion == CarModel.HINGE) System.arraycopy(bodyM, 0, modelM, 0, 16);
+        else Matrix.setIdentityM(modelM, 0);
+        if (c.motion == CarModel.WHEEL || c.motion == CarModel.CALLIPER) {
             Matrix.translateM(modelM, 0, c.px, c.py, c.pz);
             if (c.corner == CarModel.FL || c.corner == CarModel.FR) Matrix.rotateM(modelM, 0, wheel, 0, 1, 0);
             if (c.motion == CarModel.WHEEL) Matrix.rotateM(modelM, 0, roll, 1, 0, 0);
@@ -244,18 +297,36 @@ final class CarRenderer implements GLSurfaceView.Renderer {
 
     /** The backdrop panorama over the whole screen: each pixel looks it up by its view direction (texture unit 3). */
     private void drawSky() {
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glDisable(GLES20.GL_BLEND);
         if (!Matrix.invertM(invVP, 0, vp, 0)) return;
         sky.use();
         GLES20.glUniformMatrix4fv(sky.u("uInvVP"), 1, false, invVP, 0);
         GLES20.glUniform3f(sky.u("uEye"), eye[0], eye[1], eye[2]);
+        GLES20.glUniform1f(sky.u("uYaw0"), (float) Math.atan2(-eye[0], -0.1f - eye[2]));   // azimuth the camera looks along
         GLES20.glUniform1i(sky.u("uSky"), 3);
-        quadDraw(sky);
+        int a = sky.a("aCorner");
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+        GLES20.glEnableVertexAttribArray(a);
+        GLES20.glVertexAttribPointer(a, 2, GLES20.GL_FLOAT, false, 0, rewind(skyGrid));
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, SKY_COLS * SKY_ROWS * 6);
+        GLES20.glDisableVertexAttribArray(a);
+    }
+
+    /** The backdrop as a grid over the screen: the panorama coordinates are worked out per vertex (atan / asin), not per
+     *  pixel; across 58 degrees of view the mapping is smooth enough for a 20 x 12 grid. */
+    private static final int SKY_COLS = 20, SKY_ROWS = 12;
+    private FloatBuffer skyGrid;
+    private static FloatBuffer skyGrid() {
+        FloatBuffer b = ByteBuffer.allocateDirect(SKY_COLS * SKY_ROWS * 12 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        for (int r = 0; r < SKY_ROWS; r++) for (int c = 0; c < SKY_COLS; c++) {
+            float x0 = -1 + 2f * c / SKY_COLS, x1 = -1 + 2f * (c + 1) / SKY_COLS, y0 = -1 + 2f * r / SKY_ROWS, y1 = -1 + 2f * (r + 1) / SKY_ROWS;
+            b.put(new float[] {x0, y0, x1, y0, x0, y1, x0, y1, x1, y0, x1, y1});
+        }
+        rewind(b);
+        return b;
     }
 
     private void drawFloor(float[] g, int sc, float road) {
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glEnable(GLES20.GL_BLEND);   // the floor fades out into the panorama's own ground far away
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         floor.use();
@@ -308,13 +379,21 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         for (CarModel.Spot s : m.spots) {
             float stretch = pass == 1 ? 2.6f : 1f;
             GLES20.glUniform3f(halo.u("uUp"), view[1] * stretch, view[5] * stretch, view[9] * stretch);
-            float k = s.group < g.length ? g[s.group] * HALO_GAIN[s.group] : 0;
+            float k = s.group < g.length ? g[s.group] * HALO_GAIN[s.group] * s.gain : 0;
             if (k < 0.02f) continue;
-            spot[0] = s.x; spot[1] = s.y; spot[2] = s.z; spot[3] = 1;
-            Matrix.multiplyMV(spotW, 0, bodyM, 0, spot, 0);   // the lamps ride on the body
+            float nx = s.nx, ny = s.ny, nz = s.nz;
+            if (s.hinge >= 0 && s.hinge < CarState.OPENINGS) {   // a lamp on a door / hatch / mirror swings with it
+                spot[0] = s.x - hingeAt[s.hinge][0]; spot[1] = s.y - hingeAt[s.hinge][1]; spot[2] = s.z - hingeAt[s.hinge][2]; spot[3] = 1;
+                Matrix.multiplyMV(spotW, 0, hingeM, s.hinge * 16, spot, 0);
+                spot[0] = nx; spot[1] = ny; spot[2] = nz; spot[3] = 0;
+                Matrix.multiplyMV(spotN, 0, hingeM, s.hinge * 16, spot, 0); nx = spotN[0]; ny = spotN[1]; nz = spotN[2];
+            } else {
+                spot[0] = s.x; spot[1] = s.y; spot[2] = s.z; spot[3] = 1;
+                Matrix.multiplyMV(spotW, 0, bodyM, 0, spot, 0);   // the lamps ride on the body
+            }
             float sx = spotW[0], sy = pass == 1 ? -spotW[1] : spotW[1], sz = spotW[2];
             float vx = eye[0] - sx, vy = eye[1] - sy, vz = eye[2] - sz, vl = (float) Math.sqrt(vx * vx + vy * vy + vz * vz);
-            float facing = (vx * s.nx + vy * s.ny + vz * s.nz) / vl;   // halos only towards where the lamp shines
+            float facing = (vx * nx + vy * ny + vz * nz) / vl;   // halos only towards where the lamp shines
             facing = Math.max(0f, Math.min(1f, facing * 1.6f + 0.15f));
             if (facing <= 0.01f) continue;
             float size = s.radius * 1.2f + 0.07f, push = 0.12f;
@@ -352,9 +431,16 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         "void main(){ vW=(uModel*vec4(aPos,1.0)).xyz; vN=(uModel*vec4(aNrm,0.0)).xyz;\n" +
         " float paint=step(7.5,aGroup); vC=aCol; vC.rgb=mix(aCol.rgb,uPaint,uPaintOn*paint); vC.a=mix(aCol.a,aCol.a*uPaintGloss,paint);\n" +
         " gl_Position=uMVP*vec4(aPos,1.0); }\n";
-    /** Panorama lookup by direction: u = azimuth (atan2(x, z) / 2pi + 0.5), v = elevation from +64 (top) to -16 deg. */
+    /** Panorama lookup by direction: u = azimuth (atan2(x, z) / 2pi + 0.5), v = elevation from +64 (top) to -16 deg.
+     *  Polynomial atan2 / asin (errors under 0.01 rad, a pixel or two of the blurred reflection map): the built-in ones
+     *  expand to long instruction runs on the head unit's fragment processor, and this runs for every car and floor pixel. */
     private static final String ENV_LOOKUP =
-        "vec3 env(sampler2D t, vec3 d){ float u=atan(d.x,d.z)*0.159155+0.5; float e=asin(clamp(d.y,-1.0,1.0))*57.29578;\n" +
+        "float fatan2(float y, float x){ float ax=abs(x), ay=abs(y); float a=min(ax,ay)/max(max(ax,ay),1e-4); float s=a*a;\n" +
+        " float r=((-0.0464965*s+0.1593142)*s-0.3276228)*s*a+a; r=mix(r,1.5707963-r,step(ax,ay)); r=mix(r,3.1415927-r,step(x,0.0));\n" +
+        " return mix(r,-r,step(y,0.0)); }\n" +
+        "float fasin(float y){ float a=min(abs(y),1.0); float r=1.5707963-sqrt(1.0-a)*(1.5707288+a*(-0.2121144+a*(0.0742610-0.0187293*a)));\n" +
+        " return y<0.0?-r:r; }\n" +
+        "vec3 env(sampler2D t, vec3 d){ float u=fatan2(d.x,d.z)*0.159155+0.5; float e=fasin(d.y)*57.29578;\n" +
         " return texture2D(t,vec2(u,clamp((64.0-e)/80.0,0.004,0.996))).rgb; }\n";
     /** Shared lighting: hemisphere + key light, the backdrop reflected with Fresnel. */
     private static final String LIGHTING =
@@ -392,11 +478,14 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         " gl_Position=uMVP*vec4(aPos,1.0); }\n";
     private static final String LAMP_FS =
         "precision mediump float;\n" + LIGHTING +
-        "uniform sampler2D uBase; uniform sampler2D uGlowTex;\n" +
+        "uniform sampler2D uBase; uniform sampler2D uGlowTex; uniform float uFlat;\n" +
         "varying vec3 vN; varying vec3 vW; varying vec2 vUV; varying float vK;\n" +
         "void main(){ vec3 n=normalize(vN); vec3 v=normalize(uEye-vW);\n" +
         " vec3 b=texture2D(uBase,vUV).rgb; vec3 e=texture2D(uGlowTex,vUV).rgb;\n" +
         " vec3 c=shade(b*0.75,0.5,n,v)*(1.0-0.5*vK)+e*(0.05+vK*1.9);\n" +
+        // number plates (uFlat 1): the film reads near its own colour, the rear plate's lamps (vK: its POSITION group,
+        // on with the tail lamps) wash it a little brighter
+        " c=mix(c,b*(0.9+0.1*vK)+shade(vec3(0.0),0.4,n,v)*0.25,uFlat);\n" +
         " gl_FragColor=vec4(c,1.0); }\n";
     private static final String FLOOR_VS =
         "uniform mat4 uMVP; uniform float uSize; attribute vec2 aCorner; varying vec2 vXZ;\n" +
@@ -422,22 +511,28 @@ final class CarRenderer implements GLSurfaceView.Renderer {
         " vec3 c=(f+env(uEnv,vec3(vd.x,-vd.y,vd.z))*refl*fres)*shadow;\n" +
         " float alpha=1.0-smoothstep(uScene>2.5?10.0:6.0,uScene>2.5?28.0:20.0,d);\n" +
         " float z=p.y-1.95;\n" +                                                     // headlamp beams ahead of the car
-        " float beam=0.0; if(z>0.0){ float w=0.35+z*0.32; beam=(exp(-pow((p.x-0.66)/w,2.0))+exp(-pow((p.x+0.66)/w,2.0)))*exp(-z*0.28)*smoothstep(0.0,0.7,z); }\n" +
-        " c+=vec3(1.0,0.96,0.86)*beam*0.42*uLamps.x;\n" +
-        " c+=vec3(1.0,0.85,0.6)*pool(p,vec2(0.0,2.3),0.9)*0.05*uLamps.w;\n" +
-        " c+=vec3(1.0,0.06,0.04)*(pool(p,vec2(0.55,-2.25),0.75)+pool(p,vec2(-0.55,-2.25),0.75))*0.16*uLamps.y;\n" +
-        " c+=vec3(0.9,0.95,1.0)*pool(p,vec2(0.0,-2.9),1.1)*0.28*uLamps.z;\n" +
+        // lamp light on the floor, each term only while its lamps are on (a uniform branch: the same way for every pixel)
+        " if(uLamps.x>0.002&&z>0.0){ float w=0.35+z*0.32; float beam=(exp(-pow((p.x-0.66)/w,2.0))+exp(-pow((p.x+0.66)/w,2.0)))*exp(-z*0.28)*smoothstep(0.0,0.7,z);\n" +
+        "   c+=vec3(1.0,0.96,0.86)*beam*0.42*uLamps.x; }\n" +
+        " if(uLamps.w>0.002) c+=vec3(1.0,0.85,0.6)*pool(p,vec2(0.0,2.3),0.9)*0.05*uLamps.w;\n" +
+        " if(uLamps.y>0.002) c+=vec3(1.0,0.06,0.04)*(pool(p,vec2(0.55,-2.25),0.75)+pool(p,vec2(-0.55,-2.25),0.75))*0.16*uLamps.y;\n" +
+        " if(uLamps.z>0.002) c+=vec3(0.9,0.95,1.0)*pool(p,vec2(0.0,-2.9),1.1)*0.28*uLamps.z;\n" +
         " vec3 amber=vec3(1.0,0.5,0.04);\n" +
-        " c+=amber*0.22*uTurn.x*(pool(p,vec2(0.85,2.05),0.6)+pool(p,vec2(0.75,-2.05),0.6)+pool(p,vec2(1.25,0.55),0.45));\n" +
-        " c+=amber*0.22*uTurn.y*(pool(p,vec2(-0.85,2.05),0.6)+pool(p,vec2(-0.75,-2.05),0.6)+pool(p,vec2(-1.25,0.55),0.45));\n" +
+        " if(uTurn.x>0.002) c+=amber*0.22*uTurn.x*(pool(p,vec2(0.85,2.05),0.6)+pool(p,vec2(0.75,-2.05),0.6)+pool(p,vec2(1.25,0.55),0.45));\n" +
+        " if(uTurn.y>0.002) c+=amber*0.22*uTurn.y*(pool(p,vec2(-0.85,2.05),0.6)+pool(p,vec2(-0.75,-2.05),0.6)+pool(p,vec2(-1.25,0.55),0.45));\n" +
         " gl_FragColor=vec4(c,alpha); }\n";
+    /** Per vertex: the view direction to panorama u (unwrapped around the camera's own azimuth uYaw0, so it never jumps
+     *  across the seam inside the view; the texture repeats in u) and v. */
     private static final String SKY_VS =
-        "uniform mat4 uInvVP; uniform vec3 uEye; attribute vec2 aCorner; varying vec3 vDir;\n" +
-        "void main(){ vec4 q=uInvVP*vec4(aCorner,1.0,1.0); vDir=q.xyz/q.w-uEye; gl_Position=vec4(aCorner,0.999,1.0); }\n";
+        "uniform mat4 uInvVP; uniform vec3 uEye; uniform float uYaw0; attribute vec2 aCorner; varying vec2 vUV;\n" +
+        "void main(){ vec4 q=uInvVP*vec4(aCorner,1.0,1.0); vec3 d=normalize(q.xyz/q.w-uEye);\n" +
+        " float da=atan(d.x,d.z)-uYaw0; da-=6.2831853*floor((da+3.1415927)/6.2831853);\n" +
+        " float e=asin(clamp(d.y,-1.0,1.0))*57.29578;\n" +
+        " vUV=vec2((uYaw0+da)*0.159155+0.5,clamp((64.0-e)/80.0,0.004,0.996)); gl_Position=vec4(aCorner,0.999,1.0); }\n";
     private static final String SKY_FS =
-        "precision mediump float;\n" + ENV_LOOKUP +
-        "uniform sampler2D uSky; varying vec3 vDir;\n" +
-        "void main(){ gl_FragColor=vec4(env(uSky,normalize(vDir)),1.0); }\n";
+        "precision mediump float;\n" +
+        "uniform sampler2D uSky; varying vec2 vUV;\n" +
+        "void main(){ gl_FragColor=vec4(texture2D(uSky,vUV).rgb,1.0); }\n";
     /** 19-inch rim (0.241 m) plus its lip; the rim's outer face sits just inside the tyre wall (0.123 m from the hub). */
     private static final float RIM_RADIUS = 0.247f, RIM_FACE_X = 0.121f;
     private static final String RIM_VS =

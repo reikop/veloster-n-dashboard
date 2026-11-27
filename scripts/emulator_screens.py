@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SLUGS = ["overview", "f1", "gauges", "graphs", "performance", "taxi", "records", "race", "lambda", "tacho", "neon",
-         "night", "vfd", "hud", "gcircle", "warp", "drag", "cassette", "show", "circuit", "car3d"]
+         "night", "vfd", "hud", "gcircle", "warp", "drag", "cassette", "show", "circuit", "car3d", "retro"]
 PATCHES = [
     ("apps/dashboard/AndroidManifest.xml",
      '<uses-library android:name="automotive" android:required="true" />',
@@ -55,6 +55,7 @@ def main():
     ap.add_argument("--out", type=Path, default=ROOT / "docs/images/screens")
     args = ap.parse_args()
     adb = lambda *a, **kw: run(args.adb, "-s", args.serial, *a, **kw)
+    tap = lambda x, y: adb("shell", "input", "tap", str(x), str(y))   # 800x480 screen points
 
     with tempfile.TemporaryDirectory(prefix="vn-emu-screens-") as tmp:
         src = Path(tmp) / "src"
@@ -92,8 +93,21 @@ def main():
         time.sleep(2)
         for i, slug in enumerate(SLUGS):
             adb("shell", "am", "broadcast", "-a", "com.veloster.dashboard.DEMO", "--ei", "page", str(i))
-            time.sleep(4)
-            (args.out / lang / f"{i + 1:02d}-{slug}.png").write_bytes(adb("exec-out", "screencap", "-p"))
+            time.sleep(7 if slug == "car3d" else 4)
+            shot = lambda name: (args.out / lang / f"{i + 1:02d}-{name}.png").write_bytes(adb("exec-out", "screencap", "-p"))
+            if slug == "retro":   # all eight styles: a tap on the body moves to the next (after its name banner fades)
+                for k in range(1, 9):
+                    shot(f"retro-{k}"); tap(400, 300); time.sleep(2.7)
+                continue
+            if slug == "car3d":   # headlamps on by the test button (the emulator has no car signal), the buttons hidden again
+                tap(400, 240); time.sleep(1); tap(351, 443); tap(400, 240); time.sleep(2)
+            shot(slug)
+            if slug == "car3d":   # the parts that open, by the test buttons: driver door + bonnet, then (from behind) the right doors + hatch
+                tap(400, 240); time.sleep(1)
+                tap(73, 389); tap(465, 389); time.sleep(2.6); shot("car3d-doors")
+                tap(73, 389); tap(465, 389); time.sleep(0.3); tap(601, 30); time.sleep(1)
+                tap(204, 389); tap(335, 389); tap(596, 389); time.sleep(2.6); shot("car3d-hatch")
+                tap(204, 389); tap(335, 389); tap(596, 389); time.sleep(1.2); tap(545, 30); time.sleep(0.5); tap(351, 443); tap(400, 240)
     print("wrote", args.out)
 
 

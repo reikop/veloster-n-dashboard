@@ -36,7 +36,17 @@ public class PerformancePreview {
    Canvas c=new Canvas(800,480);PitRenderer r=new PitRenderer();if(page==2)r.setGaugeLayout(new GaugeLayout());if(page==3)r.setGraphLayout(new GraphLayout());r.draw(c,800,480,page==1,fixture(),1000);
    check(!c.texts.contains("PERFORMANCE"),"existing page remains selectable");c.write(args[0]+"/existing-page-"+page+".png");
   }
-  System.out.println("PASS "+rendered+" performance renders and 4 existing page renders");
+  // 레트로: every style with data and without, a tap on the body moving to the next style
+  PitRenderer retro=new PitRenderer();retro.setPage(DashboardPage.RETRO);
+  for(int style=0;style<8;style++){
+   for(int k=0;k<2;k++){
+    Canvas c=new Canvas(800,480);retro.draw(c,800,480,true,k==0?fixture():new Telemetry(),1000);
+    for(String text:c.texts){check(!text.contains("NaN")&&!text.contains("Infinity"),"retro style "+style+": "+text);check(!text.matches(".*[가-힣].*"),"retro English: "+text);}
+    if(k==0)c.write(args[0]+"/retro-"+style+".png");
+   }
+   check(retro.screenTap(DashboardPage.RETRO,400,300),"a tap changes the retro style");
+  }
+  System.out.println("PASS "+rendered+" performance renders, 4 existing page renders and 8 retro styles");
  }
 }'''
 
@@ -60,7 +70,7 @@ def render(folder):
         p = root / 'PerformancePreview.java'
         p.write_text(HARNESS)
         sources.append(p)
-        sources += [ROOT / 'shared/src/com/veloster/vehicle' / (name + '.java') for name in ('Telemetry','PitRenderer','KeyPath','PerformanceRenderer','DashboardPage','ShiftGuide','MediaState','GaugeLayout','GaugeRenderer','OverviewLayout','GraphLayout','GraphRenderer','VehicleProfile','Theme','ThemedPaint','ThemeShapes','DriveStats','Records','RecordsRenderer','TaxiMeter','TaxiRenderer','TaxiTariff','TaxiZones','TaxiZoneData','DriveModes','RaceRenderer','LambdaCluster','TachoCluster','ClusterKit','RevMatch','ShiftCoach','GearRatios','MilLamp','Tiles','NightCluster','VfdCluster','HudCluster','GCircleCluster','WarpCluster','DragCluster','CassetteCluster','ShowRenderer','CircuitCluster','Circuits','CircuitData','CircuitLap','LapTimer','TrackPath','GpsFix')]
+        sources += [ROOT / 'shared/src/com/veloster/vehicle' / (name + '.java') for name in ('Telemetry','PitRenderer','KeyPath','Fmt','PerformanceRenderer','DashboardPage','ShiftGuide','MediaState','GaugeLayout','GaugeRenderer','OverviewLayout','GraphLayout','GraphRenderer','VehicleProfile','Theme','ThemedPaint','ThemeShapes','DriveStats','Records','RecordsRenderer','TaxiMeter','TaxiRenderer','TaxiTariff','TaxiZones','TaxiZoneData','DriveModes','RaceRenderer','LambdaCluster','TachoCluster','ClusterKit','RevMatch','ShiftCoach','GearRatios','MilLamp','Tiles','NightCluster','VfdCluster','HudCluster','GCircleCluster','WarpCluster','DragCluster','CassetteCluster','ShowRenderer','CircuitCluster','Circuits','CircuitData','CircuitLap','LapTimer','TrackPath','GpsFix','RetroCluster','PixelGlyphs')]
         sources.append(ROOT / 'shared/src/com/veloster/i18n/UiText.java')
         result = subprocess.run([javac,'-encoding','UTF-8','-d',str(root),*map(str,sources)],capture_output=True,text=True)
         if result.returncode: raise AssertionError(result.stderr)

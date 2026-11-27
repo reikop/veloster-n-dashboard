@@ -14,7 +14,7 @@ public final class PerformanceRenderer {
     private Telemetry.Sample[] samples;
     private boolean valid(int i){return samples[i].valid&&!Float.isNaN(samples[i].value)&&!Float.isInfinite(samples[i].value);}
     private float number(int i){return Telemetry.displayValue(i,samples[i].value);}
-    private String value(int i,String format){return valid(i)?String.format(Locale.US,format,number(i)):"—";}
+    private String value(int i,String format){return valid(i)?Fmt.f(format,number(i)):"—";}
     private float clamp(float v,float lo,float hi){return Math.max(lo,Math.min(hi,v));}
     private void text(Canvas c,String s,float x,float y,float size,int color,Paint.Align align,boolean bold){
         p.setStyle(Paint.Style.FILL);p.setColor(color);p.setTextAlign(align);p.setTextSize(size);p.setTypeface(bold?Typeface.DEFAULT_BOLD:Typeface.DEFAULT);c.drawText(s,x,y,p);

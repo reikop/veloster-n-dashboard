@@ -36,7 +36,7 @@ final class VfdCluster extends ClusterKit {
         }
         for(int k=1;k<=8;k++)mono(c,String.valueOf(k),336+(k*5-1)*11+4,336,14,k*1000>prof.redline?0xffb03a2c:DIM,Paint.Align.CENTER);
         mono(c,"RPM",340,190,14,DIM,Paint.Align.LEFT);   // above the low end of the tach, clear of the tall bars
-        seg7(c,Float.isNaN(rpm)?"----":String.format(Locale.US,"%4d",Math.round(rpm/10f)*10),520,198,30,ON,GHOST,false);
+        seg7(c,Float.isNaN(rpm)?"----":Fmt.f("%4d",Math.round(rpm/10f)*10),520,198,30,ON,GHOST,false);
         mono(c,"x1000",776,334+18,12,DIM,Paint.Align.RIGHT);
         // bottom boxes
         box(c,24,140,"FUEL");box(c,172,140,"TEMP");box(c,320,96,"GEAR");box(c,424,170,"BOOST");box(c,602,174,"ODO . TRIP");
@@ -53,16 +53,16 @@ final class VfdCluster extends ClusterKit {
         // boost bar: -0.7 .. top, zero tick, TURBO lamp past 0.4 bar
         float span=top+0.7f,bf=Float.isNaN(boost)?0:(boost+0.7f)/span,z=434+0.7f/span*150;
         for(int i=0;i<20;i++){float val=-0.7f+(i+.5f)*span/20;boolean isOn=i<Math.round(bf*20);fill(c,434+i*7.5f,388,439.5f+i*7.5f,406,isOn?(val>top*0.8f?AMB:ON):GHOST);}
-        fill(c,z-1,384,z,410,DIM);mono(c,"0",z,422,12,DIM,Paint.Align.CENTER);mono(c,String.format(Locale.US,"%.1f",top),584,422,12,DIM,Paint.Align.RIGHT);
+        fill(c,z-1,384,z,410,DIM);mono(c,"0",z,422,12,DIM,Paint.Align.CENTER);mono(c,Fmt.f("%.1f",top),584,422,12,DIM,Paint.Align.RIGHT);
         boolean turbo=!Float.isNaN(boost)&&boost>0.4f;
         if(turbo)round(c,434,430,504,452,4,AMB);else outline(c,434,430,504,452,4,1,AMB_GHOST);
         text(c,"TURBO",469,447,15,turbo?0xff1a0e00:AMB_GHOST,Paint.Align.CENTER,android.graphics.Typeface.DEFAULT_BOLD);
-        seg7(c,Float.isNaN(boost)?"---":String.format(Locale.US,"%s%.1f",boost<0?"-":" ",Math.abs(boost)),584,428,24,ON,GHOST,false);
+        seg7(c,Float.isNaN(boost)?"---":(boost<0?"-":" ")+Fmt.f("%.1f",Math.abs(boost)),584,428,24,ON,GHOST,false);
         float odo=v(Telemetry.ODOMETER);
         seg7(c,fmt("%.0f",odo).replace("—","------"),764,384,22,ON,GHOST,false);mono(c,"ODO",612,400,12,DIM,Paint.Align.LEFT);
-        seg7(c,st==null?"---.-":String.format(Locale.US,"%.1f",trip()),764,412,22,ON,GHOST,false);mono(c,"TRIP",612,428,12,DIM,Paint.Align.LEFT);
+        seg7(c,st==null?"---.-":Fmt.f("%.1f",trip()),764,412,22,ON,GHOST,false);mono(c,"TRIP",612,428,12,DIM,Paint.Align.LEFT);
         Calendar k=Calendar.getInstance();
-        seg7(c,String.format(Locale.US,"%02d:%02d",k.get(Calendar.HOUR_OF_DAY),k.get(Calendar.MINUTE)),764,438,18,AMB,AMB_GHOST,false);
+        seg7(c,Fmt.f("%02d:%02d",k.get(Calendar.HOUR_OF_DAY),k.get(Calendar.MINUTE)),764,438,18,AMB,AMB_GHOST,false);
     }
     private float tripKm;
     private long tripAt;

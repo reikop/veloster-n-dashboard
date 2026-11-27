@@ -88,7 +88,7 @@ abstract class ClusterKit {
     }
     /** Lets go of the bitmaps this screen keeps between frames (the dashboard is out of sight: only the floating window, or
      *  nothing, is drawn); each is made again the next time the screen draws. UI thread. */
-    void trim(){}
+    void trim(){memo.clear();}
     /** Frees a let-go bitmap's pixels now rather than at the next collections (a bitmap waits for its finalizer: on the
      *  V141 emulator 2.2 MB of trimmed bitmaps were still held a while after trim). Null-safe; returns null for the field. */
     static Bitmap recycle(Bitmap b){if(b!=null&&!b.isRecycled())b.recycle();return null;}
@@ -153,26 +153,43 @@ abstract class ClusterKit {
                 cx+=t*1.6f;continue;
             }
             String lit=segs(ch);
-            for(char k:"abcdefg".toCharArray()){boolean isOn=lit.indexOf(k)>=0;if(!isOn&&off==0)continue;segment(c,k,cx,y,w,h,t,isOn?on:off);}
+            digit(c,lit,cx,y,w,h,t,on,true);
+            if(off!=0)digit(c,lit,cx,y,w,h,t,off,false);
             cx+=w+gap;
         }
         return tw;
     }
-    private void segment(Canvas c,char k,float x,float y,float w,float h,float t,int color){
-        float g=t*0.2f,hh=h/2;
+    /** A digit's lit (or, lit false, unlit) segments as one shape: one drawPath a digit and colour instead of one a
+     *  segment (the VFD screen drew 270 paths a frame). */
+    private void digit(Canvas c,String lit,float x,float y,float w,float h,float t,int color,boolean lighted){
+        float g=t*0.2f,hh=h/2;int mask=0;
         base=y+h;path.reset();
-        switch(k){
-            case 'a':hseg(x+t/2+g,x+w-t/2-g,y+t/2,t);break;
-            case 'g':hseg(x+t/2+g,x+w-t/2-g,y+hh,t);break;
-            case 'd':hseg(x+t/2+g,x+w-t/2-g,y+h-t/2,t);break;
-            case 'f':vseg(x+t/2,y+t/2+g,y+hh-g,t);break;
-            case 'e':vseg(x+t/2,y+hh+g,y+h-t/2-g,t);break;
-            case 'b':vseg(x+w-t/2,y+t/2+g,y+hh-g,t);break;
-            default:vseg(x+w-t/2,y+hh+g,y+h-t/2-g,t);break;
+        for(int i=0;i<7;i++){
+            char k=SEGS.charAt(i);if((lit.indexOf(k)>=0)!=lighted)continue;mask|=1<<i;
+            switch(k){
+                case 'a':hseg(x+t/2+g,x+w-t/2-g,y+t/2,t);break;
+                case 'g':hseg(x+t/2+g,x+w-t/2-g,y+hh,t);break;
+                case 'd':hseg(x+t/2+g,x+w-t/2-g,y+h-t/2,t);break;
+                case 'f':vseg(x+t/2,y+t/2+g,y+hh-g,t);break;
+                case 'e':vseg(x+t/2,y+hh+g,y+h-t/2-g,t);break;
+                case 'b':vseg(x+w-t/2,y+t/2+g,y+hh-g,t);break;
+                default:vseg(x+w-t/2,y+hh+g,y+h-t/2-g,t);break;
+            }
         }
-        long sk=key(key(key(key(key(key(k,x),y),w),h),t),g);
-        p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(memo(sk),p);
+        if(mask==0)return;
+        long sk=key(key(key(key(key(key(mask+200,x),y),w),h),t),g);
+        Path m=memo(sk);
+        if(segGlow>0){   // halo: two soft strokes of the same shape under it (no blur filter on the head unit's renderer)
+            int rgb=col(color)&0xffffff;p.setStyle(Paint.Style.STROKE);p.setStrokeJoin(Paint.Join.ROUND);
+            float spread=Math.min(segGlow,1.5f+t*0.5f);   // px beyond the segment's edge
+            p.setStrokeWidth(2*spread);p.setColor(rgb|0x1c000000);c.drawPath(m,p);
+            p.setStrokeWidth(spread);p.setColor(rgb|0x30000000);c.drawPath(m,p);p.setStrokeJoin(Paint.Join.MITER);
+        }
+        p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(m,p);
     }
+    /** Seven-segment halo: the most it spreads past a segment's edge, px (0: none). */
+    protected float segGlow;
+    private static final String SEGS="abcdefg";
     private float base;
     /** Segment corner, slanted 0.1 to the right per unit of height above the digit's baseline. */
     private void pt(boolean first,float x,float y){float sx=x+(base-y)*0.1f;if(first)path.moveTo(sx,y);else path.lineTo(sx,y);}

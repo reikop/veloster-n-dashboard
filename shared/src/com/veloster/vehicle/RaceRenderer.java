@@ -248,7 +248,7 @@ public final class RaceRenderer {
             c.drawCircle(cx+clampG(st.trailX(i))*rad,cy+clampG(st.trailY(i))*rad,2.5f,p);}
         if(ok){p.setColor(T(RED));c.drawCircle(cx+clampG(gx)*rad,cy+clampG(gy)*rad,5,p);}   // braking (-) up
         text(c,"G  MAX "+fmt("%.2f",st.maxG),CR-8,352,12,MUTED,Paint.Align.RIGHT);
-        text(c,ok?String.format(Locale.US,"%.2f",(float)Math.sqrt(gx*gx+gy*gy)):"—",CR-8,392,30,WHITE,Paint.Align.RIGHT);
+        text(c,ok?Fmt.f("%.2f",(float)Math.sqrt(gx*gx+gy*gy)):"—",CR-8,392,30,WHITE,Paint.Align.RIGHT);
         text(c,"LAT "+fmt("%+.2f",gx),CR-8,416,12,MUTED,Paint.Align.RIGHT);
         text(c,"LON "+fmt("%+.2f",gy),CR-8,434,12,MUTED,Paint.Align.RIGHT);
     }
@@ -375,15 +375,15 @@ public final class RaceRenderer {
         c.restore();
     }
     private static float clampG(float g){return Math.max(-1,Math.min(1,g/1.2f));}
-    private static String clock(long ms){long sec=(ms+999)/1000;return String.format(Locale.US,"%d:%02d",sec/60,sec%60);}
-    private static String run(int i){return String.format(Locale.US,"%.0f→%.0f",DriveStats.RUNS[i][0],DriveStats.RUNS[i][1]);}
+    private static String clock(long ms){long sec=(ms+999)/1000;return Fmt.f("%d:%02d",sec/60,sec%60);}
+    private static String run(int i){return Fmt.f("%.0f→%.0f",DriveStats.RUNS[i][0],DriveStats.RUNS[i][1]);}
     private void trip(Canvas c){
         box(c,L,452,R,476,PANEL);
         float w=(R-L)/4,left=(L+R)/2;
         for(int i=0;i<3;i++)if(st.running[i]){
-            text(c,run(i)+" km/h   "+String.format(Locale.US,"%.1f s",(now-st.runStart[i])/1000f)+"   MEASURING",left,469,14,AMBER,Paint.Align.CENTER);return;}
+            text(c,run(i)+" km/h   "+Fmt.f("%.1f s",(now-st.runStart[i])/1000f)+"   MEASURING",left,469,14,AMBER,Paint.Align.CENTER);return;}
         for(int i=0;i<3;i++)if(st.finishedAt[i]!=0&&now-st.finishedAt[i]<8000){boolean record=st.last[i]==st.best[i];
-            text(c,run(i)+" km/h   "+String.format(Locale.US,"%.2f s",st.last[i])+"   BEST "+String.format(Locale.US,"%.2f",st.best[i])+(record?"   ★":""),
+            text(c,run(i)+" km/h   "+Fmt.f("%.2f s",st.last[i])+"   BEST "+Fmt.f("%.2f",st.best[i])+(record?"   ★":""),
                 left,469,14,record?GREEN:WHITE,Paint.Align.CENTER);return;}
         String[] item={"BATT "+fmt("%.1f",v(Telemetry.BAT_VOLTAGE))+"V","RANGE "+fmt("%.0f",v(Telemetry.RANGE))+"km",
             "AVG "+fmt("%.1f",v(Telemetry.AVG_FUEL))+"km/L","ODO "+fmt("%.0f",v(Telemetry.ODOMETER))+"km"};

@@ -14,7 +14,7 @@ Owner-provided in-car photo. Missing readings display a dash. Location/camera me
 
 | N Dashboard | My Apps |
 | --- | --- |
-| 21 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive, night, VFD, HUD, G circle, warp, drag, cassette, show, circuit (lap timer at six Korean tracks), My Car (3D Veloster N with live lamps and steering) | Dashboard and installed-app launcher |
+| 22 screens: overview, F1, gauges, graphs, performance, taxi meter, records, race, Λ, tacho, Neon Drive, night, VFD, HUD, G circle, warp, drag, cassette, show, circuit (lap timer at six Korean tracks), My Car (3D Veloster N with live lamps and steering; its doors, bonnet and hatch open and the mirrors fold; Korean number plates in five styles), Retro (eight 80s digital dashes) | Dashboard and installed-app launcher |
 | Screen list (show/hide/order), 20 themes, hold-to-change tiles, drive-mode colours and screens | Opt-in edge button and notification shortcut |
 | Floating window over other apps, settings backup, records room (best runs kept), [system font changer](docs/FONTS.md) | Engineering mode, USB debugging and Android utilities |
 | Taxi meter with 17 regional fares picked from GPS; engine sound, shift beep, speed chime | Bluetooth pairing and restart confirmation |
@@ -26,7 +26,7 @@ Vehicle telemetry uses existing receive paths without adding ECU diagnostic requ
 
 ## Screens
 
-All 21 tabs. Show, hide or reorder them by holding the tab strip or in Settings → Screens. These are **screenshots of the real dashboard app on an Android emulator (800×480)**. The emulator has no car data, so a screenshot-only build replays one minute of synthetic driving. They are not photos of the car, and the text uses Android's default font rather than the head unit's. Neon Drive runs its demo without car signals, the circuit screen's GPS wait is how the current app behaves, and My Car's headlamps were switched on with its test buttons. Retake with `scripts/emulator_screens.py`.
+All 22 tabs. Show, hide or reorder them by holding the tab strip or in Settings → Screens. These are **screenshots of the real dashboard app on an Android emulator (800×480)**. The emulator has no car data, so a screenshot-only build replays one minute of synthetic driving. They are not photos of the car, and the text uses Android's default font rather than the head unit's. Neon Drive runs its demo without car signals, the circuit screen's GPS wait is how the current app behaves, My Car's headlamps, doors, bonnet and hatch were switched on and opened with its test buttons (the doors and hatch are not yet linked to car signals), and Retro's turn arrows stay dark because the emulator has no car feed. Retake with `scripts/emulator_screens.py`.
 
 <table>
 <tr><td width="50%" valign="top"><img src="docs/images/screens/en/01-overview.png" alt="Overview" width="100%"><br><b>1. Overview</b> · Every value at a glance</td><td width="50%" valign="top"><img src="docs/images/screens/en/02-f1.png" alt="F1" width="100%"><br><b>2. F1</b> · F1-style cluster</td></tr>
@@ -39,7 +39,12 @@ All 21 tabs. Show, hide or reorder them by holding the tab strip or in Settings 
 <tr><td width="50%" valign="top"><img src="docs/images/screens/en/15-gcircle.png" alt="G circle" width="100%"><br><b>15. G circle</b> · Friction circle · G trail</td><td width="50%" valign="top"><img src="docs/images/screens/en/16-warp.png" alt="Warp" width="100%"><br><b>16. Warp</b> · Starship warp</td></tr>
 <tr><td width="50%" valign="top"><img src="docs/images/screens/en/17-drag.png" alt="Drag" width="100%"><br><b>17. Drag</b> · Drag tree · 0-100</td><td width="50%" valign="top"><img src="docs/images/screens/en/18-cassette.png" alt="Cassette" width="100%"><br><b>18. Cassette</b> · Cassette deck · VU meters</td></tr>
 <tr><td width="50%" valign="top"><img src="docs/images/screens/en/19-show.png" alt="Show" width="100%"><br><b>19. Show</b> · Powerband · boost · G circle</td><td width="50%" valign="top"><img src="docs/images/screens/en/20-circuit.png" alt="Circuit" width="100%"><br><b>20. Circuit</b> · Circuit map · lap times</td></tr>
-<tr><td width="50%" valign="top"><img src="docs/images/screens/en/21-car3d.png" alt="My Car" width="100%"><br><b>21. My Car</b> · 3D model with live lamps and steering</td><td width="50%" valign="top"></td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/21-car3d.png" alt="My Car" width="100%"><br><b>21. My Car</b> · 3D model with live lamps and steering</td><td width="50%" valign="top"><img src="docs/images/screens/en/21-car3d-doors.png" alt="My Car" width="100%"><br><b>21. My Car</b> · doors and bonnet open (test buttons)</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/21-car3d-hatch.png" alt="My Car" width="100%"><br><b>21. My Car</b> · right doors and hatch open (test buttons)</td><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-1.png" alt="Twin pods" width="100%"><br><b>22. Retro</b> · Twin pods (tap for the next style)</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-2.png" alt="Green arcs" width="100%"><br><b>22. Retro</b> · Green arcs</td><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-3.png" alt="Curved tach" width="100%"><br><b>22. Retro</b> · Curved tach</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-4.png" alt="LED matrix" width="100%"><br><b>22. Retro</b> · LED matrix</td><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-5.png" alt="Rainbow" width="100%"><br><b>22. Retro</b> · Rainbow</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-6.png" alt="Perspective road" width="100%"><br><b>22. Retro</b> · Perspective road</td><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-7.png" alt="Amber triple" width="100%"><br><b>22. Retro</b> · Amber triple</td></tr>
+<tr><td width="50%" valign="top"><img src="docs/images/screens/en/22-retro-8.png" alt="Twin circles" width="100%"><br><b>22. Retro</b> · Twin circles</td><td width="50%" valign="top"></td></tr>
 </table>
 
 ## Compatibility

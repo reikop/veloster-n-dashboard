@@ -81,7 +81,7 @@ final class TachoCluster extends ClusterKit {
         if(mt)bold(c,"C",CX,CY-50,16,clutch?YEL:0xff26313a,Paint.Align.CENTER);
         String gs=neutral||g==0&&mt?"N":gear();if(manualGate(gs))gs=gs.substring(1);
         text(c,gs,CX,CY+22,84,match?GRN:flash&&on?BLUE:FG,Paint.Align.CENTER,num());
-        text(c,Float.isNaN(rpm)?"—":String.format(java.util.Locale.US,"%,d",Math.round(rpm/10)*10),CX,CY+58,26,!Float.isNaN(rpm)&&rpm>=prof.redline?RED:FG,Paint.Align.CENTER,num());
+        text(c,Float.isNaN(rpm)?"—":Fmt.f("%,d",Math.round(rpm/10)*10),CX,CY+58,26,!Float.isNaN(rpm)&&rpm>=prof.redline?RED:FG,Paint.Align.CENTER,num());
         text(c,fmt("%.0f",kmh),CX,CY+166,54,FG,Paint.Align.CENTER,num());
         // sector cells: the arc graph on the inner edge, the number on the outer
         float boost=v(Telemetry.BOOST),cool=v(2),iat=v(Telemetry.INTAKE),load=v(Telemetry.ENGINE_LOAD);
@@ -98,7 +98,7 @@ final class TachoCluster extends ClusterKit {
         if(mt){
             if(n==0)text(c,"—",63,214,26,MUT,Paint.Align.CENTER,num());
             for(int i=0;i<n;i++){float y=178+i*30;int col=tok[i]?GRN:INK[tg[i]];dot(c,32,y-7,9,col);bold(c,String.valueOf(tg[i]),32,y-1,14,BG,Paint.Align.CENTER);
-                text(c,String.format(java.util.Locale.US,"%,d",Math.round(tr[i]/50)*50),106,y,19,tok[i]?GRN:FG,Paint.Align.RIGHT,num());}
+                text(c,Fmt.f("%,d",Math.round(tr[i]/50)*50),106,y,19,tok[i]?GRN:FG,Paint.Align.RIGHT,num());}
         }else for(int i=0;i<2;i++){float tc=v(i==0?Telemetry.CLUTCH_ODD:Telemetry.CLUTCH_EVEN),y=206+i*58;
             int col=Float.isNaN(tc)?MUT:tc>=Telemetry.CLUTCH_HOT?RED:tc>=Telemetry.CLUTCH_WARM?YEL:FG;
             text(c,t(i==0?"홀수단":"짝수단"),26,y-30,12,MUT,Paint.Align.LEFT,Typeface.DEFAULT);
@@ -130,7 +130,7 @@ final class TachoCluster extends ClusterKit {
     }
 
     // ---- the still parts, drawn once ----
-    @Override void trim(){face=recycle(face);faceKey="";}
+    @Override void trim(){super.trim();face=recycle(face);faceKey="";}
     private Bitmap buildFace(int acc){
         Bitmap b=bitmap((int)W,(int)H);Canvas c=new Canvas(b);
         fill(c,0,0,W,H,BG);

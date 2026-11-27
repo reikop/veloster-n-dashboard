@@ -42,6 +42,7 @@ public final class UiText {
         EN.put("5도 위로","Up a fifth");
         EN.put("5분","5 min");
         EN.put("80년대","80s");
+        EN.put("80년대 계기판 8종 · 눌러서 바꾸기","Eight 80s dashes · tap to change");
         EN.put("80년대 디지털 계기판","80s digital dash");
         EN.put("8비트","8-bit");
         EN.put("AE86 킨콘","AE86 ding-dong");
@@ -80,6 +81,7 @@ public final class UiText {
         EN.put("GR86 삐삐삐","GR86 beep-beep-beep");
         EN.put("KIC 상설 서킷","KIC Permanent Circuit");
         EN.put("L · 가속 페달","L · accelerator");
+        EN.put("LED 매트릭스","LED matrix");
         EN.put("N 계기판","N Dashboard");
         EN.put("N 퍼포먼스 화면","N Performance screen");
         EN.put("OFF: 일반 USB 모드로 복귀하며 PC 연결이 끊길 수 있습니다.","OFF: returns to normal USB mode and can drop the PC connection.");
@@ -148,6 +150,7 @@ public final class UiText {
         EN.put("계기판이 화면에서 사라질 때 자동 저장되고, 새로 설치하면 되돌릴지 한 번 묻습니다.","Saved whenever the dashboard leaves the screen; a fresh install asks once whether to restore it.");
         EN.put("고딕","sans");
         EN.put("고른 값 게이지","Your chosen gauges");
+        EN.put("곡선 타코","Curved tach");
         EN.put("곧 출발","Get ready");
         EN.put("공장 출고 설정","Factory setting");
         EN.put("공회전 시간","Idle time");
@@ -159,6 +162,7 @@ public final class UiText {
         EN.put("그래프 ","Graph ");
         EN.put("그래프를 길게 눌러 항목 변경","Hold a graph to change its signal");
         EN.put("그린","Green");
+        EN.put("그린 아크","Green arcs");
         EN.put("글꼴","Fonts");
         EN.put("글꼴 목록을 읽지 못했습니다","Could not read the font list");
         EN.put("글꼴 설정을 다시 읽어 보니 다릅니다","The font settings read back differently");
@@ -222,6 +226,7 @@ public final class UiText {
         EN.put("네온 드라이브","Neon Drive");
         EN.put("네이비","Navy");
         EN.put("노을","Sunset");
+        EN.put("녹색 (구형)","Green (old)");
         EN.put("눌러서 N 계기판과 앱 목록 열기","Tap to open N Dashboard and your app list");
         EN.put("다른 칸과 위치 바꾸기","Swap with another slot");
         EN.put("다음","Next");
@@ -245,6 +250,7 @@ public final class UiText {
         EN.put("뒤 왼쪽 타이어 온도","Rear-left tyre temperature");
         EN.put("뒤 왼쪽 휠","Rear-left wheel");
         EN.put("뒤로","Back");
+        EN.put("뒷문","Rear door");
         EN.put("드래그","Drag");
         EN.put("드래그 출발 신호·0-100","Drag tree · 0-100");
         EN.put("디젤 DPF","Diesel DPF");
@@ -255,6 +261,7 @@ public final class UiText {
         EN.put("레드","Red");
         EN.put("레이스","Race");
         EN.put("레이스 버저","Race buzzer");
+        EN.put("레인보우","Rainbow");
         EN.put("레트로","Retro");
         EN.put("로즈","Rose");
         EN.put("루트 권한으로 시스템 글꼴 설정(/system/etc/system_fonts.xml)을 바꾸며, 재부팅해야 반영됩니다. 처음 바꾸기 전 설정은 /data/local/tmp/vn-fonts에 보관됩니다.","This changes the system font settings (/system/etc/system_fonts.xml) as root and shows after a reboot. The settings from before the first change are kept in /data/local/tmp/vn-fonts.");
@@ -282,6 +289,7 @@ public final class UiText {
         EN.put("문 열림","Door open");
         EN.put("미니","Mini");
         EN.put("미등","Position lamps");
+        EN.put("미러 접기","Fold mirrors");
         EN.put("미리보기","Preview");
         EN.put("미리보기 · 화면을 누르면 시험 버튼","Preview · tap for test buttons");
         EN.put("바로가기 끄기","Turn shortcut off");
@@ -289,6 +297,7 @@ public final class UiText {
         EN.put("바로가기 시작 실패. 내 앱을 다시 열어 설정을 확인하세요.","Shortcut could not start. Reopen My Apps and check its settings.");
         EN.put("바로가기 시작 실패. 설정 상태와 시스템 권한을 확인하세요.","Shortcut could not start. Check its settings and system permissions.");
         EN.put("바로가기: ","Shortcut: ");
+        EN.put("반사필름 (2020~)","Reflective film (2020-)");
         EN.put("반응 시간","Reaction");
         EN.put("받은 RPM·페달·부스트로 만든 소리","Made from the received rpm, pedal and boost");
         EN.put("받지 못함","Not received");
@@ -306,6 +315,7 @@ public final class UiText {
         EN.put("버튼 위치를 갱신하지 못해 알림만 유지합니다.","Could not update the button position. Only the notification remains.");
         EN.put("번 · "," - ");
         EN.put("번 칸"," cell");
+        EN.put("번호판","Plate");
         EN.put("변속 권장","Shift hint");
         EN.put("변속 레버","Shift lever");
         EN.put("변속 알림","Shift beep");
@@ -455,6 +465,7 @@ public final class UiText {
         EN.put("앞 왼쪽 휠","Front-left wheel");
         EN.put("앞바퀴","Front wheels");
         EN.put("앰버","Amber");
+        EN.put("앰버 트리플","Amber triple");
         EN.put("앱","Apps");
         EN.put("앱 관리","Manage apps");
         EN.put("앱 화면을 열지 못했습니다. 알림에서 다시 시도하세요.","Could not open My Apps. Try the notification.");
@@ -488,6 +499,7 @@ public final class UiText {
         EN.put("연타 · 5번","Rapid · 5 taps");
         EN.put("연하게","Light");
         EN.put("영수증","RECEIPT");
+        EN.put("영업용","Commercial");
         EN.put("옆","Side");
         EN.put("예상","PREDICTED");
         EN.put("오류가 나면 앱 내부 진단 기록에 남습니다 (차량 값·음원 정보 제외).","Errors go to the app's private diagnostic record (no vehicle values or track info).");
@@ -514,6 +526,7 @@ public final class UiText {
         EN.put("울산","Ulsan");
         EN.put("워프","Warp");
         EN.put("원","KRW");
+        EN.put("원근 도로","Perspective road");
         EN.put("원래 화면","Previous screen");
         EN.put("원작: reikop/veloster-n-dashboard (MIT)","Original: reikop/veloster-n-dashboard (MIT)");
         EN.put("원형","Dial");
@@ -578,6 +591,7 @@ public final class UiText {
         EN.put("적용","Apply");
         EN.put("적용하면 재부팅 뒤에 화면에 반영됩니다","A font you apply shows after a reboot");
         EN.put("전기·차체","Electrics · body");
+        EN.put("전기차","Electric car");
         EN.put("전남","Jeonnam");
         EN.put("전북","Jeonbuk");
         EN.put("전에 쓰던 화면 배치 · 테마 · 플로팅 창 설정입니다. %s 저장","Earlier screens, theme, floating window. Saved %s");
@@ -712,6 +726,8 @@ public final class UiText {
         EN.put("트랙·서킷 전용 · 속도 곡선 0~12초","Track use only · speed 0-12 s");
         EN.put("트렁크","Trunk");
         EN.put("트렁크 열림","Trunk open");
+        EN.put("트윈 서클","Twin circles");
+        EN.put("트윈 포드","Twin pods");
         EN.put("틱틱","Double tick");
         EN.put("틸","Teal");
         EN.put("파일","File");
@@ -772,6 +788,7 @@ public final class UiText {
         EN.put("후진 중이거나 RPM이 없으면 조용합니다","Silent in reverse or without rpm");
         EN.put("흡기","Intake");
         EN.put("흡기 온도","Intake temperature");
+        EN.put("흰색","White");
         KO.put("가장자리 버튼 + 알림 / Floating + notification","가장자리 버튼 + 알림");
         KO.put("기어","기어");
         KO.put("내 앱 / My Apps","내 앱");

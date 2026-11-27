@@ -38,8 +38,8 @@ public final class LapTimer {
     /** m:ss.cc, minutes unpadded ("1:23.45"); "—" for -1. */
     public static String format(long ms){
         if(ms<0)return "—";long cs=ms/10;
-        return String.format(Locale.US,"%d:%02d.%02d",cs/6000,cs/100%60,cs%100);
+        return Fmt.f("%d:%02d.%02d",cs/6000,cs/100%60,cs%100);
     }
     /** +0.42 / -1.05 seconds. */
-    public static String formatDelta(long ms){return String.format(Locale.US,"%s%d.%02d",ms<0?"-":"+",Math.abs(ms)/1000,Math.abs(ms)/10%100);}
+    public static String formatDelta(long ms){return (ms<0?"-":"+")+Fmt.f("%d.%02d",Math.abs(ms)/1000,Math.abs(ms)/10%100);}
 }
