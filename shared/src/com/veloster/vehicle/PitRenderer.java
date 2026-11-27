@@ -28,7 +28,7 @@ public final class PitRenderer {
     }
     /** Page whose tab is selected (DashboardPage id); records page data. */
     private int page=DashboardPage.OVERVIEW;
-    public void setPage(int value){page=DashboardPage.normalize(value);}
+    public void setPage(int value){int was=page;page=DashboardPage.normalize(value);if(was==DashboardPage.RETRO&&page!=was)retro.trim();}   // 레트로 keeps a screen-sized glass bitmap only while it shows
     private DriveStats stats;
     /** Screens from the i30 PD build (sung9155/i30-pd-dashboard, MIT): 레이스, 람다 (Λ), 타코. */
     private final RaceRenderer raceRenderer=new RaceRenderer();
@@ -44,18 +44,22 @@ public final class PitRenderer {
     private final CassetteCluster cassette=new CassetteCluster();
     private final CircuitCluster circuit=new CircuitCluster();
     private final ShowRenderer showRenderer=new ShowRenderer();
+    /** 레트로: eight 1980s-style dashboards in one tab (RetroCluster). */
+    private final RetroCluster retro=new RetroCluster();
+    /** 레트로's turn arrows this frame (VehicleDash reads them from Neon Drive's hscand feed). */
+    public void setTurns(boolean left,boolean right){retro.turnL=left;retro.turnR=right;}
     /** The ported ClusterKit screen on a page, or null. */
     private ClusterKit kit(int p){
         switch(p){
             case DashboardPage.NIGHT:return night;case DashboardPage.VFD:return vfd;case DashboardPage.HUD:return hud;
             case DashboardPage.GCIRCLE:return gcircle;case DashboardPage.WARP:return warp;case DashboardPage.DRAG:return drag;
-            case DashboardPage.CASSETTE:return cassette;case DashboardPage.CIRCUIT:return circuit;default:return null;
+            case DashboardPage.CASSETTE:return cassette;case DashboardPage.CIRCUIT:return circuit;case DashboardPage.RETRO:return retro;default:return null;
         }
     }
     /** A tap on the body of a ported screen (드래그 준비 key, cassette, circuit list); true when it used the tap. */
     public boolean screenTap(int p,float x,float y){ClusterKit k=kit(p);return k!=null&&k.tap(x,y);}
     /** Ported screens that animate (needles, stars, the G tail): redraw about 20 times a second. */
-    public static boolean animated(int p){return p==DashboardPage.HUD||p==DashboardPage.GCIRCLE||p==DashboardPage.WARP||p==DashboardPage.DRAG||p==DashboardPage.CASSETTE||p==DashboardPage.SHOW||p==DashboardPage.VFD||p==DashboardPage.CIRCUIT;}
+    public static boolean animated(int p){return p==DashboardPage.HUD||p==DashboardPage.GCIRCLE||p==DashboardPage.WARP||p==DashboardPage.DRAG||p==DashboardPage.CASSETTE||p==DashboardPage.SHOW||p==DashboardPage.VFD||p==DashboardPage.CIRCUIT||p==DashboardPage.RETRO;}
     private final RecordsRenderer recordsRenderer=new RecordsRenderer();
     public void setRecords(DriveStats value){stats=value;}
     /** Settings open: the gear button is lit. */
@@ -178,7 +182,7 @@ public final class PitRenderer {
             case DashboardPage.TACHO:return UiText.t("타코");
             case DashboardPage.NEON:return UiText.t("네온 드라이브");
             case DashboardPage.NIGHT:case DashboardPage.VFD:case DashboardPage.HUD:case DashboardPage.GCIRCLE:case DashboardPage.WARP:
-            case DashboardPage.DRAG:case DashboardPage.CASSETTE:case DashboardPage.SHOW:case DashboardPage.CIRCUIT:case DashboardPage.CAR3D:return UiText.t(DashboardPage.NAMES[page]);
+            case DashboardPage.DRAG:case DashboardPage.CASSETTE:case DashboardPage.SHOW:case DashboardPage.CIRCUIT:case DashboardPage.CAR3D:case DashboardPage.RETRO:return UiText.t(DashboardPage.NAMES[page]);
             default:return UiText.t("전체 조망");
         }
     }

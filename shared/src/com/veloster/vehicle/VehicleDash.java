@@ -163,6 +163,7 @@ public final class VehicleDash extends View implements Runnable {
         loadTaxiHorse(a);
         try{TAXI.setArea(a.getSharedPreferences("pit_vehicle_ui",0).getString("taxi_area","서울"));}catch(ClassCastException ignored){}   // the last area until the GPS places the car
         try{if(TAXI.region()!=a.getSharedPreferences("pit_vehicle_ui",0).getInt("taxi_region",TaxiMeter.KOREA))TAXI.setRegion(a.getSharedPreferences("pit_vehicle_ui",0).getInt("taxi_region",TaxiMeter.KOREA));}catch(ClassCastException ignored){}
+        try{RetroCluster.style=RetroCluster.validStyle(a.getSharedPreferences("pit_vehicle_ui",0).getInt("retro_style",0));}catch(ClassCastException ignored){}   // 레트로: the last style
         shiftTarget=ShiftGuide.clamp(a.getSharedPreferences("pit_vehicle_ui",0).getInt("shift_target",ShiftGuide.DEFAULT)); setVisibility(GONE); }
     // ---- 네온 드라이브 (apps/neondrive) as a page: its own view over the dashboard, back button returns ----
     private com.veloster.neondrive.NeonDrivePage neon;
@@ -201,6 +202,26 @@ public final class VehicleDash extends View implements Runnable {
     }
     private void exitCar(){hideCar();setPage(carBack==DashboardPage.CAR3D?DashboardPage.OVERVIEW:carBack,true);invalidate();}
     /** The back key: leaves Neon Drive or closes the settings; false lets the activity go back as usual. */
+    // ---- 레트로: turn signals from Neon Drive's passive hscand feed (Telemetry has none), read only while 레트로 shows ----
+    private com.veloster.neondrive.DriveFeed retroFeed;
+    private boolean retroFeedFailed;
+    private final com.veloster.neondrive.DriveSignals.Snapshot retroSnap=new com.veloster.neondrive.DriveSignals.Snapshot();
+    /** Each frame: start the feed on 레트로 and hand its turn lamps to the renderer, the real lamp phase while a lamp is
+     *  blinking, else the stalk / hazard switch on the 내 차 page's 0.75 s timer; stop it on any other page. */
+    private void retroTurns(long now){
+        if(page!=DashboardPage.RETRO||retroFeedFailed){stopRetroFeed();renderer.setTurns(false,false);return;}
+        try{
+            if(retroFeed==null)retroFeed=new com.veloster.neondrive.DriveFeed(activity);
+            retroFeed.start();
+            com.veloster.neondrive.DriveSignals.Snapshot s=retroFeed.signals().snapshot(now,retroSnap);
+            boolean timer=now%750<400,l,r;
+            if(!s.live){l=false;r=false;}
+            else if(s.lampPhaseLive){l=s.leftLit;r=s.rightLit;}
+            else{l=s.leftActive&&timer;r=s.rightActive&&timer;}
+            renderer.setTurns(l,r);
+        }catch(RuntimeException e){retroFeedFailed=true;com.veloster.diagnostics.ErrorLog.record("retro_turns",e);android.util.Log.e("VehicleDash","retro turn feed unavailable",e);renderer.setTurns(false,false);}
+    }
+    private void stopRetroFeed(){if(retroFeed!=null)retroFeed.stop();}
     public static boolean back(Activity a){
         VehicleDash d=current.get();if(d==null||d.activity!=a)return false;
         if(d.page==DashboardPage.NEON&&d.neon!=null&&d.neon.view().getParent()!=null){d.exitNeon();return true;}
@@ -215,6 +236,7 @@ public final class VehicleDash extends View implements Runnable {
         else hideNeon();
         if(page==DashboardPage.CAR3D){if(before!=DashboardPage.CAR3D)carBack=before;if(resumed||standalone&&getVisibility()==VISIBLE)showCar();}
         else hideCar();
+        if(page!=DashboardPage.RETRO)stopRetroFeed();   // started again by the next 레트로 frame
         cluster=page==DashboardPage.F1;gauges=page==DashboardPage.GAUGES;graphs=page==DashboardPage.GRAPHS;performance=page==DashboardPage.PERFORMANCE;taxiPage=page==DashboardPage.TAXI;records=page==DashboardPage.RECORDS;
         tabScroll=DashboardPage.reveal(page,tabScroll);   // keep the selected tab in view
         if(save)activity.getSharedPreferences("pit_vehicle_ui",0).edit().putInt("dashboard_page",page).apply();
@@ -254,11 +276,11 @@ public final class VehicleDash extends View implements Runnable {
     }
     public static void pauseStandalone(Activity a){
         VehicleDash d=current.get();if(d==null||d.activity!=a)return;
-        d.resumed=false;d.touching=false;d.removeCallbacks(d.editHold);d.removeCallbacks(d.stripHold);backupSave(a);d.hideNeon();d.hideCar();
+        d.resumed=false;d.touching=false;d.removeCallbacks(d.editHold);d.removeCallbacks(d.stripHold);backupSave(a);d.hideNeon();d.hideCar();d.stopRetroFeed();
         d.gaugeEditor.dismiss();d.graphEditor.dismiss();d.cellPicker.dismiss();if(!FloatPanel.musicShown()||FloatPanel.shape==FloatPanel.OFF)d.mediaReceiver.stop();d.artwork.close();
     }
     private void showDashboard(){setVisibility(VISIBLE);if(entry!=null)entry.setVisibility(GONE);bringToFront();}
-    private void close() { entryRequestUntil=0;removeCallbacks(editHold);touching=false;gaugeEditor.dismiss();graphEditor.dismiss();setVisibility(GONE); if(entry!=null) entry.setVisibility(blocked?GONE:VISIBLE); }
+    private void close() { stopRetroFeed();entryRequestUntil=0;removeCallbacks(editHold);touching=false;gaugeEditor.dismiss();graphEditor.dismiss();setVisibility(GONE); if(entry!=null) entry.setVisibility(blocked?GONE:VISIBLE); }
     public static void consumeEntryIntent(Activity a){entryIntent(a,a.getIntent());}
     /** Explicit opt-in only; consume once and require a live unrestricted OEM response. */
     public static void entryIntent(Activity a,android.content.Intent intent){
@@ -365,6 +387,7 @@ public final class VehicleDash extends View implements Runnable {
         renderer.setGaugeLayout(gauges?gaugeLayout:null);
         renderer.setGraphLayout(graphs?graphLayout:null);
         renderer.setOverviewLayout(overviewLayout);
+        retroTurns(now);
         renderer.draw(c,getWidth(),getHeight(),cluster,DATA,now,shiftTarget,media,track);
         if(introStart>0&&now-introStart<INTRO_MS)renderer.drawIntro(c,getWidth(),getHeight(),(now-introStart)/(float)INTRO_MS);
         if(settings){
@@ -451,6 +474,7 @@ public final class VehicleDash extends View implements Runnable {
         if(tap&&!blocked&&DashboardPage.gear(x,y)&&DashboardPage.gear(downX,downY)){if(settings)closeSettings();else openSettings(settingsState.cat);return true;}
         if(tap&&!blocked&&y>=DashboardPage.BOTTOM+6&&renderer.screenTap(page,x,y)){   // 드래그 준비 key, cassette keys, circuit list
             int kc=CassetteCluster.consumeKeyCmd();if(kc==-1||kc==1)requestMedia(kc);else if(kc!=0)requestMedia(0);   // ▶ / ■ / ❚❚: play-pause (no stop or mute here)
+            if(page==DashboardPage.RETRO){playSoundEffect(android.view.SoundEffectConstants.CLICK);ui().edit().putInt("retro_style",RetroCluster.style).apply();}   // 레트로: a tap moved to the next style
             invalidate();return true;}
         if(tap&&!blocked&&records&&y>=RecordsRenderer.RUN_TOP&&y<=RecordsRenderer.RUN_BOTTOM&&downY>=RecordsRenderer.RUN_TOP&&downY<=RecordsRenderer.RUN_BOTTOM){RecordsDialog.show(activity);return true;}
         if(standalone&&tap&&x>=666&&x<=782&&downX>=666&&downX<=782&&y>=8&&y<=46&&downY>=8&&downY<=46){activity.finish();return true;}

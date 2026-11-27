@@ -42,6 +42,7 @@ public final class UiText {
         EN.put("5도 위로","Up a fifth");
         EN.put("5분","5 min");
         EN.put("80년대","80s");
+        EN.put("80년대 계기판 8종 · 눌러서 바꾸기","Eight 80s dashes · tap to change");
         EN.put("80년대 디지털 계기판","80s digital dash");
         EN.put("8비트","8-bit");
         EN.put("AE86 킨콘","AE86 ding-dong");
@@ -80,6 +81,7 @@ public final class UiText {
         EN.put("GR86 삐삐삐","GR86 beep-beep-beep");
         EN.put("KIC 상설 서킷","KIC Permanent Circuit");
         EN.put("L · 가속 페달","L · accelerator");
+        EN.put("LED 매트릭스","LED matrix");
         EN.put("N 계기판","N Dashboard");
         EN.put("N 퍼포먼스 화면","N Performance screen");
         EN.put("OFF: 일반 USB 모드로 복귀하며 PC 연결이 끊길 수 있습니다.","OFF: returns to normal USB mode and can drop the PC connection.");
@@ -148,6 +150,7 @@ public final class UiText {
         EN.put("계기판이 화면에서 사라질 때 자동 저장되고, 새로 설치하면 되돌릴지 한 번 묻습니다.","Saved whenever the dashboard leaves the screen; a fresh install asks once whether to restore it.");
         EN.put("고딕","sans");
         EN.put("고른 값 게이지","Your chosen gauges");
+        EN.put("곡선 타코","Curved tach");
         EN.put("곧 출발","Get ready");
         EN.put("공장 출고 설정","Factory setting");
         EN.put("공회전 시간","Idle time");
@@ -159,6 +162,7 @@ public final class UiText {
         EN.put("그래프 ","Graph ");
         EN.put("그래프를 길게 눌러 항목 변경","Hold a graph to change its signal");
         EN.put("그린","Green");
+        EN.put("그린 아크","Green arcs");
         EN.put("글꼴","Fonts");
         EN.put("글꼴 목록을 읽지 못했습니다","Could not read the font list");
         EN.put("글꼴 설정을 다시 읽어 보니 다릅니다","The font settings read back differently");
@@ -255,6 +259,7 @@ public final class UiText {
         EN.put("레드","Red");
         EN.put("레이스","Race");
         EN.put("레이스 버저","Race buzzer");
+        EN.put("레인보우","Rainbow");
         EN.put("레트로","Retro");
         EN.put("로즈","Rose");
         EN.put("루트 권한으로 시스템 글꼴 설정(/system/etc/system_fonts.xml)을 바꾸며, 재부팅해야 반영됩니다. 처음 바꾸기 전 설정은 /data/local/tmp/vn-fonts에 보관됩니다.","This changes the system font settings (/system/etc/system_fonts.xml) as root and shows after a reboot. The settings from before the first change are kept in /data/local/tmp/vn-fonts.");
@@ -455,6 +460,7 @@ public final class UiText {
         EN.put("앞 왼쪽 휠","Front-left wheel");
         EN.put("앞바퀴","Front wheels");
         EN.put("앰버","Amber");
+        EN.put("앰버 트리플","Amber triple");
         EN.put("앱","Apps");
         EN.put("앱 관리","Manage apps");
         EN.put("앱 화면을 열지 못했습니다. 알림에서 다시 시도하세요.","Could not open My Apps. Try the notification.");
@@ -514,6 +520,7 @@ public final class UiText {
         EN.put("울산","Ulsan");
         EN.put("워프","Warp");
         EN.put("원","KRW");
+        EN.put("원근 도로","Perspective road");
         EN.put("원래 화면","Previous screen");
         EN.put("원작: reikop/veloster-n-dashboard (MIT)","Original: reikop/veloster-n-dashboard (MIT)");
         EN.put("원형","Dial");
@@ -712,6 +719,8 @@ public final class UiText {
         EN.put("트랙·서킷 전용 · 속도 곡선 0~12초","Track use only · speed 0-12 s");
         EN.put("트렁크","Trunk");
         EN.put("트렁크 열림","Trunk open");
+        EN.put("트윈 서클","Twin circles");
+        EN.put("트윈 포드","Twin pods");
         EN.put("틱틱","Double tick");
         EN.put("틸","Teal");
         EN.put("파일","File");

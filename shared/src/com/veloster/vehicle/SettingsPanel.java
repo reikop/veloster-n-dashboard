@@ -40,9 +40,9 @@ public final class SettingsPanel {
     // ---- geometry (800 x 480) ------------------------------------------------------------------------------------
     static final float CAT_L=18,CAT_R=166,CAT_T=60,CAT_H=36,CAT_STEP=40,PANE_L=180,PANE_R=782,TOP=60,BOTTOM=472;
     static final float DONE_T=420,DONE_B=468;
-    static final float ROW_T=60,ROW_H=46,ROW_STEP=51,ARROW_W=34,COL_W=(PANE_R-PANE_L-2*10)/3;
-    /** The screen list in three columns of seven (20 screens). */
-    static final int ROWS=7;
+    static final float ROW_T=60,ROW_H=42,ROW_STEP=46,ARROW_W=34,COL_W=(PANE_R-PANE_L-2*10)/3;
+    /** The screen list in three columns of eight (22 screens). */
+    static final int ROWS=8;
     static float rowL(int i){return PANE_L+(i/ROWS)*(COL_W+10);}
     static float upL(int i){return rowL(i)+COL_W-2*ARROW_W-6;}
     static float downL(int i){return rowL(i)+COL_W-ARROW_W;}
@@ -187,10 +187,10 @@ public final class SettingsPanel {
         for(int i=0;i<o.length;i++){
             int page=o[i];boolean on=DashboardPage.isShown(page);float t=rowTop(i),l=rowL(i),r=upL(i)-6;
             panel(c,l,t,r-l,ROW_H,on?PANEL:OFFCELL,on?LINE:0xff252a2c);
-            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(on?BLUE:MUTED);c.drawRect(l+8,t+14,l+28,t+34,p);p.setStyle(Paint.Style.FILL);
-            if(on){p.setStrokeWidth(3);c.drawLine(l+12,t+24,l+17,t+29,p);c.drawLine(l+17,t+29,l+25,t+18,p);}
-            fitted(c,UiText.t(DashboardPage.NAMES[page]),l+36,t+21,14,r-l-42,on?WHITE:MUTED);
-            fitted(c,(page==s.page?UiText.t("지금 화면")+" · ":"")+UiText.t(DashboardPage.DESC[page]),l+36,t+38,10,r-l-42,page==s.page?BLUE:MUTED);
+            p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(on?BLUE:MUTED);c.drawRect(l+8,t+11,l+28,t+31,p);p.setStyle(Paint.Style.FILL);
+            if(on){p.setStrokeWidth(3);c.drawLine(l+12,t+21,l+17,t+26,p);c.drawLine(l+17,t+26,l+25,t+15,p);}
+            fitted(c,UiText.t(DashboardPage.NAMES[page]),l+36,t+19,14,r-l-42,on?WHITE:MUTED);
+            fitted(c,(page==s.page?UiText.t("지금 화면")+" · ":"")+UiText.t(DashboardPage.DESC[page]),l+36,t+35,10,r-l-42,page==s.page?BLUE:MUTED);
             button(c,"▲",upL(i),t,ARROW_W,ROW_H,false,14);button(c,"▼",downL(i),t,ARROW_W,ROW_H,false,14);
         }
         text(c,UiText.t("줄을 누르면 보이기·숨기기, ▲▼로 순서 변경 · 탭 줄을 길게 눌러도 열립니다"),PANE_R,470,12,MUTED,false,Paint.Align.RIGHT);

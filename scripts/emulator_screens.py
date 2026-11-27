@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SLUGS = ["overview", "f1", "gauges", "graphs", "performance", "taxi", "records", "race", "lambda", "tacho", "neon",
-         "night", "vfd", "hud", "gcircle", "warp", "drag", "cassette", "show", "circuit", "car3d"]
+         "night", "vfd", "hud", "gcircle", "warp", "drag", "cassette", "show", "circuit", "car3d", "retro"]
 PATCHES = [
     ("apps/dashboard/AndroidManifest.xml",
      '<uses-library android:name="automotive" android:required="true" />',

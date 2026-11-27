@@ -171,8 +171,17 @@ abstract class ClusterKit {
             default:vseg(x+w-t/2,y+hh+g,y+h-t/2-g,t);break;
         }
         long sk=key(key(key(key(key(key(k,x),y),w),h),t),g);
-        p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(memo(sk),p);
+        Path m=memo(sk);
+        if(segGlow>0){   // halo: two soft strokes of the same shape under it (no blur filter on the head unit's renderer)
+            int rgb=col(color)&0xffffff;p.setStyle(Paint.Style.STROKE);p.setStrokeJoin(Paint.Join.ROUND);
+            float spread=Math.min(segGlow,1.5f+t*0.5f);   // px beyond the segment's edge
+            p.setStrokeWidth(2*spread);p.setColor(rgb|0x1c000000);c.drawPath(m,p);
+            p.setStrokeWidth(spread);p.setColor(rgb|0x30000000);c.drawPath(m,p);p.setStrokeJoin(Paint.Join.MITER);
+        }
+        p.setStyle(Paint.Style.FILL);p.setColor(col(color));c.drawPath(m,p);
     }
+    /** Seven-segment halo: the most it spreads past a segment's edge, px (0: none). */
+    protected float segGlow;
     private float base;
     /** Segment corner, slanted 0.1 to the right per unit of height above the digit's baseline. */
     private void pt(boolean first,float x,float y){float sx=x+(base-y)*0.1f;if(first)path.moveTo(sx,y);else path.lineTo(sx,y);}
