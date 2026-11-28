@@ -139,6 +139,7 @@ public final class HubActivity extends Activity {
         add(second,UiText.t("안드로이드 기본앱"),new Runnable(){public void run(){page="android";render();}});
         content.addView(first);content.addView(second);
         add(content,UiText.t("블루투스 연결 설정"),new Runnable(){public void run(){openBluetooth();}});
+        add(content,UiText.t("USB 업데이트"),new Runnable(){public void run(){startActivity(new Intent(HubActivity.this,UsbUpdateActivity.class));}});
         add(content,UiText.t("강제 재시작"),new Runnable(){public void run(){confirmReboot();}});
         final List<ResolveInfo> all = new ArrayList<ResolveInfo>();
         for(ResolveInfo item:launchable())

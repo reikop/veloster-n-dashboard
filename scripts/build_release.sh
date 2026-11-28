@@ -6,6 +6,7 @@
 # build-tools;34.0.0 and platforms;android-34.
 # env: ANDROID_HOME  KS (phone installer keystore, outside the repo)  KS_PASS or KS_PASS_FILE
 #      TOOLS (default build/ci-tools: scripts/ci_tools.sh fills it)  OUT (default build/release)
+#      UPDATE_KEY (optional: the USB update key, PEM; adds vn-usb-update.zip)
 # Never connects to a vehicle.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"; cd "$REPO"
@@ -22,4 +23,10 @@ python3 scripts/sign_apk_v1_legacy.py --key "$TOOLS/platform.pk8" --cert "$TOOLS
 python3 scripts/sign_apk_v1_legacy.py --key "$TOOLS/platform.pk8" --cert "$TOOLS/platform.x509.pem" "$OUT/build-hub/hub-UNSIGNED.apk" "$OUT/apks/My-Apps-API17.apk"
 APKS="$OUT/apks" OUT="$OUT/vn-installer-android.apk" bash installer/android/build.sh
 python3 scripts/package_installer.py --out "$OUT/assets" --apks "$OUT/apks" --android-apk "$OUT/vn-installer-android.apk"
+# USB 업데이트 bundle, when the update key is given (UPDATE_KEY: its private half, PEM): listed in SHA256SUMS.txt too.
+if [ -n "${UPDATE_KEY:-}" ]; then
+  python3 scripts/usb_update.py --dashboard "$OUT/apks/N-Dashboard-API17.apk" --hub "$OUT/apks/My-Apps-API17.apk" \
+    --key "$UPDATE_KEY" --cert "$TOOLS/platform.x509.pem" --out "$OUT/assets/vn-usb-update.zip"
+  (cd "$OUT/assets" && shasum -a 256 vn-usb-update.zip >> SHA256SUMS.txt)
+fi
 echo "release $VERSION:"; cat "$OUT/assets/SHA256SUMS.txt"
