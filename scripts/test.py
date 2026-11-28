@@ -38,6 +38,8 @@ def main():
     sources += [ROOT / "shared/src/com/veloster/vehicle" / (name + ".java") for name in ("Circuits", "CircuitData", "CircuitLap", "LapTimer", "TrackPath")]
     # 내 차 (3D car): the mesh reader and the lamp / steering state.
     sources += [ROOT / "apps/dashboard/src/com/veloster/car3d" / (name + ".java") for name in ("CarModel", "CarState", "CarScene", "PlateText")]
+    # USB 업데이트: the signed bundle manifest and the APK checks My Apps runs before installing.
+    sources += [ROOT / "apps/hub/src/com/veloster/carplayhub/usb/UsbBundle.java"]
     sources += tests
     with tempfile.TemporaryDirectory(prefix="vn-public-tests-") as temporary:
         subprocess.run([str(javac), "-encoding", "UTF-8", "-d", temporary,

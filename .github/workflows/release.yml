@@ -1,7 +1,7 @@
 # Push a tag vMAJOR.MINOR.PATCH (it must equal the version in the sources, scripts/check_versions.py) to build and
 # publish a release with the one-click installers only. "Run workflow" by hand refreshes the 'test' pre-release
 # from the chosen branch instead. Secrets: INSTALLER_KEYSTORE_B64 (the phone installer's PKCS#12, base64) and
-# INSTALLER_KEYSTORE_PASS.
+# INSTALLER_KEYSTORE_PASS; USB_UPDATE_KEY (optional: the USB update key's private half, PEM) adds vn-usb-update.zip.
 name: Release
 on:
   push:
@@ -29,18 +29,21 @@ jobs:
         env:
           KS_B64: ${{ secrets.INSTALLER_KEYSTORE_B64 }}
           KS_PASS: ${{ secrets.INSTALLER_KEYSTORE_PASS }}
+          USB_KEY: ${{ secrets.USB_UPDATE_KEY }}
           TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
         run: |
           [ -n "$KS_B64" ] && [ -n "$KS_PASS" ] || { echo "INSTALLER_KEYSTORE_B64 / INSTALLER_KEYSTORE_PASS secrets are missing" >&2; exit 1; }
           export KS="$RUNNER_TEMP/installer.p12"; printf '%s' "$KS_B64" | base64 -d > "$KS"
+          if [ -n "$USB_KEY" ]; then export UPDATE_KEY="$RUNNER_TEMP/usb-update.pem"; (umask 077; printf '%s\n' "$USB_KEY" > "$UPDATE_KEY"); fi
           bash scripts/build_release.sh
-          rm -f "$KS"
+          rm -f "$KS" "${UPDATE_KEY:-}"
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           V="$(python3 scripts/check_versions.py)"; A=build/release/assets
           FILES=("$A"/vn-installer-windows.zip "$A"/vn-installer-mac.zip "$A"/vn-installer-linux.zip "$A"/vn-installer-android.apk "$A"/SHA256SUMS.txt)
+          [ -f "$A/vn-usb-update.zip" ] && FILES+=("$A/vn-usb-update.zip")
           NOTES="docs/releases/v$V.md"; [ -f "$NOTES" ] || { printf 'N 계기판 %s\n\n설치: [설치 방법](https://github.com/%s/blob/main/docs/INSTALL.md)\n' "$V" "$GITHUB_REPOSITORY" > "$RUNNER_TEMP/notes.md"; NOTES="$RUNNER_TEMP/notes.md"; }
           if [ "$GITHUB_REF_TYPE" = tag ]; then
             gh release create "$GITHUB_REF_NAME" "${FILES[@]}" --title "v$V" --notes-file "$NOTES" --latest

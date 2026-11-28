@@ -91,8 +91,11 @@ public final class UiText {
         EN.put("RPM 막대","RPM bar");
         EN.put("USB 디버깅","USB debugging");
         EN.put("USB 디버깅 ","USB debugging ");
+        EN.put("USB 메모리를 확인하는 중…","Checking USB sticks…");
         EN.put("USB 모드 전환 실패: ","USB mode request failed: ");
         EN.put("USB 모드 전환 요청이 거부되었습니다.","The USB mode request was denied.");
+        EN.put("USB 업데이트","USB update");
+        EN.put("USB 업데이트 파일을 쓸 수 없습니다.","The USB update files cannot be used.");
         EN.put("V6 트윈터보","V6 twin-turbo");
         EN.put("V8 크로스플레인","V8 cross-plane");
         EN.put("V8 플랫플레인","V8 flat-plane");
@@ -373,6 +376,7 @@ public final class UiText {
         EN.put("상태 확인 실패: ","Status check failed: ");
         EN.put("상향등","High beam");
         EN.put("새 기기","New device");
+        EN.put("새 업데이트가 있는 USB 메모리가 없습니다.\nUSB 메모리 맨 위에 vn-update 폴더를 넣고 다시 꽂으세요.","No USB stick with a newer update.\nPut the vn-update folder at the top of a USB stick and plug it in again.");
         EN.put("새로 시작","Start fresh");
         EN.put("새로고침","Refresh");
         EN.put("새로고침을 누르면 글꼴을 찾습니다","Press Refresh to look for fonts");
@@ -398,7 +402,11 @@ public final class UiText {
         EN.put("설정: ON","Setting: ON");
         EN.put("설정된 글꼴","Set font");
         EN.put("설정으로 / Back","Back");
+        EN.put("설치","Install");
+        EN.put("설치 화면에서 [설치]를 누르세요.","Tap Install on the installer screen.");
         EN.put("설치된 기본 앱 중 외부 실행이 허용된 앱만 표시합니다.","Only installed system apps that allow external launch are shown.");
+        EN.put("설치하는 동안 계기판과 내 앱이 잠시 닫힙니다.","The dashboard and My Apps close for a moment while installing.");
+        EN.put("설치하는 중…","Installing…");
         EN.put("세로 단수","Gear column");
         EN.put("세로 띠","Column");
         EN.put("세로 띠 + RPM","Column + RPM");
@@ -479,6 +487,10 @@ public final class UiText {
         EN.put("양보","Prompts");
         EN.put("양보: 내비 안내 때 줄이거나 멈춤, 통화 때 멈춤","Prompts: lower or stop for guidance, stop for calls");
         EN.put("언어 설정을 저장하지 못했습니다.","Could not save the language setting.");
+        EN.put("업데이트","Update");
+        EN.put("업데이트 완료","Update complete");
+        EN.put("업데이트를 설치할까요?","Install the update?");
+        EN.put("업데이트하지 못했습니다.","The update failed.");
         EN.put("없음","None");
         EN.put("에메랄드","Emerald");
         EN.put("엔지니어링 모드","Engineering mode");

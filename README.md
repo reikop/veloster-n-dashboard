@@ -79,7 +79,7 @@ You need the car parked with the engine running, and one of: a Windows or macOS 
 4. **Connect** the car's USB port to the computer (a data cable, not a charge-only one) and start the install. The installer checks it is a `jsn_kr` head unit on API 17 (another build number only shows a warning), installs both apps and opens My Apps on the car screen.
 5. **USB debugging turns off** by itself when you restart the engine.
 
-**Updates:** run the installer again; an app already at the same version is skipped. When a newer release is out, the Windows and macOS installers show an **[업데이트]** button that fetches the new installer (hash-checked) and opens it, the phone installer shows an update band, and the console installers ask.
+**Updates:** run the installer again; an app already at the same version is skipped. From 1.15.0 a USB stick works too ([USB update](docs/USB_UPDATE.md)). When a newer release is out, the Windows and macOS installers show an **[업데이트]** button that fetches the new installer (hash-checked) and opens it, the phone installer shows an update band, and the console installers ask.
 
 Removing, diagnostics files and troubleshooting: [owner install guide (Korean)](INSTALL.md) · [ADB connection](docs/ADB_EN.md) · [installer details](installer/README.md)
 
